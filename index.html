@@ -134,6 +134,7 @@
         import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+        // อย่าลืมตรวจสอบ Firebase Security Rules ก่อนนำไปใช้งานจริงนะครับ
         const firebaseConfig = {
             apiKey: "AIzaSyDV-gefPFqCmAvYmrSXeb5W1JUKf4Ev50Q",
             authDomain: "musix-syn.firebaseapp.com",
@@ -157,12 +158,12 @@
         window.currentSongId = null;
         window.ytPlayer = null;
         window.syncInterval = null;
-        window.isLoggedIn = false; // ตัวแปรเก็บสถานะการล็อกอิน
+        window.isLoggedIn = false; 
+        window.isYTApiReady = false; // ตัวแปรเช็คสถานะการโหลด YouTube API
 
         onAuthStateChanged(auth, (user) => {
             window.isLoggedIn = !!user;
             
-            // อัปเดตปุ่มบน Header และปุ่มเพิ่มเพลง ตามสถานะการล็อกอิน
             if (window.isLoggedIn) {
                 document.getElementById('btnHeaderLogout').style.display = 'block';
                 document.getElementById('btnHeaderLogin').style.display = 'none';
@@ -175,13 +176,11 @@
                 document.getElementById('btnAddSong').style.display = 'none';
             }
             
-            // โหลดคลังเพลงใหม่เพื่ออัปเดตปุ่ม แก้ไข/ลบ
             fetchSongs(); 
         });
 
         window.loginWithGoogle = async function() {
             try {
-                // กลับมาใช้ Popup เพราะปลดล็อก API Key เรียบร้อยแล้ว
                 await signInWithPopup(auth, provider);
             } catch (error) {
                 console.error("Login Error:", error);
@@ -220,7 +219,6 @@
                 });
                 document.getElementById('loadingOverlay').style.display = 'none';
                 
-                // ตรวจสอบว่าอยู่หน้า list หรือไม่ จะได้เรนเดอร์ให้ถูกต้อง
                 if (!document.getElementById('view-player').classList.contains('active') && 
                     !document.getElementById('view-add').classList.contains('active')) {
                     window.showView('view-list');
@@ -235,12 +233,8 @@
         }
 
         window.onYouTubeIframeAPIReady = function() {
-            window.ytPlayer = new YT.Player('youtubePlayer', {
-                height: '100%',
-                width: '100%',
-                videoId: '',
-                playerVars: { 'playsinline': 1, 'controls': 1 }
-            });
+            // แค่จำไว้ว่า API โหลดเสร็จแล้ว จะไปสร้าง Player ตอนแสดงหน้าต่าง Player แทน
+            window.isYTApiReady = true; 
         }
 
         window.extractYouTubeID = function(url) {
@@ -257,7 +251,6 @@
             if (viewId === 'view-list') {
                 headerTitle.innerText = 'คลังเพลงของฉัน';
                 
-                // ควบคุมการแสดงปุ่มเพิ่มเพลง
                 document.getElementById('btnAddSong').style.display = window.isLoggedIn ? 'block' : 'none';
                 
                 window.renderSongList();
@@ -269,7 +262,6 @@
             } else if (viewId === 'view-player') {
                 headerTitle.innerText = 'กำลังเล่นเพลง';
                 
-                // เปลี่ยนข้อความกำกับ Timestamp
                 if (window.isLoggedIn) {
                     document.getElementById('tsEditorTitle').innerText = "⏱ แก้ไข Timestamp (วินาที)";
                     document.getElementById('tsEditorSub').innerText = "พิมพ์แก้ไขตัวเลขได้ทันที";
@@ -343,6 +335,10 @@
                 }
                 
                 await fetchSongs();
+                
+                // --- เพิ่มส่วนนี้ให้เด้งกลับหน้าคลังเพลงหลังเซฟเสร็จ ---
+                window.showView('view-list'); 
+
             } catch (e) {
                 console.error(e);
                 alert("บันทึกไม่สำเร็จ");
@@ -366,7 +362,6 @@
                 const item = document.createElement('div');
                 item.className = 'song-item';
                 
-                // ควบคุมปุ่มแก้ไขและลบตามสถานะล็อกอิน
                 let actionsHtml = '';
                 if (window.isLoggedIn) {
                     actionsHtml = `
@@ -410,20 +405,34 @@
             document.getElementById('playerTitle').innerText = song.title;
             document.getElementById('playerArtist').innerText = `ศิลปิน: ${song.artist || 'ไม่ระบุศิลปิน'}`;
 
-            const videoId = window.extractYouTubeID(song.audioPath);
-            if (window.ytPlayer && typeof window.ytPlayer.loadVideoById === 'function') {
-                window.ytPlayer.loadVideoById(videoId);
-            } else {
-                alert("ระบบกำลังโหลดตัวเล่น YouTube กรุณารอสักครู่แล้วลองกดเล่นอีกครั้งครับ");
-                return;
-            }
-            
+            // --- สลับมาหน้า Player ก่อนเพื่อเปิดขนาดกล่องรอไว้ ---
             window.currentLyricsArray = song.lyrics.split(/\n\s*\n/);
             window.currentLyricIndex = -1;
-            
             window.renderTimestampEditor();
             window.updateLyricDisplay();
             window.showView('view-player');
+
+            // --- โหลด YouTube ---
+            const videoId = window.extractYouTubeID(song.audioPath);
+            
+            if (window.ytPlayer) {
+                if (typeof window.ytPlayer.loadVideoById === 'function') {
+                    window.ytPlayer.loadVideoById(videoId);
+                }
+            } else {
+                if (window.isYTApiReady) {
+                    window.ytPlayer = new YT.Player('youtubePlayer', {
+                        height: '100%',
+                        width: '100%',
+                        videoId: videoId,
+                        playerVars: { 'playsinline': 1, 'controls': 1 }
+                    });
+                } else {
+                    alert("สคริปต์ YouTube ยังโหลดไม่เสร็จ กรุณารอสักครู่แล้วลองกดเล่นอีกครั้งครับ");
+                    window.showView('view-list');
+                    return;
+                }
+            }
 
             clearInterval(window.syncInterval);
             window.syncInterval = setInterval(() => {
@@ -519,7 +528,6 @@
                 
                 input.value = (song.timestamps && song.timestamps[index] != null) ? song.timestamps[index].toFixed(1) : '';
                 
-                // ควบคุมสิทธิ์ Guest ในการแก้ไข Timestamp
                 if (!window.isLoggedIn) {
                     input.readOnly = true;
                     input.style.border = 'none';
@@ -613,7 +621,6 @@
                 window.currentLyricIndex++;
                 window.updateLyricDisplay();
 
-                // บันทึกเฉพาะเมื่อคลิกเอง และต้องล็อกอินอยู่
                 if (!isAuto && window.isLoggedIn && window.currentSongId && window.ytPlayer && typeof window.ytPlayer.getCurrentTime === 'function') {
                     const songIndex = window.songs.findIndex(s => s.id === window.currentSongId);
                     if (songIndex !== -1) {
