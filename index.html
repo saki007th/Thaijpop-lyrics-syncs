@@ -4,16 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Lyric Player</title>
-    <script src="https://www.youtube.com/iframe_api"></script>
     <style>
         body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; }
         header { background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid rgba(255, 255, 255, 0.1); letter-spacing: 1px; }
         
         .header-title { font-size: 1.3em; font-weight: bold; flex-grow: 1; text-align: center; }
         .header-btn-group { width: 100px; display: flex; justify-content: flex-end; }
-        .header-spacer { width: 100px; } /* ตัวดันระยะให้ Title อยู่กึ่งกลาง */
+        .header-spacer { width: 100px; } 
 
-        /* ปุ่ม Login / Logout บน Header */
         .btn-auth { background: transparent; border: 1px solid; padding: 6px 14px; font-size: 0.85em; border-radius: 20px; cursor: pointer; transition: all 0.3s ease; font-weight: bold; }
         .btn-login { color: #00b4db; border-color: #00b4db; }
         .btn-login:hover { background: rgba(0, 180, 219, 0.1); }
@@ -134,7 +132,6 @@
         import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-        // อย่าลืมตรวจสอบ Firebase Security Rules ก่อนนำไปใช้งานจริงนะครับ
         const firebaseConfig = {
             apiKey: "AIzaSyDV-gefPFqCmAvYmrSXeb5W1JUKf4Ev50Q",
             authDomain: "musix-syn.firebaseapp.com",
@@ -159,7 +156,22 @@
         window.ytPlayer = null;
         window.syncInterval = null;
         window.isLoggedIn = false; 
-        window.isYTApiReady = false; // ตัวแปรเช็คสถานะการโหลด YouTube API
+        window.isYTApiReady = false;
+
+        // --- แก้ไขปัญหาโหลด YouTube: สั่งโหลด YouTube API ผ่าน Javascript แบบ Dynamic แทน ---
+        window.onYouTubeIframeAPIReady = function() {
+            window.isYTApiReady = true; 
+        };
+
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        if (firstScriptTag) {
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        } else {
+            document.head.appendChild(tag);
+        }
+        // ----------------------------------------------------------------------------------
 
         onAuthStateChanged(auth, (user) => {
             window.isLoggedIn = !!user;
@@ -230,11 +242,6 @@
                 alert("เชื่อมต่อฐานข้อมูลไม่สำเร็จ กรุณาตรวจสอบสิทธิ์ Rules ว่าอนุญาตให้อ่านข้อมูลได้หรือไม่");
                 document.getElementById('loadingOverlay').style.display = 'none';
             }
-        }
-
-        window.onYouTubeIframeAPIReady = function() {
-            // แค่จำไว้ว่า API โหลดเสร็จแล้ว จะไปสร้าง Player ตอนแสดงหน้าต่าง Player แทน
-            window.isYTApiReady = true; 
         }
 
         window.extractYouTubeID = function(url) {
@@ -335,8 +342,6 @@
                 }
                 
                 await fetchSongs();
-                
-                // --- เพิ่มส่วนนี้ให้เด้งกลับหน้าคลังเพลงหลังเซฟเสร็จ ---
                 window.showView('view-list'); 
 
             } catch (e) {
@@ -405,14 +410,12 @@
             document.getElementById('playerTitle').innerText = song.title;
             document.getElementById('playerArtist').innerText = `ศิลปิน: ${song.artist || 'ไม่ระบุศิลปิน'}`;
 
-            // --- สลับมาหน้า Player ก่อนเพื่อเปิดขนาดกล่องรอไว้ ---
             window.currentLyricsArray = song.lyrics.split(/\n\s*\n/);
             window.currentLyricIndex = -1;
             window.renderTimestampEditor();
             window.updateLyricDisplay();
             window.showView('view-player');
 
-            // --- โหลด YouTube ---
             const videoId = window.extractYouTubeID(song.audioPath);
             
             if (window.ytPlayer) {
@@ -420,7 +423,8 @@
                     window.ytPlayer.loadVideoById(videoId);
                 }
             } else {
-                if (window.isYTApiReady) {
+                // --- เพิ่มการเช็ค window.YT ให้ครอบคลุมมากขึ้น ---
+                if (window.isYTApiReady || (window.YT && window.YT.Player)) {
                     window.ytPlayer = new YT.Player('youtubePlayer', {
                         height: '100%',
                         width: '100%',
