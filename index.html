@@ -7,25 +7,34 @@
     <script src="https://www.youtube.com/iframe_api"></script>
     <style>
         body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; }
-        header { background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 1.4em; font-weight: bold; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid rgba(255, 255, 255, 0.1); letter-spacing: 1px; }
-        .header-title { flex-grow: 1; text-align: center; }
-        .user-profile { font-size: 0.6em; font-weight: normal; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 20px; display: flex; align-items: center; gap: 8px; }
-        .user-profile img { width: 24px; height: 24px; border-radius: 50%; }
+        header { background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid rgba(255, 255, 255, 0.1); letter-spacing: 1px; }
+        
+        .header-title { font-size: 1.3em; font-weight: bold; flex-grow: 1; text-align: center; }
+        .header-btn-group { width: 100px; display: flex; justify-content: flex-end; }
+        .header-spacer { width: 100px; } /* ตัวดันระยะให้ Title อยู่กึ่งกลาง */
+
+        /* ปุ่ม Login / Logout บน Header */
+        .btn-auth { background: transparent; border: 1px solid; padding: 6px 14px; font-size: 0.85em; border-radius: 20px; cursor: pointer; transition: all 0.3s ease; font-weight: bold; }
+        .btn-login { color: #00b4db; border-color: #00b4db; }
+        .btn-login:hover { background: rgba(0, 180, 219, 0.1); }
+        .btn-logout { color: #ff5252; border-color: rgba(255, 82, 82, 0.5); }
+        .btn-logout:hover { background: rgba(255, 82, 82, 0.1); }
         
         .container { padding: 20px; max-width: 600px; margin: auto; flex-grow: 1; width: 100%; box-sizing: border-box; }
+        
         button { background: linear-gradient(45deg, #00b4db, #0083b0); color: white; border: none; padding: 14px 20px; font-size: 1.1em; font-weight: bold; border-radius: 50px; cursor: pointer; width: 100%; margin-top: 15px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 180, 219, 0.3); }
         button:hover { box-shadow: 0 6px 20px rgba(0, 180, 219, 0.5); transform: translateY(-2px); }
         button:active { transform: scale(0.96); box-shadow: 0 2px 10px rgba(0, 180, 219, 0.2); }
         button:disabled { background: #546e7a; cursor: not-allowed; box-shadow: none; transform: none; }
+        
         .btn-secondary { background: rgba(255, 255, 255, 0.1); box-shadow: none; border: 1px solid rgba(255, 255, 255, 0.2); }
         .btn-secondary:hover { background: rgba(255, 255, 255, 0.2); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
-        .btn-logout { background: transparent; border: 1px solid rgba(255, 82, 82, 0.5); color: #ff5252; padding: 6px 12px; font-size: 0.85em; margin-top: 0; width: auto; box-shadow: none; }
-        .btn-logout:hover { background: rgba(255, 82, 82, 0.1); }
 
         label { font-size: 0.9em; color: #b0bec5; margin-top: 10px; display: block; }
         input, textarea { width: 100%; padding: 12px 15px; margin-top: 8px; margin-bottom: 20px; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; color: #ffffff; font-size: 1em; box-sizing: border-box; transition: border-color 0.3s ease; }
         input:focus, textarea:focus { outline: none; border-color: #00b4db; background: rgba(0, 0, 0, 0.4); }
         textarea { height: 180px; resize: vertical; line-height: 1.5; }
+        
         .song-item { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px); padding: 15px 20px; border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s ease, background 0.2s ease; }
         .song-item:hover { transform: translateX(5px); background: rgba(255, 255, 255, 0.08); }
         .song-item-title { font-size: 1.1em; letter-spacing: 0.5px; flex-grow: 1; }
@@ -39,6 +48,7 @@
         .lyric-sub { text-align: center; font-size: 1em; color: rgba(255, 255, 255, 0.4); white-space: pre-wrap; min-height: 3em; display: flex; align-items: center; justify-content: center; padding: 0 20px; opacity: 0; }
         .youtube-container { position: relative; width: 100%; padding-bottom: 56.25%; margin-bottom: 15px; border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .youtube-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+        
         .timestamp-editor-container { margin-top: 25px; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 15px; }
         .timestamp-list { max-height: 180px; overflow-y: auto; padding-right: 5px; }
         .timestamp-list::-webkit-scrollbar { width: 6px; }
@@ -48,36 +58,27 @@
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         .button-group { display: flex; gap: 10px; margin-top: 10px; }
-        #loadingOverlay { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999; justify-content: center; align-items: center; font-size: 1.2em; font-weight: bold; flex-direction: column; gap: 15px; }
+        #loadingOverlay { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999; justify-content: center; align-items: center; font-size: 1.2em; font-weight: bold; flex-direction: column; gap: 15px; transition: opacity 0.3s; }
     </style>
 </head>
 <body>
 
     <div id="loadingOverlay">
-        <div>กำลังตรวจสอบสถานะ...</div>
+        <div>กำลังโหลดข้อมูลคลังเพลง...</div>
     </div>
 
     <header>
-        <div style="width: 80px;"></div> <div id="headerTitle" class="header-title">คลังเพลงของฉัน</div>
-        <div id="userInfoContainer" style="width: 80px; display: none; justify-content: flex-end;">
-            <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
+        <div class="header-spacer"></div>
+        <div id="headerTitle" class="header-title">คลังเพลงของฉัน</div>
+        <div class="header-btn-group">
+            <button id="btnHeaderLogin" class="btn-auth btn-login" onclick="loginWithGoogle()">เข้าสู่ระบบ</button>
+            <button id="btnHeaderLogout" class="btn-auth btn-logout" style="display:none;" onclick="logout()">ออกจากระบบ</button>
         </div>
     </header>
 
     <div class="container">
-        <div id="view-login" class="view">
-            <div style="text-align: center; margin-top: 40px; background: rgba(0,0,0,0.3); padding: 40px 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);">
-                <h2 style="margin-top: 0; color: #00b4db;">เข้าสู่ระบบเพื่อใช้งาน</h2>
-                <p style="color: #b0bec5; font-size: 0.9em; margin-bottom: 30px;">ฐานข้อมูลถูกป้องกันไว้ กรุณายืนยันตัวตนครับ</p>
-                <button onclick="loginWithGoogle()" style="width: auto; padding: 12px 30px; font-size: 1em; background: #ffffff; color: #757575; box-shadow: none;">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" style="width: 18px; vertical-align: middle; margin-right: 10px;">
-                    เข้าสู่ระบบด้วย Google
-                </button>
-            </div>
-        </div>
-
         <div id="view-list" class="view">
-            <button onclick="openAddView()">✨ เพิ่มเพลงใหม่</button>
+            <button id="btnAddSong" onclick="openAddView()" style="display: none;">✨ เพิ่มเพลงใหม่</button>
             <h3 style="margin-top:30px; font-weight: normal; color: #b0bec5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">เลือกเพลงที่ต้องการฟัง</h3>
             <div id="songList"></div>
         </div>
@@ -117,13 +118,13 @@
 
             <div class="timestamp-editor-container">
                 <h4 style="margin: 0 0 10px 0; font-weight: normal; color: #b0bec5; font-size: 0.95em; display: flex; justify-content: space-between;">
-                    <span>⏱ แก้ไข Timestamp (วินาที)</span>
-                    <span style="font-size: 0.85em; color: #00b4db;">พิมพ์แก้ไขตัวเลขได้ทันที</span>
+                    <span id="tsEditorTitle">⏱ Timestamp (วินาที)</span>
+                    <span id="tsEditorSub" style="font-size: 0.85em; color: #00b4db;"></span>
                 </h4>
                 <div id="timestampList" class="timestamp-list"></div>
             </div>
             
-            <button class="btn-secondary" onclick="resetSync()" style="margin-top: 15px; font-size: 0.9em; background: rgba(255, 152, 0, 0.1); border-color: rgba(255, 152, 0, 0.3); color: #ff9800;">🔄 ล้างเวลาซิงค์ทั้งหมด (เริ่มจับจังหวะใหม่)</button>
+            <button id="btnResetSync" class="btn-secondary" onclick="resetSync()" style="margin-top: 15px; font-size: 0.9em; background: rgba(255, 152, 0, 0.1); border-color: rgba(255, 152, 0, 0.3); color: #ff9800; display: none;">🔄 ล้างเวลาซิงค์ทั้งหมด (เริ่มจับจังหวะใหม่)</button>
             <button class="btn-secondary" onclick="showView('view-list')" style="margin-top: 15px;">🏠 กลับคลังเพลง</button>
         </div>
     </div>
@@ -131,7 +132,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        // เพิ่มโมดูล Authentication
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         const firebaseConfig = {
@@ -157,25 +157,24 @@
         window.currentSongId = null;
         window.ytPlayer = null;
         window.syncInterval = null;
+        window.isLoggedIn = false; // ตัวแปรเก็บสถานะการล็อกอิน
 
-        // ระบบตรวจสอบสถานะ Login แบบ Real-time
         onAuthStateChanged(auth, (user) => {
-            const overlay = document.getElementById('loadingOverlay');
-            if (user) {
-                // ถ้ามีผู้ใช้ล็อกอินอยู่
-                document.getElementById('userInfoContainer').style.display = 'flex';
-                overlay.innerHTML = '<div>กำลังโหลดข้อมูลคลังเพลง...</div>';
-                fetchSongs(); // โหลดข้อมูลเฉพาะตอนล็อกอินแล้วเท่านั้น
+            window.isLoggedIn = !!user;
+            
+            // อัปเดตปุ่มบน Header ตามสถานะการล็อกอิน
+            if (window.isLoggedIn) {
+                document.getElementById('btnHeaderLogout').style.display = 'block';
+                document.getElementById('btnHeaderLogin').style.display = 'none';
             } else {
-                // ถ้ายังไม่ได้ล็อกอิน
-                document.getElementById('userInfoContainer').style.display = 'none';
-                window.songs = []; // ล้างข้อมูลเก่าทิ้ง
-                window.showView('view-login');
-                overlay.style.display = 'none';
+                document.getElementById('btnHeaderLogout').style.display = 'none';
+                document.getElementById('btnHeaderLogin').style.display = 'block';
             }
+            
+            // โหลดคลังเพลงทันที ไม่ว่าจะล็อกอินหรือไม่ก็ตาม
+            fetchSongs(); 
         });
 
-        // ฟังก์ชันเข้าสู่ระบบด้วย Google
         window.loginWithGoogle = async function() {
             try {
                 await signInWithPopup(auth, provider);
@@ -185,7 +184,6 @@
             }
         }
 
-        // ฟังก์ชันออกจากระบบ
         window.logout = async function() {
             if(confirm('ต้องการออกจากระบบใช่หรือไม่?')) {
                 try {
@@ -200,6 +198,7 @@
         }
 
         async function fetchSongs() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
             try {
                 const querySnapshot = await getDocs(songsCollection);
                 window.songs = [];
@@ -218,7 +217,7 @@
                 window.showView('view-list');
             } catch (error) {
                 console.error("Error fetching songs:", error);
-                alert("เชื่อมต่อฐานข้อมูลไม่สำเร็จ กรุณาตรวจสอบสิทธิ์ (Rules)");
+                alert("เชื่อมต่อฐานข้อมูลไม่สำเร็จ กรุณาตรวจสอบสิทธิ์ Rules ว่าอนุญาตให้อ่านข้อมูลได้หรือไม่");
                 document.getElementById('loadingOverlay').style.display = 'none';
             }
         }
@@ -243,10 +242,12 @@
             document.getElementById(viewId).classList.add('active');
             
             const headerTitle = document.getElementById('headerTitle');
-            if (viewId === 'view-login') {
-                headerTitle.innerText = 'ยินดีต้อนรับ';
-            } else if (viewId === 'view-list') {
+            if (viewId === 'view-list') {
                 headerTitle.innerText = 'คลังเพลงของฉัน';
+                
+                // ควบคุมการแสดงปุ่มเพิ่มเพลง
+                document.getElementById('btnAddSong').style.display = window.isLoggedIn ? 'block' : 'none';
+                
                 window.renderSongList();
                 clearInterval(window.syncInterval);
                 window.currentSongId = null;
@@ -255,10 +256,24 @@
                 }
             } else if (viewId === 'view-player') {
                 headerTitle.innerText = 'กำลังเล่นเพลง';
+                
+                // เปลี่ยนข้อความกำกับ Timestamp
+                if (window.isLoggedIn) {
+                    document.getElementById('tsEditorTitle').innerText = "⏱ แก้ไข Timestamp (วินาที)";
+                    document.getElementById('tsEditorSub').innerText = "พิมพ์แก้ไขตัวเลขได้ทันที";
+                    document.getElementById('tsEditorSub').style.color = "#00b4db";
+                    document.getElementById('btnResetSync').style.display = 'block';
+                } else {
+                    document.getElementById('tsEditorTitle').innerText = "⏱ Timestamp (วินาที)";
+                    document.getElementById('tsEditorSub').innerText = "โหมดดูอย่างเดียว";
+                    document.getElementById('tsEditorSub').style.color = "#b0bec5";
+                    document.getElementById('btnResetSync').style.display = 'none';
+                }
             }
         }
 
         window.openAddView = function() {
+            if (!window.isLoggedIn) return;
             window.editingSongId = null;
             document.getElementById('headerTitle').innerText = 'เพิ่มเพลงใหม่';
             document.getElementById('inputTitle').value = '';
@@ -269,6 +284,7 @@
         }
 
         window.editSong = function(id) {
+            if (!window.isLoggedIn) return;
             const song = window.songs.find(s => s.id === id);
             if (!song) return;
 
@@ -282,6 +298,11 @@
         }
 
         window.saveSong = async function() {
+            if (!window.isLoggedIn) {
+                alert("ต้องเข้าสู่ระบบก่อนจึงจะบันทึกได้ครับ");
+                return;
+            }
+            
             const title = document.getElementById('inputTitle').value.trim();
             const artist = document.getElementById('inputArtist').value.trim();
             const audioPath = document.getElementById('inputAudio').value.trim();
@@ -312,7 +333,7 @@
                 await fetchSongs();
             } catch (e) {
                 console.error(e);
-                alert("บันทึกไม่สำเร็จ อาจเป็นเพราะยังไม่ได้เข้าสู่ระบบ");
+                alert("บันทึกไม่สำเร็จ");
             } finally {
                 btnSave.disabled = false;
                 btnSave.innerText = "💾 บันทึกเพลง";
@@ -325,13 +346,23 @@
             listContainer.innerHTML = '';
 
             if (window.songs.length === 0) {
-                listContainer.innerHTML = '<p style="color:rgba(255,255,255,0.5); text-align:center; margin-top:40px;">ยังไม่มีเพลงในคลัง<br>กดเพิ่มเพลงใหม่ได้เลยครับ</p>';
+                listContainer.innerHTML = '<p style="color:rgba(255,255,255,0.5); text-align:center; margin-top:40px;">ยังไม่มีเพลงในคลัง</p>';
                 return;
             }
 
             window.songs.forEach(song => {
                 const item = document.createElement('div');
                 item.className = 'song-item';
+                
+                // ควบคุมปุ่มแก้ไขและลบ
+                let actionsHtml = '';
+                if (window.isLoggedIn) {
+                    actionsHtml = `
+                        <button class="btn-action btn-secondary" onclick="editSong('${song.id}')">✏️ แก้ไข</button>
+                        <button class="btn-action btn-secondary" style="background:rgba(229, 57, 53, 0.2); border-color:rgba(229, 57, 53, 0.4); color:#ef5350;" onclick="deleteSong('${song.id}')">ลบ</button>
+                    `;
+                }
+                
                 item.innerHTML = `
                     <div class="song-item-title">
                         ${song.title}
@@ -339,8 +370,7 @@
                     </div>
                     <div class="song-item-actions">
                         <button class="btn-action" style="background: linear-gradient(45deg, #11998e, #38ef7d);" onclick="playSong('${song.id}')">▶ เล่น</button>
-                        <button class="btn-action btn-secondary" onclick="editSong('${song.id}')">✏️ แก้ไข</button>
-                        <button class="btn-action btn-secondary" style="background:rgba(229, 57, 53, 0.2); border-color:rgba(229, 57, 53, 0.4); color:#ef5350;" onclick="deleteSong('${song.id}')">ลบ</button>
+                        ${actionsHtml}
                     </div>
                 `;
                 listContainer.appendChild(item);
@@ -348,7 +378,8 @@
         }
 
         window.deleteSong = async function(id) {
-            if(confirm('ต้องการลบเพลงนี้ใช่หรือไม่? ข้อมูลจะถูกลบออกจากระบบออนไลน์ด้วย')) {
+            if (!window.isLoggedIn) return;
+            if(confirm('ต้องการลบเพลงนี้ใช่หรือไม่?')) {
                 try {
                     await deleteDoc(doc(db, "songs", id));
                     await fetchSongs();
@@ -419,6 +450,7 @@
         }
 
         window.saveTimestampsToFirebase = async function() {
+            if (!window.isLoggedIn) return;
             const song = window.songs.find(s => s.id === window.currentSongId);
             if (song) {
                 try {
@@ -475,15 +507,22 @@
                 
                 input.value = (song.timestamps && song.timestamps[index] != null) ? song.timestamps[index].toFixed(1) : '';
                 
-                input.onchange = (e) => {
-                    const val = parseFloat(e.target.value);
-                    const songIdx = window.songs.findIndex(s => s.id === window.currentSongId);
-                    if (songIdx !== -1) {
-                        if (!window.songs[songIdx].timestamps) window.songs[songIdx].timestamps = [];
-                        window.songs[songIdx].timestamps[index] = isNaN(val) ? null : val;
-                        window.saveTimestampsToFirebase();
-                    }
-                };
+                // ควบคุมสิทธิ์ Guest ในการแก้ไข Timestamp
+                if (!window.isLoggedIn) {
+                    input.readOnly = true;
+                    input.style.border = 'none';
+                    input.style.background = 'transparent';
+                } else {
+                    input.onchange = (e) => {
+                        const val = parseFloat(e.target.value);
+                        const songIdx = window.songs.findIndex(s => s.id === window.currentSongId);
+                        if (songIdx !== -1) {
+                            if (!window.songs[songIdx].timestamps) window.songs[songIdx].timestamps = [];
+                            window.songs[songIdx].timestamps[index] = isNaN(val) ? null : val;
+                            window.saveTimestampsToFirebase();
+                        }
+                    };
+                }
 
                 row.appendChild(label);
                 row.appendChild(input);
@@ -562,7 +601,8 @@
                 window.currentLyricIndex++;
                 window.updateLyricDisplay();
 
-                if (!isAuto && window.currentSongId && window.ytPlayer && typeof window.ytPlayer.getCurrentTime === 'function') {
+                // บันทึกเฉพาะเมื่อคลิกเอง และต้องล็อกอินอยู่
+                if (!isAuto && window.isLoggedIn && window.currentSongId && window.ytPlayer && typeof window.ytPlayer.getCurrentTime === 'function') {
                     const songIndex = window.songs.findIndex(s => s.id === window.currentSongId);
                     if (songIndex !== -1) {
                         if (!window.songs[songIndex].timestamps) window.songs[songIndex].timestamps = [];
@@ -575,7 +615,7 @@
 
         window.prevLyric = function() {
             if (window.currentLyricIndex > -1) {
-                if (window.currentSongId) {
+                if (window.isLoggedIn && window.currentSongId) {
                     const songIndex = window.songs.findIndex(s => s.id === window.currentSongId);
                     if (songIndex !== -1 && window.songs[songIndex].timestamps) {
                         window.songs[songIndex].timestamps[window.currentLyricIndex] = null;
@@ -589,6 +629,7 @@
         }
 
         window.resetSync = function() {
+            if (!window.isLoggedIn) return;
             if(confirm('ต้องการล้างเวลาที่ซิงค์ไว้ของเพลงนี้ทั้งหมดเพื่อเริ่มจับจังหวะใหม่ใช่หรือไม่?')) {
                 const songIndex = window.songs.findIndex(s => s.id === window.currentSongId);
                 if (songIndex !== -1) {
