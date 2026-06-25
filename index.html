@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Lyric Player</title>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.4em;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            letter-spacing: 1px;
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+            flex-grow: 1;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: linear-gradient(45deg, #00b4db, #0083b0);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 180, 219, 0.3);
+        }
+        button:hover {
+            box-shadow: 0 6px 20px rgba(0, 180, 219, 0.5);
+            transform: translateY(-2px);
+        }
+        button:active { 
+            transform: scale(0.96); 
+            box-shadow: 0 2px 10px rgba(0, 180, 219, 0.2);
+        }
+        
+        .btn-secondary { 
+            background: rgba(255, 255, 255, 0.1); 
+            box-shadow: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        label {
+            font-size: 0.9em;
+            color: #b0bec5;
+            margin-top: 10px;
+            display: block;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            margin-top: 8px;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 1em;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #00b4db;
+            background: rgba(0, 0, 0, 0.4);
+        }
+        textarea { height: 180px; resize: vertical; line-height: 1.5; }
+
+        .song-item {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(5px);
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+        .song-item:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .song-item-title { font-size: 1.1em; letter-spacing: 0.5px; flex-grow: 1; }
+        .song-item-actions { display: flex; gap: 6px; }
+        .btn-action { margin: 0; padding: 8px 12px; border-radius: 30px; font-size: 0.85em; width: auto; }
+
+        @keyframes slideUp {
+            0% { transform: translateY(20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .slide-up-anim {
+            animation: slideUp 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        .lyric-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 30px 20px;
+            border-radius: 16px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 1.4em;
+            font-weight: bold;
+            line-height: 1.6;
+            margin: 15px 0;
+            white-space: pre-wrap;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            opacity: 0; 
+        }
+
+        .lyric-sub {
+            text-align: center;
+            font-size: 1em;
+            color: rgba(255, 255, 255, 0.4);
+            white-space: pre-wrap;
+            min-height: 3em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            opacity: 0; 
+        }
+
+        .youtube-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .youtube-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .view { display: none; animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .view.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .button-group { display: flex; gap: 10px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <header id="headerTitle">คลังเพลงของฉัน</header>
+
+    <div class="container">
+        <div id="view-list" class="view active">
+            <button onclick="openAddView()">✨ เพิ่มเพลงใหม่</button>
+            <h3 style="margin-top:30px; font-weight: normal; color: #b0bec5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">เลือกเพลงที่ต้องการฟัง</h3>
+            <div id="songList"></div>
+        </div>
+
+        <div id="view-add" class="view">
+            <label>ชื่อเพลง:</label>
+            <input type="text" id="inputTitle" placeholder="เช่น ソワレ (Soirée)">
+            
+            <label>ลิงก์ YouTube (เช่น https://youtu.be/... หรือ https://www.youtube.com/watch?v=...):</label>
+            <input type="text" id="inputAudio" placeholder="วางลิงก์วิดีโอ YouTube ที่นี่">
+            
+            <label>เนื้อเพลง (เว้นบรรทัด 1 บรรทัดเปล่า เพื่อแบ่งท่อนถัดไป):</label>
+            <textarea id="inputLyrics" placeholder="ท่อนที่ 1 ญี่ปุ่น&#10;ท่อนที่ 1 โรมาจิ&#10;ท่อนที่ 1 ไทย&#10;&#10;ท่อนที่ 2 ญี่ปุ่น..."></textarea>
+            
+            <button onclick="saveSong()">💾 บันทึกเพลง</button>
+            <button class="btn-secondary" onclick="showView('view-list')">❌ ยกเลิก</button>
+        </div>
+
+        <div id="view-player" class="view">
+            <div class="youtube-container">
+                <div id="youtubePlayer"></div>
+            </div>
+            
+            <div class="lyric-sub" id="lyricPrev"></div>
+            <div class="lyric-box" id="lyricDisplay"></div>
+            <div class="lyric-sub" id="lyricNext"></div>
+            
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevLyric()" style="flex: 1;">⏮ ย้อนกลับ</button>
+                <button onclick="nextLyric()" style="flex: 2; font-size: 1.2em;">⏭ ถัดไป</button>
+            </div>
+            
+            <button class="btn-secondary" onclick="resetSync()" style="margin-top: 15px; font-size: 0.9em; background: rgba(255, 152, 0, 0.1); border-color: rgba(255, 152, 0, 0.3); color: #ff9800;">🔄 ล้างเวลาซิงค์เนื้อเพลงนี้ (จับจังหวะใหม่)</button>
+            <button class="btn-secondary" onclick="showView('view-list')" style="margin-top: 15px;">🏠 กลับคลังเพลง</button>
+        </div>
+    </div>
+
+    <script>
+        let songs = JSON.parse(localStorage.getItem('mySongs')) || [];
+        let currentLyricsArray = [];
+        let currentLyricIndex = -1;
+        let editingSongId = null;
+        let currentSongId = null;
+        let ytPlayer;
+        let syncInterval = null;
+
+        function onYouTubeIframeAPIReady() {
+            ytPlayer = new YT.Player('youtubePlayer', {
+                height: '100%',
+                width: '100%',
+                videoId: '',
+                playerVars: {
+                    'playsinline': 1,
+                    'controls': 1
+                }
+            });
+        }
+
+        function extractYouTubeID(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            
+            if (viewId === 'view-list') {
+                document.getElementById('headerTitle').innerText = 'คลังเพลงของฉัน';
+                renderSongList();
+                clearInterval(syncInterval);
+                currentSongId = null;
+                if (ytPlayer && typeof ytPlayer.stopVideo === 'function') {
+                    ytPlayer.stopVideo();
+                }
+            } else if (viewId === 'view-player') {
+                document.getElementById('headerTitle').innerText = 'กำลังเล่นเพลง';
+            }
+        }
+
+        function openAddView() {
+            editingSongId = null;
+            document.getElementById('headerTitle').innerText = 'เพิ่มเพลงใหม่';
+            document.getElementById('inputTitle').value = '';
+            document.getElementById('inputAudio').value = '';
+            document.getElementById('inputLyrics').value = '';
+            showView('view-add');
+        }
+
+        function editSong(id) {
+            const song = songs.find(s => s.id === id);
+            if (!song) return;
+
+            editingSongId = id;
+            document.getElementById('headerTitle').innerText = 'แก้ไขเพลง';
+            document.getElementById('inputTitle').value = song.title;
+            document.getElementById('inputAudio').value = song.audioPath;
+            document.getElementById('inputLyrics').value = song.lyrics;
+            showView('view-add');
+        }
+
+        function saveSong() {
+            const title = document.getElementById('inputTitle').value.trim();
+            const audioPath = document.getElementById('inputAudio').value.trim();
+            const lyrics = document.getElementById('inputLyrics').value.trim();
+
+            if (!title || !lyrics) {
+                alert("กรุณากรอกชื่อเพลงและเนื้อเพลงครับ");
+                return;
+            }
+
+            if (!extractYouTubeID(audioPath)) {
+                alert("ลิงก์ YouTube ไม่ถูกต้อง กรุณาตรวจสอบอีกครั้งครับ");
+                return;
+            }
+
+            if (editingSongId) {
+                const songIndex = songs.findIndex(s => s.id === editingSongId);
+                if (songIndex !== -1) {
+                    songs[songIndex].title = title;
+                    songs[songIndex].audioPath = audioPath;
+                    songs[songIndex].lyrics = lyrics;
+                }
+            } else {
+                const newSong = {
+                    id: Date.now().toString(),
+                    title: title,
+                    audioPath: audioPath,
+                    lyrics: lyrics,
+                    timestamps: [] // สร้าง array ว่างสำหรับเก็บเวลาซิงค์
+                };
+                songs.push(newSong);
+            }
+
+            localStorage.setItem('mySongs', JSON.stringify(songs));
+            editingSongId = null;
+            showView('view-list');
+        }
+
+        function renderSongList() {
+            const listContainer = document.getElementById('songList');
+            listContainer.innerHTML = '';
+
+            if (songs.length === 0) {
+                listContainer.innerHTML = '<p style="color:rgba(255,255,255,0.5); text-align:center; margin-top:40px;">ยังไม่มีเพลงในคลัง<br>กดเพิ่มเพลงใหม่ได้เลยครับ</p>';
+                return;
+            }
+
+            songs.forEach(song => {
+                const item = document.createElement('div');
+                item.className = 'song-item';
+                item.innerHTML = `
+                    <div class="song-item-title">${song.title}</div>
+                    <div class="song-item-actions">
+                        <button class="btn-action" style="background: linear-gradient(45deg, #11998e, #38ef7d);" onclick="playSong('${song.id}')">▶ เล่น</button>
+                        <button class="btn-action btn-secondary" onclick="editSong('${song.id}')">✏️ แก้ไข</button>
+                        <button class="btn-action btn-secondary" style="background:rgba(229, 57, 53, 0.2); border-color:rgba(229, 57, 53, 0.4); color:#ef5350;" onclick="deleteSong('${song.id}')">ลบ</button>
+                    </div>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+
+        function deleteSong(id) {
+            if(confirm('ต้องการลบเพลงนี้ใช่หรือไม่?')) {
+                songs = songs.filter(s => s.id !== id);
+                localStorage.setItem('mySongs', JSON.stringify(songs));
+                renderSongList();
+            }
+        }
+
+        function playSong(id) {
+            currentSongId = id;
+            const song = songs.find(s => s.id === id);
+            if (!song) return;
+
+            const videoId = extractYouTubeID(song.audioPath);
+            if (ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
+                ytPlayer.loadVideoById(videoId);
+            } else {
+                alert("ระบบกำลังโหลดตัวเล่น YouTube กรุณารอสักครู่แล้วลองกดเล่นอีกครั้งครับ");
+                return;
+            }
+            
+            currentLyricsArray = song.lyrics.split(/\n\s*\n/);
+            currentLyricIndex = -1;
+            
+            updateLyricDisplay();
+            showView('view-player');
+
+            // --- ระบบ Auto Sync ---
+            clearInterval(syncInterval);
+            syncInterval = setInterval(() => {
+                if (!ytPlayer || typeof ytPlayer.getCurrentTime !== 'function') return;
+                
+                const currentSong = songs.find(s => s.id === currentSongId);
+                if (!currentSong || !currentSong.timestamps) return;
+
+                const currentTime = ytPlayer.getCurrentTime();
+                if (currentTime === undefined || currentTime === 0) return;
+
+                // เช็คเพื่อเลื่อนท่อนถัดไป
+                const nextIndex = currentLyricIndex + 1;
+                if (nextIndex <= currentLyricsArray.length) {
+                    const targetTime = currentSong.timestamps[nextIndex];
+                    if (targetTime !== undefined && targetTime !== null && currentTime >= targetTime) {
+                        nextLyric(true); // สั่งเลื่อนท่อนแบบ Auto (ไม่บันทึกเวลาทับ)
+                    }
+                }
+
+                // เช็คเผื่อผู้ใช้กดย้อนเวลา (Seek Backward) ในวิดีโอ
+                if (currentLyricIndex > -1) {
+                    const currentLyricTime = currentSong.timestamps[currentLyricIndex];
+                    if (currentLyricTime !== undefined && currentLyricTime !== null && currentTime < currentLyricTime) {
+                        let expectedIndex = -1;
+                        for (let i = 0; i < currentSong.timestamps.length; i++) {
+                            if (currentSong.timestamps[i] !== null && currentTime >= currentSong.timestamps[i]) {
+                                expectedIndex = i;
+                            }
+                        }
+                        if (currentLyricIndex !== expectedIndex) {
+                            currentLyricIndex = expectedIndex;
+                            updateLyricDisplay();
+                        }
+                    }
+                }
+            }, 100); // ตรวจสอบทุกๆ 0.1 วินาที
+        }
+
+        function updateLyricDisplay() {
+            const displayPrev = document.getElementById('lyricPrev');
+            const displayMain = document.getElementById('lyricDisplay');
+            const displayNext = document.getElementById('lyricNext');
+
+            displayPrev.classList.remove('slide-up-anim');
+            displayMain.classList.remove('slide-up-anim');
+            displayNext.classList.remove('slide-up-anim');
+
+            void displayMain.offsetWidth;
+
+            if (currentLyricIndex === -1) {
+                displayMain.innerText = "กดปุ่ม 'ถัดไป' เพื่อเริ่มแสดงเนื้อเพลง\n🎵 [ เริ่มเพลง ]";
+            } else if (currentLyricIndex >= currentLyricsArray.length) {
+                displayMain.innerText = "✨ [ จบเพลง ] ✨";
+            } else {
+                displayMain.innerText = currentLyricsArray[currentLyricIndex];
+            }
+
+            if (currentLyricIndex > 0 && currentLyricIndex < currentLyricsArray.length + 1) {
+                displayPrev.innerText = currentLyricsArray[currentLyricIndex - 1].split('\n')[0] + "...";
+            } else {
+                displayPrev.innerText = "";
+            }
+
+            if (currentLyricIndex >= -1 && currentLyricIndex < currentLyricsArray.length - 1) {
+                displayNext.innerText = currentLyricsArray[currentLyricIndex + 1].split('\n')[0] + "...";
+            } else {
+                displayNext.innerText = "";
+            }
+
+            displayPrev.classList.add('slide-up-anim');
+            displayMain.classList.add('slide-up-anim');
+            displayNext.classList.add('slide-up-anim');
+        }
+
+        // เพิ่มพารามิเตอร์ isAuto เพื่อแยกว่าเป็นการกดปุ่มเอง หรือระบบออโต้เลื่อนให้
+        function nextLyric(isAuto = false) {
+            if (currentLyricsArray.length === 0) return;
+            if (currentLyricIndex < currentLyricsArray.length) {
+                currentLyricIndex++;
+                updateLyricDisplay();
+
+                // บันทึกเวลาเฉพาะตอนที่ 'คนกดเอง'
+                if (!isAuto && currentSongId && ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
+                    const songIndex = songs.findIndex(s => s.id === currentSongId);
+                    if (songIndex !== -1) {
+                        if (!songs[songIndex].timestamps) songs[songIndex].timestamps = [];
+                        songs[songIndex].timestamps[currentLyricIndex] = ytPlayer.getCurrentTime();
+                        localStorage.setItem('mySongs', JSON.stringify(songs));
+                    }
+                }
+            }
+        }
+
+        function prevLyric() {
+            if (currentLyricIndex > -1) {
+                // หากกดย้อนกลับ ให้ล้างข้อมูลเวลาของท่อนปัจจุบัน เพื่อให้กด Next รอบใหม่เป็นการบันทึกใหม่
+                if (currentSongId) {
+                    const songIndex = songs.findIndex(s => s.id === currentSongId);
+                    if (songIndex !== -1 && songs[songIndex].timestamps) {
+                        songs[songIndex].timestamps[currentLyricIndex] = null;
+                        localStorage.setItem('mySongs', JSON.stringify(songs));
+                    }
+                }
+                
+                currentLyricIndex--;
+                updateLyricDisplay();
+            }
+        }
+
+        function resetSync() {
+            if(confirm('ต้องการล้างเวลาที่ซิงค์ไว้ของเพลงนี้ทั้งหมดเพื่อเริ่มจับจังหวะใหม่ใช่หรือไม่?')) {
+                const songIndex = songs.findIndex(s => s.id === currentSongId);
+                if (songIndex !== -1) {
+                    songs[songIndex].timestamps = [];
+                    localStorage.setItem('mySongs', JSON.stringify(songs));
+                    currentLyricIndex = -1;
+                    updateLyricDisplay();
+                    if (ytPlayer && typeof ytPlayer.seekTo === 'function') ytPlayer.seekTo(0);
+                    alert('ล้างเวลาซิงค์เรียบร้อยครับ กด Next เพื่อเริ่มจับจังหวะใหม่ได้เลย');
+                }
+            }
+        }
+
+        renderSongList();
+    </script>
+</body>
+</html>
