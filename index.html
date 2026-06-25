@@ -33,10 +33,15 @@
         input:focus, textarea:focus { outline: none; border-color: #00b4db; background: rgba(0, 0, 0, 0.4); }
         textarea { height: 180px; resize: vertical; line-height: 1.5; }
         
-        .song-item { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px); padding: 15px 20px; border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s ease, background 0.2s ease; }
+        .song-item { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px); padding: 12px 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s ease, background 0.2s ease; gap: 10px; }
         .song-item:hover { transform: translateX(5px); background: rgba(255, 255, 255, 0.08); }
-        .song-item-title { font-size: 1.1em; letter-spacing: 0.5px; flex-grow: 1; }
-        .song-item-actions { display: flex; gap: 6px; }
+        
+        /* สไตล์สำหรับรูปภาพหน้าปกและชื่อเพลง */
+        .song-info-wrapper { display: flex; align-items: center; flex-grow: 1; min-width: 0; }
+        .song-thumbnail { width: 85px; height: 48px; border-radius: 6px; object-fit: cover; margin-right: 12px; flex-shrink: 0; background: #000; box-shadow: 0 2px 5px rgba(0,0,0,0.4); }
+        .song-item-title { font-size: 1.05em; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .song-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
         .btn-action { margin: 0; padding: 8px 12px; border-radius: 30px; font-size: 0.85em; width: auto; }
         
         @keyframes slideUp { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
@@ -132,6 +137,13 @@
         import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+        // ----------------------------------------------------
+        // ตั้งค่าอีเมลที่มีสิทธิ์เป็น Admin (แก้ไข เพิ่ม ลบ เพลงได้)
+        // ใส่ Email ของคุณที่นี่ (สามารถเพิ่มหลายอันได้โดยคั่นด้วยลูกน้ำ)
+        // ----------------------------------------------------
+        const ALLOWED_EMAILS = ["sashikiwa@gmail.com", "panupong.bb27115@gmail.com"]; 
+        // ----------------------------------------------------
+
         const firebaseConfig = {
             apiKey: "AIzaSyDV-gefPFqCmAvYmrSXeb5W1JUKf4Ev50Q",
             authDomain: "musix-syn.firebaseapp.com",
@@ -156,9 +168,9 @@
         window.ytPlayer = null;
         window.syncInterval = null;
         window.isLoggedIn = false; 
+        window.isAdmin = false; // ตัวแปรใหม่สำหรับเช็คสิทธิ์ Admin
         window.isYTApiReady = false;
 
-        // --- แก้ไขปัญหาโหลด YouTube: สั่งโหลด YouTube API ผ่าน Javascript แบบ Dynamic แทน ---
         window.onYouTubeIframeAPIReady = function() {
             window.isYTApiReady = true; 
         };
@@ -171,20 +183,23 @@
         } else {
             document.head.appendChild(tag);
         }
-        // ----------------------------------------------------------------------------------
 
         onAuthStateChanged(auth, (user) => {
             window.isLoggedIn = !!user;
+            window.isAdmin = user && ALLOWED_EMAILS.includes(user.email); // ตรวจสอบว่าเป็น Admin หรือไม่
             
             if (window.isLoggedIn) {
                 document.getElementById('btnHeaderLogout').style.display = 'block';
                 document.getElementById('btnHeaderLogin').style.display = 'none';
-                if (document.getElementById('view-list').classList.contains('active')) {
-                    document.getElementById('btnAddSong').style.display = 'block';
-                }
             } else {
                 document.getElementById('btnHeaderLogout').style.display = 'none';
                 document.getElementById('btnHeaderLogin').style.display = 'block';
+            }
+
+            // แสดงปุ่มเพิ่มเพลงเฉพาะ Admin
+            if (window.isAdmin && document.getElementById('view-list').classList.contains('active')) {
+                document.getElementById('btnAddSong').style.display = 'block';
+            } else {
                 document.getElementById('btnAddSong').style.display = 'none';
             }
             
@@ -258,7 +273,7 @@
             if (viewId === 'view-list') {
                 headerTitle.innerText = 'คลังเพลงของฉัน';
                 
-                document.getElementById('btnAddSong').style.display = window.isLoggedIn ? 'block' : 'none';
+                document.getElementById('btnAddSong').style.display = window.isAdmin ? 'block' : 'none';
                 
                 window.renderSongList();
                 clearInterval(window.syncInterval);
@@ -269,9 +284,9 @@
             } else if (viewId === 'view-player') {
                 headerTitle.innerText = 'กำลังเล่นเพลง';
                 
-                if (window.isLoggedIn) {
+                if (window.isAdmin) {
                     document.getElementById('tsEditorTitle').innerText = "⏱ แก้ไข Timestamp (วินาที)";
-                    document.getElementById('tsEditorSub').innerText = "พิมพ์แก้ไขตัวเลขได้ทันที";
+                    document.getElementById('tsEditorSub').innerText = "พิมพ์แก้ไขตัวเลขได้ทันที (Admin)";
                     document.getElementById('tsEditorSub').style.color = "#00b4db";
                     document.getElementById('btnResetSync').style.display = 'block';
                 } else {
@@ -284,7 +299,7 @@
         }
 
         window.openAddView = function() {
-            if (!window.isLoggedIn) return;
+            if (!window.isAdmin) return;
             window.editingSongId = null;
             document.getElementById('headerTitle').innerText = 'เพิ่มเพลงใหม่';
             document.getElementById('inputTitle').value = '';
@@ -295,7 +310,7 @@
         }
 
         window.editSong = function(id) {
-            if (!window.isLoggedIn) return;
+            if (!window.isAdmin) return;
             const song = window.songs.find(s => s.id === id);
             if (!song) return;
 
@@ -309,8 +324,8 @@
         }
 
         window.saveSong = async function() {
-            if (!window.isLoggedIn) {
-                alert("ต้องเข้าสู่ระบบก่อนจึงจะบันทึกได้ครับ");
+            if (!window.isAdmin) {
+                alert("ต้องเข้าสู่ระบบด้วยอีเมล Admin ก่อนจึงจะบันทึกได้ครับ");
                 return;
             }
             
@@ -367,21 +382,28 @@
                 const item = document.createElement('div');
                 item.className = 'song-item';
                 
+                // สกัดรหัสวิดีโอเพื่อดึงรูปภาพหน้าปก
+                const videoId = window.extractYouTubeID(song.audioPath);
+                const thumbUrl = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : '';
+                
                 let actionsHtml = '';
-                if (window.isLoggedIn) {
+                if (window.isAdmin) {
                     actionsHtml = `
-                        <button class="btn-action btn-secondary" onclick="editSong('${song.id}')">✏️ แก้ไข</button>
+                        <button class="btn-action btn-secondary" onclick="editSong('${song.id}')">✏️</button>
                         <button class="btn-action btn-secondary" style="background:rgba(229, 57, 53, 0.2); border-color:rgba(229, 57, 53, 0.4); color:#ef5350;" onclick="deleteSong('${song.id}')">ลบ</button>
                     `;
                 }
                 
                 item.innerHTML = `
-                    <div class="song-item-title">
-                        ${song.title}
-                        <span style="font-size: 0.85em; color: #b0bec5; block-size: auto; display: block; margin-top: 2px;">🎤 ${song.artist || 'ไม่ระบุศิลปิน'}</span>
+                    <div class="song-info-wrapper">
+                        <img src="${thumbUrl}" class="song-thumbnail" onerror="this.style.display='none'" alt="Cover">
+                        <div class="song-item-title">
+                            ${song.title}
+                            <span style="font-size: 0.85em; color: #b0bec5; display: block; margin-top: 2px;">🎤 ${song.artist || 'ไม่ระบุศิลปิน'}</span>
+                        </div>
                     </div>
                     <div class="song-item-actions">
-                        <button class="btn-action" style="background: linear-gradient(45deg, #11998e, #38ef7d);" onclick="playSong('${song.id}')">▶ เล่น</button>
+                        <button class="btn-action" style="background: linear-gradient(45deg, #11998e, #38ef7d);" onclick="playSong('${song.id}')">▶</button>
                         ${actionsHtml}
                     </div>
                 `;
@@ -390,7 +412,7 @@
         }
 
         window.deleteSong = async function(id) {
-            if (!window.isLoggedIn) return;
+            if (!window.isAdmin) return;
             if(confirm('ต้องการลบเพลงนี้ใช่หรือไม่?')) {
                 try {
                     await deleteDoc(doc(db, "songs", id));
@@ -423,7 +445,6 @@
                     window.ytPlayer.loadVideoById(videoId);
                 }
             } else {
-                // --- เพิ่มการเช็ค window.YT ให้ครอบคลุมมากขึ้น ---
                 if (window.isYTApiReady || (window.YT && window.YT.Player)) {
                     window.ytPlayer = new YT.Player('youtubePlayer', {
                         height: '100%',
@@ -475,7 +496,7 @@
         }
 
         window.saveTimestampsToFirebase = async function() {
-            if (!window.isLoggedIn) return;
+            if (!window.isAdmin) return;
             const song = window.songs.find(s => s.id === window.currentSongId);
             if (song) {
                 try {
@@ -532,7 +553,7 @@
                 
                 input.value = (song.timestamps && song.timestamps[index] != null) ? song.timestamps[index].toFixed(1) : '';
                 
-                if (!window.isLoggedIn) {
+                if (!window.isAdmin) {
                     input.readOnly = true;
                     input.style.border = 'none';
                     input.style.background = 'transparent';
@@ -625,7 +646,8 @@
                 window.currentLyricIndex++;
                 window.updateLyricDisplay();
 
-                if (!isAuto && window.isLoggedIn && window.currentSongId && window.ytPlayer && typeof window.ytPlayer.getCurrentTime === 'function') {
+                // บันทึกจังหวะอัตโนมัติเฉพาะเมื่อเป็น Admin และกดเอง (ไม่ใช่ Auto จากระบบซิงค์)
+                if (!isAuto && window.isAdmin && window.currentSongId && window.ytPlayer && typeof window.ytPlayer.getCurrentTime === 'function') {
                     const songIndex = window.songs.findIndex(s => s.id === window.currentSongId);
                     if (songIndex !== -1) {
                         if (!window.songs[songIndex].timestamps) window.songs[songIndex].timestamps = [];
@@ -638,7 +660,7 @@
 
         window.prevLyric = function() {
             if (window.currentLyricIndex > -1) {
-                if (window.isLoggedIn && window.currentSongId) {
+                if (window.isAdmin && window.currentSongId) {
                     const songIndex = window.songs.findIndex(s => s.id === window.currentSongId);
                     if (songIndex !== -1 && window.songs[songIndex].timestamps) {
                         window.songs[songIndex].timestamps[window.currentLyricIndex] = null;
@@ -652,7 +674,7 @@
         }
 
         window.resetSync = function() {
-            if (!window.isLoggedIn) return;
+            if (!window.isAdmin) return;
             if(confirm('ต้องการล้างเวลาที่ซิงค์ไว้ของเพลงนี้ทั้งหมดเพื่อเริ่มจับจังหวะใหม่ใช่หรือไม่?')) {
                 const songIndex = window.songs.findIndex(s => s.id === window.currentSongId);
                 if (songIndex !== -1) {
