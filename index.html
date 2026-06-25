@@ -132,7 +132,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getAuth, signInWithRedirect, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDV-gefPFqCmAvYmrSXeb5W1JUKf4Ev50Q",
@@ -162,25 +162,30 @@
         onAuthStateChanged(auth, (user) => {
             window.isLoggedIn = !!user;
             
-            // อัปเดตปุ่มบน Header ตามสถานะการล็อกอิน
+            // อัปเดตปุ่มบน Header และปุ่มเพิ่มเพลง ตามสถานะการล็อกอิน
             if (window.isLoggedIn) {
                 document.getElementById('btnHeaderLogout').style.display = 'block';
                 document.getElementById('btnHeaderLogin').style.display = 'none';
+                if (document.getElementById('view-list').classList.contains('active')) {
+                    document.getElementById('btnAddSong').style.display = 'block';
+                }
             } else {
                 document.getElementById('btnHeaderLogout').style.display = 'none';
                 document.getElementById('btnHeaderLogin').style.display = 'block';
+                document.getElementById('btnAddSong').style.display = 'none';
             }
             
-            // โหลดคลังเพลงทันที ไม่ว่าจะล็อกอินหรือไม่ก็ตาม
+            // โหลดคลังเพลงใหม่เพื่ออัปเดตปุ่ม แก้ไข/ลบ
             fetchSongs(); 
         });
 
         window.loginWithGoogle = async function() {
             try {
-                await signInWithRedirect(auth, provider);
+                // กลับมาใช้ Popup เพราะปลดล็อก API Key เรียบร้อยแล้ว
+                await signInWithPopup(auth, provider);
             } catch (error) {
                 console.error("Login Error:", error);
-                alert("เกิดข้อผิดพลาดในการเปลี่ยนหน้าเพื่อเข้าสู่ระบบ: " + error.message);
+                alert("เข้าสู่ระบบไม่สำเร็จ: " + error.message);
             }
         }
 
@@ -214,7 +219,14 @@
                     });
                 });
                 document.getElementById('loadingOverlay').style.display = 'none';
-                window.showView('view-list');
+                
+                // ตรวจสอบว่าอยู่หน้า list หรือไม่ จะได้เรนเดอร์ให้ถูกต้อง
+                if (!document.getElementById('view-player').classList.contains('active') && 
+                    !document.getElementById('view-add').classList.contains('active')) {
+                    window.showView('view-list');
+                } else {
+                    window.renderSongList();
+                }
             } catch (error) {
                 console.error("Error fetching songs:", error);
                 alert("เชื่อมต่อฐานข้อมูลไม่สำเร็จ กรุณาตรวจสอบสิทธิ์ Rules ว่าอนุญาตให้อ่านข้อมูลได้หรือไม่");
@@ -354,7 +366,7 @@
                 const item = document.createElement('div');
                 item.className = 'song-item';
                 
-                // ควบคุมปุ่มแก้ไขและลบ
+                // ควบคุมปุ่มแก้ไขและลบตามสถานะล็อกอิน
                 let actionsHtml = '';
                 if (window.isLoggedIn) {
                     actionsHtml = `
