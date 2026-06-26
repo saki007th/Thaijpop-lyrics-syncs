@@ -1,98 +1,159 @@
-body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; }
-header { background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid rgba(255, 255, 255, 0.1); letter-spacing: 1px; }
+/* --- Apple Style Typography & Background --- */
+body { 
+    /* ใช้ฟอนต์ระบบของ Apple เป็นอันดับแรก */
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    margin: 0; 
+    padding: 0; 
+    background-color: #000000; /* ดำสนิทแบบ Apple Dark Mode */
+    color: #f5f5f7; /* ขาวนวล สบายตา */
+    min-height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+    -webkit-font-smoothing: antialiased;
+}
 
-.header-title { font-size: 1.3em; font-weight: bold; flex-grow: 1; text-align: center; }
+/* --- Apple Navigation Bar (Header) --- */
+header { 
+    background: rgba(28, 28, 30, 0.7); /* สีเทาโปร่งแสง */
+    backdrop-filter: saturate(180%) blur(20px); 
+    -webkit-backdrop-filter: saturate(180%) blur(20px); 
+    color: #f5f5f7; 
+    padding: 12px 20px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    position: sticky; 
+    top: 0; 
+    z-index: 10; 
+    border-bottom: 0.5px solid rgba(255, 255, 255, 0.1); 
+}
+
+.header-title { font-size: 1.2em; font-weight: 600; flex-grow: 1; text-align: center; letter-spacing: -0.5px; }
 .header-btn-group { width: 100px; display: flex; justify-content: flex-end; }
 .header-spacer { width: 100px; } 
 
-.btn-auth { background: transparent; border: 1px solid; padding: 6px 14px; font-size: 0.85em; border-radius: 20px; cursor: pointer; transition: all 0.3s ease; font-weight: bold; }
-.btn-login { color: #00b4db; border-color: #00b4db; }
-.btn-login:hover { background: rgba(0, 180, 219, 0.1); }
-.btn-logout { color: #ff5252; border-color: rgba(255, 82, 82, 0.5); }
-.btn-logout:hover { background: rgba(255, 82, 82, 0.1); }
+/* ปุ่ม Login/Logout ขนาดเล็กบน Header */
+.btn-auth { background: transparent; border: none; padding: 6px 12px; font-size: 0.9em; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
+.btn-login { color: #0a84ff; /* iOS Blue */ }
+.btn-logout { color: #ff453a; /* iOS Red */ }
+.btn-auth:hover { opacity: 0.7; }
 
-.container { padding: 20px; max-width: 600px; margin: auto; flex-grow: 1; width: 100%; box-sizing: border-box; }
+.container { padding: 20px; max-width: 650px; margin: auto; flex-grow: 1; width: 100%; box-sizing: border-box; }
 
-button { background: linear-gradient(45deg, #00b4db, #0083b0); color: white; border: none; padding: 14px 20px; font-size: 1.1em; font-weight: bold; border-radius: 50px; cursor: pointer; width: 100%; margin-top: 15px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 180, 219, 0.3); }
-button:hover { box-shadow: 0 6px 20px rgba(0, 180, 219, 0.5); transform: translateY(-2px); }
-button:active { transform: scale(0.96); box-shadow: 0 2px 10px rgba(0, 180, 219, 0.2); }
-button:disabled { background: #546e7a; cursor: not-allowed; box-shadow: none; transform: none; }
+/* --- Apple Style Primary Buttons --- */
+button { 
+    background: #0a84ff; 
+    color: white; 
+    border: none; 
+    padding: 14px 20px; 
+    font-size: 1.05em; 
+    font-weight: 600; 
+    border-radius: 14px; /* ขอบโค้งมนแบบ iOS */
+    cursor: pointer; 
+    width: 100%; 
+    margin-top: 15px; 
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1); 
+}
+button:hover { background: #0071e3; transform: scale(0.98); }
+button:active { transform: scale(0.95); opacity: 0.8; }
+button:disabled { background: #3a3a3c; color: #8e8e93; cursor: not-allowed; transform: none; }
 
-.btn-secondary { background: rgba(255, 255, 255, 0.1); box-shadow: none; border: 1px solid rgba(255, 255, 255, 0.2); }
-.btn-secondary:hover { background: rgba(255, 255, 255, 0.2); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+/* ปุ่มรอง (Secondary) */
+.btn-secondary { background: #2c2c2e; color: #f5f5f7; }
+.btn-secondary:hover { background: #3a3a3c; }
 
-label { font-size: 0.9em; color: #b0bec5; margin-top: 10px; display: block; }
-input, textarea { width: 100%; padding: 12px 15px; margin-top: 8px; margin-bottom: 20px; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; color: #ffffff; font-size: 1em; box-sizing: border-box; transition: border-color 0.3s ease; }
-input:focus, textarea:focus { outline: none; border-color: #00b4db; background: rgba(0, 0, 0, 0.4); }
-textarea { height: 180px; resize: vertical; line-height: 1.5; }
+/* --- Inputs & Textareas --- */
+label { font-size: 0.85em; color: #8e8e93; margin-top: 15px; margin-bottom: 5px; display: block; font-weight: 500; }
+input, textarea { 
+    width: 100%; 
+    padding: 14px 16px; 
+    background: #1c1c1e; 
+    border: 1px solid transparent; 
+    border-radius: 12px; 
+    color: #f5f5f7; 
+    font-size: 1em; 
+    font-family: inherit;
+    box-sizing: border-box; 
+    transition: all 0.2s ease; 
+}
+input:focus, textarea:focus { outline: none; border-color: #0a84ff; background: #2c2c2e; }
+textarea { height: 160px; resize: vertical; line-height: 1.5; }
+.search-input { margin-top: 10px; margin-bottom: 10px; background: #1c1c1e; border-radius: 10px; padding: 12px 16px; font-size: 1.05em; }
 
-/* ช่องค้นหา */
-.search-input { margin-top: 15px; margin-bottom: 5px; }
-
-/* --- ระบบจัดการตาราง (Grid) และแถบเลื่อน --- */
+/* --- Apple Style Grid & Cards --- */
 #songList {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
-    gap: 15px; 
-    max-height: 55vh; 
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+    gap: 16px; 
+    max-height: 58vh; 
     overflow-y: auto; 
-    padding: 5px;
-    padding-right: 10px; 
+    padding-bottom: 20px;
 }
 
-#songList::-webkit-scrollbar { width: 6px; }
-#songList::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
-#songList::-webkit-scrollbar-thumb { background: rgba(0, 180, 219, 0.5); border-radius: 10px; }
-#songList::-webkit-scrollbar-thumb:hover { background: #00b4db; }
+#songList::-webkit-scrollbar { width: 5px; }
+#songList::-webkit-scrollbar-track { background: transparent; }
+#songList::-webkit-scrollbar-thumb { background: #48484a; border-radius: 10px; }
 
-/* --- ปรับ UI ของเพลงแต่ละกล่องให้เป็นแบบการ์ด --- */
-.song-item { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px); padding: 15px; border-radius: 12px; margin-bottom: 0; border: 1px solid rgba(255, 255, 255, 0.08); display: flex; flex-direction: column; justify-content: space-between; align-items: center; transition: transform 0.2s ease, background 0.2s ease; gap: 12px; }
-.song-item:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.08); }
+.song-item { 
+    background: #1c1c1e; 
+    padding: 16px; 
+    border-radius: 18px; 
+    margin-bottom: 0; 
+    border: none; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: space-between; 
+    align-items: center; 
+    transition: transform 0.2s ease, background 0.2s ease; 
+    gap: 14px; 
+}
+.song-item:hover { transform: scale(1.02); background: #2c2c2e; }
 
 .song-info-wrapper { display: flex; flex-direction: column; align-items: flex-start; flex-grow: 1; min-width: 0; overflow: hidden; width: 100%; }
-.song-thumbnail { width: 100%; height: 130px; border-radius: 8px; object-fit: cover; margin-right: 0; margin-bottom: 12px; flex-shrink: 0; background: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+.song-thumbnail { width: 100%; height: 120px; border-radius: 10px; object-fit: cover; margin-bottom: 12px; flex-shrink: 0; background: #2c2c2e; }
 
-/* ปรับปรุงให้สามารถเลื่อนซ้ายขวาได้เมื่อชื่อเพลงยาวเกินขอบ */
 .song-item-title-container { width: 100%; flex-grow: 1; min-width: 0; overflow-x: auto; white-space: nowrap; scrollbar-width: none; -ms-overflow-style: none; }
 .song-item-title-container::-webkit-scrollbar { display: none; }
-.song-item-title { font-size: 1.05em; letter-spacing: 0.5px; display: inline-block; padding-right: 10px; }
+.song-item-title { font-size: 1.05em; font-weight: 600; letter-spacing: -0.3px; display: inline-block; padding-right: 10px; color: #ffffff; }
 
 .song-item-actions { display: flex; gap: 8px; flex-shrink: 0; width: 100%; justify-content: center; }
-.btn-action { margin: 0; padding: 8px 12px; border-radius: 30px; font-size: 0.85em; width: auto; flex-grow: 1; text-align: center; }
+.btn-action { margin: 0; padding: 8px; border-radius: 10px; font-size: 0.9em; flex-grow: 1; text-align: center; }
 
-/* --- โครงสร้างอื่นๆ --- */
-@keyframes slideUp { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
-.slide-up-anim { animation: slideUp 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+/* --- Apple Music Lyric View Style --- */
+@keyframes slideUp { 0% { transform: translateY(15px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+.slide-up-anim { animation: slideUp 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
 
-/* --- ปรับปรุงกล่องเนื้อเพลง --- */
 .lyric-box { 
-    background: rgba(0, 0, 0, 0.3); 
-    border: 1px solid rgba(255, 255, 255, 0.15); 
-    padding: 25px 20px; 
-    border-radius: 16px; 
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6); 
-    min-height: 150px; 
+    background: rgba(28, 28, 30, 0.6); 
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 0.5px solid rgba(255, 255, 255, 0.08); 
+    padding: 35px 20px; 
+    border-radius: 24px; 
+    min-height: 140px; 
     display: flex; 
     align-items: center; 
     justify-content: center; 
     text-align: center; 
-    font-size: clamp(1.1em, 4vw, 1.35em); 
-    font-weight: bold; 
-    line-height: 1.8; 
+    font-size: clamp(1.2em, 4.5vw, 1.5em); /* ใหญ่และอ่านง่ายขึ้นแบบ Apple Music */
+    font-weight: 700; 
+    line-height: 1.6; 
+    letter-spacing: -0.5px;
     margin: 15px 0; 
     white-space: pre-wrap; 
     word-break: break-word; 
     overflow-wrap: break-word;
     box-sizing: border-box; 
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5); 
     opacity: 0; 
     width: 100%;
+    color: #ffffff;
 }
 
 .lyric-sub { 
     text-align: center; 
     font-size: 1em; 
-    color: rgba(255, 255, 255, 0.4); 
+    font-weight: 600;
+    color: #8e8e93; /* สีเทาดรอปลงมาให้รู้ว่าเป็นท่อนถัดไป/ก่อนหน้า */
     white-space: pre-wrap; 
     word-break: break-word;
     overflow-wrap: break-word;
@@ -105,18 +166,24 @@ textarea { height: 180px; resize: vertical; line-height: 1.5; }
     opacity: 0; 
     width: 100%;
     line-height: 1.5;
+    transition: color 0.3s;
 }
 
-.youtube-container { position: relative; width: 100%; padding-bottom: 56.25%; margin-bottom: 15px; border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+/* --- YouTube Video Container --- */
+.youtube-container { position: relative; width: 100%; padding-bottom: 56.25%; margin-bottom: 20px; border-radius: 16px; overflow: hidden; background: #1c1c1e; }
 .youtube-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
 
-.timestamp-editor-container { margin-top: 25px; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 15px; }
-.timestamp-list { max-height: 180px; overflow-y: auto; padding-right: 5px; }
-.timestamp-list::-webkit-scrollbar { width: 6px; }
-.timestamp-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+/* --- Timestamp Editor (Admin) --- */
+.timestamp-editor-container { margin-top: 30px; background: #1c1c1e; border-radius: 16px; padding: 20px; }
+.timestamp-list { max-height: 180px; overflow-y: auto; padding-right: 8px; margin-top: 10px; }
+.timestamp-list::-webkit-scrollbar { width: 5px; }
+.timestamp-list::-webkit-scrollbar-thumb { background: #48484a; border-radius: 10px; }
 
-.view { display: none; animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+/* --- General View Transitions --- */
+.view { display: none; animation: fadeIn 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
 .view.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-.button-group { display: flex; gap: 10px; margin-top: 10px; }
-#loadingOverlay { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999; justify-content: center; align-items: center; font-size: 1.2em; font-weight: bold; flex-direction: column; gap: 15px; transition: opacity 0.3s; }
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+.button-group { display: flex; gap: 12px; margin-top: 15px; }
+
+/* --- Loading Overlay --- */
+#loadingOverlay { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 999; justify-content: center; align-items: center; font-size: 1.1em; font-weight: 600; color: #f5f5f7; flex-direction: column; gap: 15px; transition: opacity 0.3s; }
