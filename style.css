@@ -224,8 +224,44 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 /* ซ่อนเนื้อเพลงท่อนที่ผ่านมาแล้ว */
 #lyricPrev { display: none !important; }
 
-.youtube-container { position: relative; width: 100%; padding-bottom: 56.25%; margin-bottom: 20px; border-radius: 16px; overflow: hidden; background: #1c1c1e; flex-shrink: 0; }
-.youtube-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+/* --- YouTube Video Container พร้อม Ambient Light --- */
+.youtube-container { 
+    position: relative; 
+    width: 100%; 
+    padding-bottom: 56.25%; 
+    margin-bottom: 30px; /* เผื่อพื้นที่ด้านล่างให้แสงฟุ้งได้เต็มที่ */
+    border-radius: 16px; 
+    background: #1c1c1e; 
+    flex-shrink: 0; 
+    z-index: 1; /* จัดเลเยอร์ให้กรอบวิดีโออยู่ด้านหน้า */
+}
+
+/* สร้างแสง Ambient เรืองแสงอยู่ด้านหลังวิดีโอ */
+.youtube-container::before {
+    content: "";
+    position: absolute;
+    inset: -5px; /* ระยะความหนาของแสง */
+    border-radius: 20px; 
+    background: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff);
+    background-size: 300% 300%;
+    z-index: -1; /* ดันแสงไปไว้ด้านหลังสุด */
+    filter: blur(20px); /* ตั้งค่าให้แสงฟุ้งกระจายเหมือน Ambient Light */
+    opacity: 0.75; /* ความสว่างของแสง */
+    animation: appleAiGlow 8s ease-in-out infinite; /* เคลื่อนไหวช้าๆ นุ่มนวล */
+}
+
+/* บังคับให้ตัววิดีโอมีขอบโค้งมนแทน และเพิ่มเงาดำให้มีมิติซ้อนทับแสง */
+.youtube-container iframe { 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    border: none; 
+    border-radius: 16px; 
+    z-index: 2; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6); 
+}
 
 .timestamp-editor-container { margin-top: 30px; background: #1c1c1e; border-radius: 16px; padding: 20px; flex-shrink: 0; }
 .timestamp-list { max-height: 180px; overflow-y: auto; padding-right: 8px; margin-top: 10px; }
