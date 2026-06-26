@@ -255,11 +255,14 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 
 /* เผื่อพื้นที่ด้านล่างสุดของหน้าเล่นเพลง ไม่ให้ปุ่มลอยมาบังเนื้อหา และไม่บี้แบน */
 #view-player { 
-    display: flex; 
     flex-direction: column; 
     min-height: 80vh; 
     padding-bottom: 100px; 
 } 
+/* บังคับให้แสดงผลเฉพาะตอนที่ถูกเรียกใช้งาน (มีคลาส active) */
+#view-player.active {
+    display: flex;
+}
 
 .view { display: none; animation: fadeIn 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
 .view.active { display: block; }
