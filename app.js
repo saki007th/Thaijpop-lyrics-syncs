@@ -135,7 +135,6 @@ window.showView = function(viewId) {
         headerTitle.innerText = 'คลังเพลงของฉัน';
         document.getElementById('btnAddSong').style.display = window.isAdmin ? 'block' : 'none';
         
-        // เคลียร์ช่องค้นหาเมื่อกลับมาหน้าแรก
         const searchInput = document.getElementById('searchInput');
         if(searchInput) searchInput.value = '';
         
@@ -148,16 +147,23 @@ window.showView = function(viewId) {
     } else if (viewId === 'view-player') {
         headerTitle.innerText = 'กำลังเล่นเพลง';
         
+        const lyricControlBtnGroup = document.getElementById('lyricControlBtnGroup');
+        const timestampEditorSection = document.getElementById('timestampEditorSection');
+        const btnResetSync = document.getElementById('btnResetSync');
+
+        // ตรวจสอบสิทธิ์ Admin เพื่อซ่อนหรือแสดงเครื่องมือแก้ไข
         if (window.isAdmin) {
+            if(lyricControlBtnGroup) lyricControlBtnGroup.style.display = 'flex';
+            if(timestampEditorSection) timestampEditorSection.style.display = 'block';
+            if(btnResetSync) btnResetSync.style.display = 'block';
+            
             document.getElementById('tsEditorTitle').innerText = "⏱ แก้ไข Timestamp (วินาที)";
             document.getElementById('tsEditorSub').innerText = "พิมพ์แก้ไขตัวเลขได้ทันที (Admin)";
-            document.getElementById('tsEditorSub').style.color = "#00b4db";
-            document.getElementById('btnResetSync').style.display = 'block';
+            document.getElementById('tsEditorSub').style.color = "#0a84ff";
         } else {
-            document.getElementById('tsEditorTitle').innerText = "⏱ Timestamp (วินาที)";
-            document.getElementById('tsEditorSub').innerText = "โหมดดูอย่างเดียว";
-            document.getElementById('tsEditorSub').style.color = "#b0bec5";
-            document.getElementById('btnResetSync').style.display = 'none';
+            if(lyricControlBtnGroup) lyricControlBtnGroup.style.display = 'none';
+            if(timestampEditorSection) timestampEditorSection.style.display = 'none';
+            if(btnResetSync) btnResetSync.style.display = 'none';
         }
     }
 }
@@ -233,13 +239,11 @@ window.saveSong = async function() {
     }
 }
 
-// ฟังก์ชันค้นหาเพลง
 window.filterSongs = function() {
     const query = document.getElementById('searchInput').value.toLowerCase();
     window.renderSongList(query);
 }
 
-// อัปเดต renderSongList ให้รองรับการค้นหา (query)
 window.renderSongList = function(query = '') {
     const listContainer = document.getElementById('songList');
     listContainer.innerHTML = '';
