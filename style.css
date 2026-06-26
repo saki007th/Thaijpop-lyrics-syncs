@@ -87,8 +87,9 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 #songList::-webkit-scrollbar-track { background: transparent; }
 #songList::-webkit-scrollbar-thumb { background: #48484a; border-radius: 10px; }
 
+/* --- ปรับ UI การ์ดเพลง ให้รองรับแสงสีรุ้ง Apple Intelligence --- */
 .song-item { 
-    background: #1c1c1e; 
+    position: relative;
     padding: 16px; 
     border-radius: 18px; 
     margin-bottom: 0; 
@@ -97,10 +98,40 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     flex-direction: column; 
     justify-content: space-between; 
     align-items: center; 
-    transition: transform 0.2s ease, background 0.2s ease; 
-    gap: 14px; 
+    gap: 14px;
+    z-index: 1;
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); 
 }
-.song-item:hover { transform: scale(1.02); background: #2c2c2e; }
+
+/* สร้างแสงออร่าสีรุ้งซ่อนไว้ด้านหลังการ์ด */
+.song-item::before {
+    content: "";
+    position: absolute;
+    inset: -2px; 
+    border-radius: 20px; 
+    background: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff);
+    background-size: 300% 300%;
+    z-index: -2;
+    filter: blur(6px);
+    opacity: 0; 
+    transition: opacity 0.3s ease;
+    animation: appleAiGlow 6s ease-in-out infinite;
+}
+
+/* เลเยอร์สีดำทับแสงไว้ เพื่อให้การ์ดตรงกลางยังคงเป็นสีเข้ม */
+.song-item::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 18px;
+    background: #1c1c1e; 
+    z-index: -1;
+    transition: background 0.3s ease;
+}
+
+.song-item:hover { transform: scale(1.03) translateY(-3px); }
+.song-item:hover::before { opacity: 1; }
+.song-item:hover::after { background: rgba(44, 44, 46, 0.95); }
 
 .song-info-wrapper { display: flex; flex-direction: column; align-items: flex-start; flex-grow: 1; min-width: 0; overflow: hidden; width: 100%; }
 .song-thumbnail { width: 100%; height: 120px; border-radius: 10px; object-fit: cover; margin-bottom: 12px; flex-shrink: 0; background: #2c2c2e; }
@@ -115,11 +146,9 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 @keyframes slideUp { 0% { transform: translateY(15px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
 .slide-up-anim { animation: slideUp 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
 
+/* --- กล่องเนื้อเพลง Apple Intelligence Glow และไม่บี้แบน --- */
 .lyric-box { 
-    background: rgba(28, 28, 30, 0.6); 
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 0.5px solid rgba(255, 255, 255, 0.08); 
+    position: relative;
     padding: 35px 20px; 
     border-radius: 24px; 
     min-height: 140px; 
@@ -131,14 +160,45 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     font-weight: 700; 
     line-height: 1.6; 
     letter-spacing: -0.5px;
-    margin: 15px 0; 
+    margin: 20px 0; 
+    flex-grow: 1; /* ให้กล่องยืดหยุ่นเต็มพื้นที่ว่าง */
     white-space: pre-wrap; 
     word-break: break-word; 
     overflow-wrap: break-word;
     box-sizing: border-box; 
-    opacity: 0; 
     width: 100%;
     color: #ffffff;
+    border: none;
+    z-index: 1;
+}
+
+.lyric-box::before {
+    content: "";
+    position: absolute;
+    inset: -3px; 
+    border-radius: 26px; 
+    background: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff);
+    background-size: 300% 300%;
+    z-index: -2;
+    filter: blur(8px);
+    animation: appleAiGlow 6s ease-in-out infinite;
+}
+
+.lyric-box::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 24px;
+    background: rgba(28, 28, 30, 0.85); 
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    z-index: -1;
+}
+
+@keyframes appleAiGlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .lyric-sub { 
@@ -161,10 +221,13 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     transition: color 0.3s;
 }
 
-.youtube-container { position: relative; width: 100%; padding-bottom: 56.25%; margin-bottom: 20px; border-radius: 16px; overflow: hidden; background: #1c1c1e; }
+/* ซ่อนเนื้อเพลงท่อนที่ผ่านมาแล้ว */
+#lyricPrev { display: none !important; }
+
+.youtube-container { position: relative; width: 100%; padding-bottom: 56.25%; margin-bottom: 20px; border-radius: 16px; overflow: hidden; background: #1c1c1e; flex-shrink: 0; }
 .youtube-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
 
-.timestamp-editor-container { margin-top: 30px; background: #1c1c1e; border-radius: 16px; padding: 20px; }
+.timestamp-editor-container { margin-top: 30px; background: #1c1c1e; border-radius: 16px; padding: 20px; flex-shrink: 0; }
 .timestamp-list { max-height: 180px; overflow-y: auto; padding-right: 8px; margin-top: 10px; }
 .timestamp-list::-webkit-scrollbar { width: 5px; }
 .timestamp-list::-webkit-scrollbar-thumb { background: #48484a; border-radius: 10px; }
@@ -180,18 +243,23 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     width: 90%; 
     max-width: 500px; 
     z-index: 50; 
-    background: rgba(28, 28, 30, 0.7); 
+    background: rgba(28, 28, 30, 0.8); 
     backdrop-filter: blur(20px); 
     -webkit-backdrop-filter: blur(20px);
-    padding: 15px; 
-    border-radius: 24px; 
+    padding: 12px; 
+    border-radius: 20px; 
     border: 0.5px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 #lyricControlBtnGroup button { margin-top: 0; }
 
-/* เผื่อพื้นที่ด้านล่างสุดของหน้าเล่นเพลง ไม่ให้ปุ่มลอยมาบังเนื้อหา */
-#view-player { padding-bottom: 120px; } 
+/* เผื่อพื้นที่ด้านล่างสุดของหน้าเล่นเพลง ไม่ให้ปุ่มลอยมาบังเนื้อหา และไม่บี้แบน */
+#view-player { 
+    display: flex; 
+    flex-direction: column; 
+    min-height: 80vh; 
+    padding-bottom: 100px; 
+} 
 
 .view { display: none; animation: fadeIn 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
 .view.active { display: block; }
