@@ -29,20 +29,38 @@ textarea { height: 180px; resize: vertical; line-height: 1.5; }
 /* ช่องค้นหา */
 .search-input { margin-top: 15px; margin-bottom: 5px; }
 
-.song-item { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px); padding: 12px 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s ease, background 0.2s ease; gap: 10px; }
-.song-item:hover { transform: translateX(5px); background: rgba(255, 255, 255, 0.08); }
+/* --- ส่วนที่เพิ่มเข้ามาใหม่: ระบบจัดการตาราง (Grid) และแถบเลื่อน --- */
+#songList {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+    gap: 15px; 
+    max-height: 55vh; 
+    overflow-y: auto; 
+    padding: 5px;
+    padding-right: 10px; 
+}
 
-.song-info-wrapper { display: flex; align-items: center; flex-grow: 1; min-width: 0; overflow: hidden; }
-.song-thumbnail { width: 85px; height: 48px; border-radius: 6px; object-fit: cover; margin-right: 12px; flex-shrink: 0; background: #000; box-shadow: 0 2px 5px rgba(0,0,0,0.4); }
+#songList::-webkit-scrollbar { width: 6px; }
+#songList::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+#songList::-webkit-scrollbar-thumb { background: rgba(0, 180, 219, 0.5); border-radius: 10px; }
+#songList::-webkit-scrollbar-thumb:hover { background: #00b4db; }
+
+/* --- ส่วนที่แก้ไข: ปรับ UI ของเพลงแต่ละกล่องให้เป็นแบบการ์ด --- */
+.song-item { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px); padding: 15px; border-radius: 12px; margin-bottom: 0; border: 1px solid rgba(255, 255, 255, 0.08); display: flex; flex-direction: column; justify-content: space-between; align-items: center; transition: transform 0.2s ease, background 0.2s ease; gap: 12px; }
+.song-item:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.08); }
+
+.song-info-wrapper { display: flex; flex-direction: column; align-items: flex-start; flex-grow: 1; min-width: 0; overflow: hidden; width: 100%; }
+.song-thumbnail { width: 100%; height: 130px; border-radius: 8px; object-fit: cover; margin-right: 0; margin-bottom: 12px; flex-shrink: 0; background: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
 
 /* ปรับปรุงให้สามารถเลื่อนซ้ายขวาได้เมื่อชื่อเพลงยาวเกินขอบ */
-.song-item-title-container { flex-grow: 1; min-width: 0; overflow-x: auto; white-space: nowrap; scrollbar-width: none; -ms-overflow-style: none; }
+.song-item-title-container { width: 100%; flex-grow: 1; min-width: 0; overflow-x: auto; white-space: nowrap; scrollbar-width: none; -ms-overflow-style: none; }
 .song-item-title-container::-webkit-scrollbar { display: none; }
 .song-item-title { font-size: 1.05em; letter-spacing: 0.5px; display: inline-block; padding-right: 10px; }
 
-.song-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
-.btn-action { margin: 0; padding: 8px 12px; border-radius: 30px; font-size: 0.85em; width: auto; }
+.song-item-actions { display: flex; gap: 8px; flex-shrink: 0; width: 100%; justify-content: center; }
+.btn-action { margin: 0; padding: 8px 12px; border-radius: 30px; font-size: 0.85em; width: auto; flex-grow: 1; text-align: center; }
 
+/* --- ส่วนโครงสร้างเดิมด้านล่าง คงไว้ตามปกติ --- */
 @keyframes slideUp { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
 .slide-up-anim { animation: slideUp 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 
