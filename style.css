@@ -29,7 +29,7 @@ textarea { height: 180px; resize: vertical; line-height: 1.5; }
 /* ช่องค้นหา */
 .search-input { margin-top: 15px; margin-bottom: 5px; }
 
-/* --- ส่วนที่เพิ่มเข้ามาใหม่: ระบบจัดการตาราง (Grid) และแถบเลื่อน --- */
+/* --- ระบบจัดการตาราง (Grid) และแถบเลื่อน --- */
 #songList {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
@@ -45,7 +45,7 @@ textarea { height: 180px; resize: vertical; line-height: 1.5; }
 #songList::-webkit-scrollbar-thumb { background: rgba(0, 180, 219, 0.5); border-radius: 10px; }
 #songList::-webkit-scrollbar-thumb:hover { background: #00b4db; }
 
-/* --- ส่วนที่แก้ไข: ปรับ UI ของเพลงแต่ละกล่องให้เป็นแบบการ์ด --- */
+/* --- ปรับ UI ของเพลงแต่ละกล่องให้เป็นแบบการ์ด --- */
 .song-item { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px); padding: 15px; border-radius: 12px; margin-bottom: 0; border: 1px solid rgba(255, 255, 255, 0.08); display: flex; flex-direction: column; justify-content: space-between; align-items: center; transition: transform 0.2s ease, background 0.2s ease; gap: 12px; }
 .song-item:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.08); }
 
@@ -60,12 +60,53 @@ textarea { height: 180px; resize: vertical; line-height: 1.5; }
 .song-item-actions { display: flex; gap: 8px; flex-shrink: 0; width: 100%; justify-content: center; }
 .btn-action { margin: 0; padding: 8px 12px; border-radius: 30px; font-size: 0.85em; width: auto; flex-grow: 1; text-align: center; }
 
-/* --- ส่วนโครงสร้างเดิมด้านล่าง คงไว้ตามปกติ --- */
+/* --- โครงสร้างอื่นๆ --- */
 @keyframes slideUp { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
 .slide-up-anim { animation: slideUp 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 
-.lyric-box { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.15); padding: 30px 20px; border-radius: 16px; box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6); min-height: 150px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 1.4em; font-weight: bold; line-height: 1.6; margin: 15px 0; white-space: pre-wrap; text-shadow: 0 2px 4px rgba(0,0,0,0.5); opacity: 0; }
-.lyric-sub { text-align: center; font-size: 1em; color: rgba(255, 255, 255, 0.4); white-space: pre-wrap; min-height: 3em; display: flex; align-items: center; justify-content: center; padding: 0 20px; opacity: 0; }
+/* --- ปรับปรุงกล่องเนื้อเพลง --- */
+.lyric-box { 
+    background: rgba(0, 0, 0, 0.3); 
+    border: 1px solid rgba(255, 255, 255, 0.15); 
+    padding: 25px 20px; 
+    border-radius: 16px; 
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6); 
+    min-height: 150px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    text-align: center; 
+    font-size: clamp(1.1em, 4vw, 1.35em); 
+    font-weight: bold; 
+    line-height: 1.8; 
+    margin: 15px 0; 
+    white-space: pre-wrap; 
+    word-break: break-word; 
+    overflow-wrap: break-word;
+    box-sizing: border-box; 
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5); 
+    opacity: 0; 
+    width: 100%;
+}
+
+.lyric-sub { 
+    text-align: center; 
+    font-size: 1em; 
+    color: rgba(255, 255, 255, 0.4); 
+    white-space: pre-wrap; 
+    word-break: break-word;
+    overflow-wrap: break-word;
+    min-height: 3em; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    padding: 10px 20px; 
+    box-sizing: border-box;
+    opacity: 0; 
+    width: 100%;
+    line-height: 1.5;
+}
+
 .youtube-container { position: relative; width: 100%; padding-bottom: 56.25%; margin-bottom: 15px; border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
 .youtube-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
 
