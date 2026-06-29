@@ -60,24 +60,9 @@
         <div id="view-add" class="view">
             <label>ชื่อเพลง:</label>
             <input type="text" id="inputTitle" placeholder="เช่น ソワレ (Soirée)">
-            <label>ชื่อศิลปิน:</label>
-            <input type="text" id="inputArtist" placeholder="เช่น 星街すいせい (Hoshimachi Suisei)">
+            <label>ชื่อศิลปิน (หากมีหลายคน สามารถใส่ลูกน้ำ หรือ [ชื่อ1] [ชื่อ2]):</label>
+            <input type="text" id="inputArtist" placeholder="เช่น [Suisei] [Miko] หรือ Suisei, Miko">
             
-            <!-- เพิ่มระบบเลือกว่ามีนักร้องหลายคน -->
-            <div style="display: flex; align-items: center; gap: 10px; margin-top: 15px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px;">
-                <input type="checkbox" id="inputIsMultiSinger" onchange="toggleMultiSingerHelp()" style="width: 20px; height: 20px; margin: 0; cursor: pointer;">
-                <label for="inputIsMultiSinger" style="margin: 0; color: #0a84ff; font-weight: bold; font-size: 0.95em; cursor: pointer;">🎤 เพลงนี้มีนักร้องหลายคน</label>
-            </div>
-            <!-- กล่องอธิบายวิธีใช้งาน จะแสดงก็ต่อเมื่อติ๊กถูก -->
-            <div id="multiSingerHelp" style="display: none; font-size: 0.85em; color: #ff9800; margin-top: 8px; background: rgba(255, 152, 0, 0.1); padding: 12px; border-radius: 10px; line-height: 1.5;">
-                💡 <b>วิธีแบ่งท่อนนักร้อง:</b> ให้พิมพ์ชื่อนักร้องในวงเล็บเหลี่ยม <code>[ชื่อ]</code> ไว้ที่บรรทัดแรกของท่อนนั้น<br>
-                <b>ตัวอย่าง:</b><br>
-                [Suisei]<br>
-                ท่อนที่ 1 ของซุยจัง...<br><br>
-                [Miko]<br>
-                ท่อนที่ 2 ของมิโกะ...
-            </div>
-
             <label>ลิงก์ YouTube:</label>
             <input type="text" id="inputAudio" placeholder="วางลิงก์วิดีโอ YouTube ที่นี่">
             <label>เนื้อเพลง (เว้นบรรทัด 1 บรรทัดเปล่า เพื่อแบ่งท่อนถัดไป):</label>
@@ -107,10 +92,10 @@
                 <button onclick="nextLyric()" style="flex: 2; font-size: 1.2em;">⏭ ถัดไป</button>
             </div>
 
+            <!-- ส่วนตั้งเวลา & เพิ่มชื่อนักร้อง -->
             <div class="timestamp-editor-container" id="timestampEditorSection">
                 <h4 style="margin: 0 0 10px 0; font-weight: normal; color: #b0bec5; font-size: 0.95em; display: flex; justify-content: space-between;">
-                    <span id="tsEditorTitle">⏱ Timestamp (วินาที)</span>
-                    <span id="tsEditorSub" style="font-size: 0.85em; color: #00b4db;"></span>
+                    <span id="tsEditorTitle">⏱ ตั้งเวลา & ใส่ชื่อคนร้อง (Admin)</span>
                 </h4>
                 <div id="timestampList" class="timestamp-list"></div>
             </div>
