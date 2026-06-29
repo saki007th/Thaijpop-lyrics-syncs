@@ -319,7 +319,7 @@ window.renderSongList = function(query = '', artistFilter = 'All') {
 }
 
 // ----------------------------------------------------
-// ระบบเล่นเพลง & เนื้อเพลง
+// ระบบเล่นเพลง & เนื้อเพลง (ปรับปรุง Auto-scroll)
 // ----------------------------------------------------
 window.deleteSong = async function(id) {
     if (!window.isAdmin) return;
@@ -334,6 +334,26 @@ window.deleteSong = async function(id) {
     }
 }
 
+// ฟังก์ชันสำหรับสร้างรายการเนื้อเพลงทั้งหมดลงในคอนเทนเนอร์
+window.renderLyricsToContainer = function() {
+    const container = document.getElementById('lyricsContainer');
+    if(!container) return;
+    container.innerHTML = ''; 
+    
+    if (window.currentLyricsArray.length === 0) {
+        container.innerHTML = '<div class="lyric-line">ไม่มีเนื้อเพลง</div>';
+        return;
+    }
+
+    window.currentLyricsArray.forEach((lyric, index) => {
+        const lineDiv = document.createElement('div');
+        lineDiv.className = 'lyric-line';
+        lineDiv.id = `lyric-line-${index}`;
+        lineDiv.innerText = lyric;
+        container.appendChild(lineDiv);
+    });
+}
+
 window.playSong = function(id) {
     window.currentSongId = id;
     const song = window.songs.find(s => s.id === id);
@@ -345,6 +365,7 @@ window.playSong = function(id) {
     window.currentLyricsArray = song.lyrics.split(/\n\s*\n/);
     window.currentLyricIndex = -1;
     window.renderTimestampEditor();
+    window.renderLyricsToContainer(); // สร้างเนื้อเพลงทั้งหมดเตรียมไว้
     window.updateLyricDisplay();
     window.showView('view-player');
 
@@ -512,41 +533,37 @@ window.syncTimestampEditorUI = function() {
     });
 }
 
+// อัปเดตระบบแสดงผลเนื้อเพลงและเลื่อนจออัตโนมัติ
 window.updateLyricDisplay = function() {
-    const displayPrev = document.getElementById('lyricPrev');
-    const displayMain = document.getElementById('lyricDisplay');
-    const displayNext = document.getElementById('lyricNext');
+    const container = document.getElementById('lyricsContainer');
+    if (!container) return;
 
-    displayPrev.classList.remove('slide-up-anim');
-    displayMain.classList.remove('slide-up-anim');
-    displayNext.classList.remove('slide-up-anim');
+    // ลบสถานะไฮไลต์ (active) ออกจากทุกบรรทัดก่อน
+    const allLines = container.querySelectorAll('.lyric-line');
+    allLines.forEach(line => line.classList.remove('active'));
 
-    void displayMain.offsetWidth;
-
-    if (window.currentLyricIndex === -1) {
-        displayMain.innerText = "กดปุ่ม 'ถัดไป' เพื่อเริ่มแสดงเนื้อเพลง\n🎵 [ เริ่มเพลง ]";
-    } else if (window.currentLyricIndex >= window.currentLyricsArray.length) {
-        displayMain.innerText = "✨ [ จบเพลง ] ✨";
-    } else {
-        displayMain.innerText = window.currentLyricsArray[window.currentLyricIndex];
+    // ตรวจสอบและจัดการเลื่อนเนื้อเพลง
+    if (window.currentLyricIndex >= 0 && window.currentLyricIndex < window.currentLyricsArray.length) {
+        const activeLine = document.getElementById(`lyric-line-${window.currentLyricIndex}`);
+        
+        if (activeLine) {
+            activeLine.classList.add('active'); // ไฮไลต์บรรทัดปัจจุบัน
+            
+            // คำนวณตำแหน่งเพื่อเลื่อนท่อนปัจจุบันมาไว้ตรงกลางจอกล่องเนื้อเพลงพอดี
+            const containerCenter = container.clientHeight / 2;
+            const lineCenter = activeLine.offsetTop + (activeLine.clientHeight / 2);
+            
+            container.scrollTo({
+                top: lineCenter - containerCenter,
+                behavior: 'smooth'
+            });
+        }
+    } else if (window.currentLyricIndex === -1) {
+        // หากยังไม่เริ่มเพลง หรือเริ่มใหม่ ให้เลื่อนขึ้นไปบนสุด
+        container.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    if (window.currentLyricIndex > 0 && window.currentLyricIndex < window.currentLyricsArray.length + 1) {
-        displayPrev.innerText = window.currentLyricsArray[window.currentLyricIndex - 1].split('\n')[0] + "...";
-    } else {
-        displayPrev.innerText = "";
-    }
-
-    if (window.currentLyricIndex >= -1 && window.currentLyricIndex < window.currentLyricsArray.length - 1) {
-        displayNext.innerText = window.currentLyricsArray[window.currentLyricIndex + 1].split('\n')[0] + "...";
-    } else {
-        displayNext.innerText = "";
-    }
-
-    displayPrev.classList.add('slide-up-anim');
-    displayMain.classList.add('slide-up-anim');
-    displayNext.classList.add('slide-up-anim');
-
+    // อัปเดตแผงเวลาของฝั่ง Admin
     window.syncTimestampEditorUI();
 }
 
