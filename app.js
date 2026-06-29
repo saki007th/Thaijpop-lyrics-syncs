@@ -35,8 +35,9 @@ window.isYTApiReady = false;
 window.currentFilter = 'All'; 
 
 // ==========================================
-// ระบบเปลี่ยนสีธีม (Theme System)
+// ระบบเปลี่ยนสีธีม และ พื้นหลัง (Theme & Background)
 // ==========================================
+// 1. ระบบสีออร่า (Theme Glow)
 const themes = {
     'default': 'linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff)',
     'ocean': 'linear-gradient(120deg, #2193b0, #6dd5ed, #2193b0, #6dd5ed)',
@@ -47,15 +48,30 @@ const themes = {
 
 window.setTheme = function(themeName) {
     const glowColor = themes[themeName] || themes['default'];
-    // เปลี่ยนค่าตัวแปร CSS ของทั้งเอกสารแบบ Real-time
     document.documentElement.style.setProperty('--theme-glow', glowColor);
-    // บันทึกลงเครื่องผู้ใช้
     localStorage.setItem('selectedTheme', themeName);
 }
 
-// เมื่อโหลดหน้าเว็บ ให้ดึงธีมล่าสุดที่เคยเลือกไว้มาใช้งาน
+// 2. ระบบสีพื้นหลังจอ (Background Color)
+const backgrounds = {
+    'black': '#000000',
+    'darkgray': '#1c1c1e',
+    'midnight': '#0a0f24',
+    'deeppurple': '#1a0b2e'
+};
+
+window.setBackground = function(bgName) {
+    const bgColor = backgrounds[bgName] || backgrounds['black'];
+    document.documentElement.style.setProperty('--bg-color', bgColor);
+    localStorage.setItem('selectedBg', bgName);
+}
+
+// โหลดค่าที่เคยบันทึกไว้เมื่อเปิดเว็บ
 const savedTheme = localStorage.getItem('selectedTheme') || 'default';
 window.setTheme(savedTheme);
+
+const savedBg = localStorage.getItem('selectedBg') || 'black';
+window.setBackground(savedBg);
 // ==========================================
 
 
