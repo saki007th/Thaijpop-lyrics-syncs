@@ -72,7 +72,33 @@ input, textarea {
 }
 input:focus, textarea:focus { outline: none; border-color: #0a84ff; background: #2c2c2e; }
 textarea { height: 160px; resize: vertical; line-height: 1.5; }
-.search-input { margin-top: 10px; margin-bottom: 10px; background: #1c1c1e; border-radius: 10px; padding: 12px 16px; font-size: 1.05em; }
+.search-input { margin-top: 10px; margin-bottom: 5px; background: #1c1c1e; border-radius: 10px; padding: 12px 16px; font-size: 1.05em; }
+
+/* --- ส่วนเพิ่ม: แถบปุ่มลัดชื่อศิลปิน (Chips) --- */
+.artist-chips { 
+    display: flex; 
+    gap: 8px; 
+    overflow-x: auto; 
+    padding: 5px 0 10px 0; 
+    margin-bottom: 10px;
+    scrollbar-width: none; 
+}
+.artist-chips::-webkit-scrollbar { display: none; }
+.chip { 
+    background: #1c1c1e; 
+    color: #8e8e93; 
+    border: 1px solid #3a3a3c; 
+    padding: 6px 16px; 
+    border-radius: 20px; 
+    font-size: 0.85em; 
+    white-space: nowrap;
+    transition: all 0.2s;
+    cursor: pointer;
+    width: auto;
+    margin-top: 0;
+}
+.chip.active { background: #0a84ff; color: #ffffff; border-color: #0a84ff; }
+.chip:hover { background: #2c2c2e; }
 
 #songList {
     display: grid;
@@ -161,7 +187,7 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     line-height: 1.6; 
     letter-spacing: -0.5px;
     margin: 20px 0; 
-    flex-grow: 1; /* ให้กล่องยืดหยุ่นเต็มพื้นที่ว่าง */
+    flex-grow: 1; 
     white-space: pre-wrap; 
     word-break: break-word; 
     overflow-wrap: break-word;
@@ -229,28 +255,27 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     position: relative; 
     width: 100%; 
     padding-bottom: 56.25%; 
-    margin-bottom: 30px; /* เผื่อพื้นที่ด้านล่างให้แสงฟุ้งได้เต็มที่ */
+    margin-bottom: 30px; 
     border-radius: 16px; 
     background: #1c1c1e; 
     flex-shrink: 0; 
-    z-index: 1; /* จัดเลเยอร์ให้กรอบวิดีโออยู่ด้านหน้า */
+    z-index: 1; 
 }
 
 /* สร้างแสง Ambient เรืองแสงอยู่ด้านหลังวิดีโอ */
 .youtube-container::before {
     content: "";
     position: absolute;
-    inset: -5px; /* ระยะความหนาของแสง */
+    inset: -5px; 
     border-radius: 20px; 
     background: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff);
     background-size: 300% 300%;
-    z-index: -1; /* ดันแสงไปไว้ด้านหลังสุด */
-    filter: blur(20px); /* ตั้งค่าให้แสงฟุ้งกระจายเหมือน Ambient Light */
-    opacity: 0.75; /* ความสว่างของแสง */
-    animation: appleAiGlow 8s ease-in-out infinite; /* เคลื่อนไหวช้าๆ นุ่มนวล */
+    z-index: -1; 
+    filter: blur(20px); 
+    opacity: 0.75; 
+    animation: appleAiGlow 8s ease-in-out infinite; 
 }
 
-/* บังคับให้ตัววิดีโอมีขอบโค้งมนแทน และเพิ่มเงาดำให้มีมิติซ้อนทับแสง */
 .youtube-container iframe { 
     position: absolute; 
     top: 0; 
