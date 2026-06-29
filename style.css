@@ -4,7 +4,6 @@
     --bg-color: #000000; 
 }
 
-/* --- Apple Style Typography & Background --- */
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
     margin: 0; 
@@ -125,7 +124,7 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 .lyric-line:last-child { margin-bottom: 0; }
 .lyric-line.active { font-size: 1.45em; color: #ffffff; text-shadow: 0 0 15px rgba(255, 255, 255, 0.4); transform: scale(1.05); }
 
-/* --- สไตล์สำหรับป้ายชื่อนักร้อง (Multi-Singer Mode) --- */
+/* สไตล์สำหรับป้ายชื่อนักร้อง (Multi-Singer Mode) */
 .singer-label {
     font-size: 0.65em;
     color: rgba(255, 255, 255, 0.5);
@@ -139,8 +138,6 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     font-weight: bold;
     transition: all 0.3s ease;
 }
-
-/* เมื่อท่อนนั้นกำลังเล่น (Active) ป้ายชื่อจะเรืองแสง */
 .lyric-line.active .singer-label {
     color: #ffffff;
     background: rgba(255, 255, 255, 0.15);
@@ -150,10 +147,26 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 
 #lyricControlBtnGroup { display: flex; gap: 12px; width: 100%; margin-top: 10px; }
 #lyricControlBtnGroup button { margin-top: 0; }
+
 .timestamp-editor-container { margin-top: 30px; background: #1c1c1e; border-radius: 16px; padding: 20px; flex-shrink: 0; }
-.timestamp-list { max-height: 180px; overflow-y: auto; padding-right: 8px; margin-top: 10px; }
+.timestamp-list { max-height: 250px; overflow-y: auto; padding-right: 8px; margin-top: 10px; }
 .timestamp-list::-webkit-scrollbar { width: 5px; }
 .timestamp-list::-webkit-scrollbar-thumb { background: #48484a; border-radius: 10px; }
+
+/* ช่องใส่ชื่อนักร้องในหน้า Sync */
+.ts-singer-input {
+    width: 90px !important;
+    margin: 0 !important;
+    padding: 4px 6px !important;
+    font-size: 0.85em !important;
+    background: rgba(10, 132, 255, 0.1) !important;
+    border: 1px solid rgba(10, 132, 255, 0.3) !important;
+    border-radius: 5px !important;
+    color: #fff !important;
+    text-align: center !important;
+}
+.ts-singer-input::placeholder { color: rgba(255,255,255,0.3); }
+.ts-singer-input:focus { border-color: #0a84ff !important; background: rgba(10, 132, 255, 0.2) !important; }
 
 #view-player { flex-direction: column; min-height: 80vh; padding-bottom: 30px; } 
 #view-player.active { display: flex; }
