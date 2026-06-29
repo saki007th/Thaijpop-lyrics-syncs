@@ -70,14 +70,6 @@ window.setTheme(savedTheme);
 const savedBg = localStorage.getItem('selectedBg') || 'black';
 window.setBackground(savedBg);
 
-// ==========================================
-// ระบบสลับ UI กล่องข้อแนะนำนักร้องหลายคน
-// ==========================================
-window.toggleMultiSingerHelp = function() {
-    const isChecked = document.getElementById('inputIsMultiSinger').checked;
-    document.getElementById('multiSingerHelp').style.display = isChecked ? 'block' : 'none';
-}
-
 
 window.onYouTubeIframeAPIReady = function() {
     window.isYTApiReady = true; 
@@ -149,7 +141,7 @@ async function fetchSongs() {
                 audioPath: data.audioPath,
                 lyrics: data.lyrics,
                 timestamps: data.timestamps || [],
-                isMultiSinger: data.isMultiSinger || false // ดึงข้อมูลสถานะนักร้องหลายคนมาด้วย
+                singers: data.singers || [] // 🔴 เพิ่มฟิลด์สำหรับเก็บชื่อคนร้องแยกตามท่อน
             });
         });
         document.getElementById('loadingOverlay').style.display = 'none';
@@ -206,10 +198,6 @@ window.showView = function(viewId) {
             if(lyricControlBtnGroup) lyricControlBtnGroup.style.display = 'flex';
             if(timestampEditorSection) timestampEditorSection.style.display = 'block';
             if(btnResetSync) btnResetSync.style.display = 'block';
-            
-            document.getElementById('tsEditorTitle').innerText = "⏱ แก้ไข Timestamp (วินาที)";
-            document.getElementById('tsEditorSub').innerText = "พิมพ์แก้ไขตัวเลขได้ทันที (Admin)";
-            document.getElementById('tsEditorSub').style.color = "#0a84ff";
         } else {
             if(lyricControlBtnGroup) lyricControlBtnGroup.style.display = 'none';
             if(timestampEditorSection) timestampEditorSection.style.display = 'none';
@@ -231,11 +219,6 @@ window.openAddView = function() {
     document.getElementById('inputArtist').value = '';
     document.getElementById('inputAudio').value = '';
     document.getElementById('inputLyrics').value = '';
-    
-    // รีเซ็ตการตั้งค่านักร้องหลายคน
-    document.getElementById('inputIsMultiSinger').checked = false;
-    window.toggleMultiSingerHelp();
-
     window.showView('view-add');
 }
 
@@ -250,11 +233,6 @@ window.editSong = function(id) {
     document.getElementById('inputArtist').value = song.artist || '';
     document.getElementById('inputAudio').value = song.audioPath;
     document.getElementById('inputLyrics').value = song.lyrics;
-
-    // ดึงค่าสถานะนักร้องหลายคนมาแสดงในฟอร์ม
-    document.getElementById('inputIsMultiSinger').checked = song.isMultiSinger || false;
-    window.toggleMultiSingerHelp();
-
     window.showView('view-add');
 }
 
@@ -265,7 +243,7 @@ window.saveSong = async function() {
     const artist = document.getElementById('inputArtist').value.trim();
     const audioPath = document.getElementById('inputAudio').value.trim();
     const lyrics = document.getElementById('inputLyrics').value.trim();
-    const isMultiSinger = document.getElementById('inputIsMultiSinger').checked;
+    const btnSave = document.getElementById('btnSave');
 
     if (!title || !lyrics || !window.extractYouTubeID(audioPath)) {
         alert("ข้อมูลไม่ครบถ้วน หรือลิงก์ YouTube ไม่ถูกต้อง");
@@ -278,9 +256,9 @@ window.saveSong = async function() {
     try {
         if (window.editingSongId) {
             const songRef = doc(db, "songs", window.editingSongId);
-            await updateDoc(songRef, { title, artist, audioPath, lyrics, isMultiSinger });
+            await updateDoc(songRef, { title, artist, audioPath, lyrics });
         } else {
-            await addDoc(songsCollection, { title, artist, audioPath, lyrics, timestamps: [], isMultiSinger });
+            await addDoc(songsCollection, { title, artist, audioPath, lyrics, timestamps: [], singers: [] });
         }
         await fetchSongs();
         window.showView('view-list'); 
@@ -294,6 +272,9 @@ window.saveSong = async function() {
     }
 }
 
+// ----------------------------------------------------
+// ระบบ Filter ใหม่ (แยกรายชื่อคนร้องอัตโนมัติ)
+// ----------------------------------------------------
 window.filterByArtist = function(artistName) {
     window.currentFilter = artistName;
     const query = document.getElementById('searchInput').value.toLowerCase();
@@ -311,7 +292,32 @@ window.renderSongList = function(query = '', artistFilter = 'All') {
     listContainer.innerHTML = '';
 
     if (chipContainer) {
-        const artists = ['All', ...new Set(window.songs.map(s => s.artist || 'ไม่ระบุศิลปิน'))];
+        // 🔴 จับแยกชื่อศิลปินที่พิมพ์ติดกัน (รองรับแบบ [A] [B] หรือ A, B หรือ A / B)
+        let artistSet = new Set();
+        window.songs.forEach(s => {
+            let artistStr = s.artist || 'ไม่ระบุศิลปิน';
+            let parts = [];
+            
+            // ถ้ารูปแบบเป็นวงเล็บ [ชื่อ1] [ชื่อ2]
+            if (artistStr.includes('[')) {
+                const matches = artistStr.match(/\[(.*?)\]/g);
+                if (matches) {
+                    parts = matches.map(m => m.replace(/[\[\]]/g, ''));
+                } else {
+                    parts = [artistStr];
+                }
+            } else {
+                // ถ้าพิมพ์คั่นด้วย ลูกน้ำ หรือ ทับ (/) หรือ &
+                parts = artistStr.split(/[,/&]+/);
+            }
+            
+            parts.forEach(p => {
+                let cleanName = p.trim();
+                if (cleanName) artistSet.add(cleanName);
+            });
+        });
+
+        const artists = ['All', ...Array.from(artistSet)];
         chipContainer.innerHTML = artists.map(a => 
             `<button class="chip ${artistFilter === a ? 'active' : ''}" onclick="filterByArtist('${a}')">${a === 'All' ? 'ทั้งหมด' : a}</button>`
         ).join('');
@@ -320,8 +326,12 @@ window.renderSongList = function(query = '', artistFilter = 'All') {
     const filteredSongs = window.songs.filter(song => {
         const q = query.toLowerCase();
         const artist = song.artist || 'ไม่ระบุศิลปิน';
-        return ((song.title && song.title.toLowerCase().includes(q)) || artist.toLowerCase().includes(q)) 
-            && (artistFilter === 'All' || artist === artistFilter);
+        const searchMatch = (song.title && song.title.toLowerCase().includes(q)) || artist.toLowerCase().includes(q);
+        
+        // 🔴 กรองให้เจอถ้าชื่ออยู่ในกลุ่ม Multi-singer
+        const filterMatch = (artistFilter === 'All' || artist.includes(artistFilter));
+        
+        return searchMatch && filterMatch;
     });
 
     if (filteredSongs.length === 0) {
@@ -375,7 +385,7 @@ window.deleteSong = async function(id) {
 }
 
 // ----------------------------------------------------
-// ระบบเนื้อเพลง (รองรับโหมดนักร้องหลายคน)
+// ระบบเนื้อเพลง (พร้อมป้ายชื่อนักร้อง)
 // ----------------------------------------------------
 window.renderLyricsToContainer = function() {
     const container = document.getElementById('lyricsContainer');
@@ -388,7 +398,6 @@ window.renderLyricsToContainer = function() {
     }
 
     const currentSong = window.songs.find(s => s.id === window.currentSongId);
-    const isMulti = currentSong ? currentSong.isMultiSinger : false;
 
     window.currentLyricsArray.forEach((lyric, index) => {
         const lineDiv = document.createElement('div');
@@ -396,17 +405,13 @@ window.renderLyricsToContainer = function() {
         lineDiv.id = `lyric-line-${index}`;
 
         let htmlContent = lyric;
+        // 🔴 ถ้ามีการพิมพ์ชื่อคนร้องไว้ในหน้า Sync ให้ดึงมาแสดงเป็นป้ายชื่อ
+        const singerName = (currentSong.singers && currentSong.singers[index]) ? currentSong.singers[index] : null;
 
-        // หากเป็นโหมดนักร้องหลายคน ให้แยกชื่อออกจากวงเล็บเหลี่ยม [] มาทำเป็นป้ายชื่อ
-        if (isMulti) {
-            const match = lyric.match(/^\[(.*?)\]\s*([\s\S]*)$/);
-            if (match) {
-                const singerName = match[1];
-                const text = match[2];
-                htmlContent = `<div class="singer-label">${singerName}</div><div>${text}</div>`;
-            } else {
-                htmlContent = `<div>${lyric}</div>`;
-            }
+        if (singerName) {
+            htmlContent = `<div class="singer-label">${singerName}</div><div>${lyric}</div>`;
+        } else {
+            htmlContent = `<div>${lyric}</div>`;
         }
 
         lineDiv.innerHTML = htmlContent;
@@ -487,11 +492,20 @@ window.saveTimestampsToFirebase = async function() {
     const song = window.songs.find(s => s.id === window.currentSongId);
     if (song) {
         try {
-            await updateDoc(doc(db, "songs", window.currentSongId), { timestamps: song.timestamps });
-        } catch(e) {}
+            // บันทึกทั้งเวลา และ รายชื่อนักร้อง
+            await updateDoc(doc(db, "songs", window.currentSongId), { 
+                timestamps: song.timestamps,
+                singers: song.singers || []
+            });
+        } catch(e) {
+            console.error(e);
+        }
     }
 }
 
+// ----------------------------------------------------
+// ระบบ Sync (เพิ่มช่องกรอกชื่อคนร้อง)
+// ----------------------------------------------------
 window.renderTimestampEditor = function() {
     const container = document.getElementById('timestampList');
     container.innerHTML = '';
@@ -509,16 +523,7 @@ window.renderTimestampEditor = function() {
         row.style.borderRadius = '6px';
         row.style.marginBottom = '4px';
 
-        // ปรับการดึงข้อความมาแสดงในระบบ Editor ให้ซ่อนแท็กชื่อนักร้อง
-        let textSnippet = lyric.split('\n')[0] || `ท่อนที่ ${index + 1}`;
-        if (song.isMultiSinger) {
-            const match = lyric.match(/^\[(.*?)\]\s*([\s\S]*)$/);
-            if (match) {
-                textSnippet = match[2].split('\n')[0]; 
-                if (!textSnippet) textSnippet = `[${match[1]}]`; 
-            }
-        }
-
+        const textSnippet = lyric.split('\n')[0] || `ท่อนที่ ${index + 1}`;
         const label = document.createElement('span');
         label.className = 'ts-label';
         label.style.fontSize = '0.85em';
@@ -526,32 +531,62 @@ window.renderTimestampEditor = function() {
         label.style.overflow = 'hidden';
         label.style.textOverflow = 'ellipsis';
         label.style.paddingRight = '10px';
+        label.style.flexGrow = '1';
         label.innerText = `${index + 1}. ${textSnippet.substring(0, 22)}${textSnippet.length > 22 ? '...' : ''}`;
 
-        const input = document.createElement('input');
-        input.type = 'number';
-        input.step = '0.1';
-        input.min = '0';
-        input.className = 'ts-input';
-        input.id = `ts-input-${index}`;
-        input.style.width = '85px';
-        input.style.margin = '0';
-        input.style.padding = '4px 6px';
-        input.style.fontSize = '0.85em';
-        input.style.background = 'rgba(0, 0, 0, 0.4)';
-        input.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-        input.style.borderRadius = '5px';
-        input.style.color = '#fff';
-        input.style.textAlign = 'center';
+        // กล่องรวม Input (ชื่อคนร้อง + เวลา)
+        const controlsDiv = document.createElement('div');
+        controlsDiv.style.display = 'flex';
+        controlsDiv.style.gap = '6px';
+        controlsDiv.style.flexShrink = '0';
+
+        // 🔴 Input ช่องใส่ชื่อคนร้อง (เฉพาะ Admin)
+        const singerInput = document.createElement('input');
+        singerInput.type = 'text';
+        singerInput.placeholder = 'ชื่อนักร้อง';
+        singerInput.className = 'ts-singer-input';
+        singerInput.value = (song.singers && song.singers[index]) ? song.singers[index] : '';
         
-        input.value = (song.timestamps && song.timestamps[index] != null) ? song.timestamps[index].toFixed(1) : '';
+        if (window.isAdmin) {
+            singerInput.onchange = (e) => {
+                const songIdx = window.songs.findIndex(s => s.id === window.currentSongId);
+                if (songIdx !== -1) {
+                    if (!window.songs[songIdx].singers) window.songs[songIdx].singers = [];
+                    window.songs[songIdx].singers[index] = e.target.value.trim() || null;
+                    window.saveTimestampsToFirebase();
+                    // อัปเดตเนื้อเพลงให้แสดงป้ายชื่อทันที
+                    window.renderLyricsToContainer();
+                    window.updateLyricDisplay();
+                }
+            };
+            controlsDiv.appendChild(singerInput);
+        }
+
+        // Input ช่องใส่เวลา
+        const timeInput = document.createElement('input');
+        timeInput.type = 'number';
+        timeInput.step = '0.1';
+        timeInput.min = '0';
+        timeInput.className = 'ts-input';
+        timeInput.id = `ts-input-${index}`;
+        timeInput.style.width = '70px';
+        timeInput.style.margin = '0';
+        timeInput.style.padding = '4px 6px';
+        timeInput.style.fontSize = '0.85em';
+        timeInput.style.background = 'rgba(0, 0, 0, 0.4)';
+        timeInput.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+        timeInput.style.borderRadius = '5px';
+        timeInput.style.color = '#fff';
+        timeInput.style.textAlign = 'center';
+        
+        timeInput.value = (song.timestamps && song.timestamps[index] != null) ? song.timestamps[index].toFixed(1) : '';
         
         if (!window.isAdmin) {
-            input.readOnly = true;
-            input.style.border = 'none';
-            input.style.background = 'transparent';
+            timeInput.readOnly = true;
+            timeInput.style.border = 'none';
+            timeInput.style.background = 'transparent';
         } else {
-            input.onchange = (e) => {
+            timeInput.onchange = (e) => {
                 const val = parseFloat(e.target.value);
                 const songIdx = window.songs.findIndex(s => s.id === window.currentSongId);
                 if (songIdx !== -1) {
@@ -561,9 +596,10 @@ window.renderTimestampEditor = function() {
                 }
             };
         }
+        controlsDiv.appendChild(timeInput);
 
         row.appendChild(label);
-        row.appendChild(input);
+        row.appendChild(controlsDiv);
         container.appendChild(row);
     });
 }
@@ -661,6 +697,7 @@ window.resetSync = function() {
         const songIndex = window.songs.findIndex(s => s.id === window.currentSongId);
         if (songIndex !== -1) {
             window.songs[songIndex].timestamps = [];
+            window.songs[songIndex].singers = []; // ล้างชื่อคนร้องออกด้วย
             window.saveTimestampsToFirebase();
             window.currentLyricIndex = -1;
             window.renderTimestampEditor();
