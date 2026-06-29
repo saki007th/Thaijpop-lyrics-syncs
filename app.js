@@ -505,8 +505,7 @@ window.syncTimestampEditorUI = function() {
 }
 
 /* =========================================
-   แก้ไขใหม่: ฟังก์ชันเลื่อนเนื้อเพลง
-   ========================================= */
+   อัปเดตฟังก์ชันเลื่อนเนื้อเพลง (แก้ปัญหาวิดีโอหลุดจอ)
    ========================================= */
 window.updateLyricDisplay = function() {
     const container = document.getElementById('lyricsContainer');
@@ -536,6 +535,10 @@ window.updateLyricDisplay = function() {
         // หากยังไม่เริ่มเพลง ให้กลับไปบนสุด
         container.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
+    // อัปเดตแผงเวลาของฝั่ง Admin
+    window.syncTimestampEditorUI();
+}
 
     // อัปเดตแผงเวลาของฝั่ง Admin
     window.syncTimestampEditorUI();
