@@ -183,10 +183,9 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 .lyrics-wrapper {
     position: relative;
     width: 100%;
-    height: 40vh; /* ความสูงของจอเนื้อเพลง ปรับได้ตามชอบ */
-    margin: 15px 0;
+    height: 30vh; /* 🔴 ลดความสูงลงจาก 40vh เพื่อไม่ให้ชนขอบล่างเกินไป */
+    margin: 15px 0 90px 0; /* 🔴 เพิ่ม margin ด้านล่าง 90px เพื่อเว้นที่ให้ปุ่มลอย */
     overflow: hidden;
-    /* สร้างเอฟเฟกต์ Fade (จางหาย) ที่ขอบบนและขอบล่าง */
     mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
     z-index: 1;
@@ -194,14 +193,15 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 
 .lyrics-container {
     height: 100%;
-    overflow-y: auto; /* ให้ผู้ใช้ใช้นิ้วเลื่อนดูเนื้อเพลงได้ */
-    scroll-behavior: smooth; /* ทำให้เวลาโค้ดสั่งเลื่อน มันจะสมูท */
-    scrollbar-width: none; /* ซ่อน Scrollbar ของ Firefox */
-    padding: 40vh 20px; /* ใช้ Padding ดันเพื่อให้ท่อนแรกและท่อนสุดท้ายอยู่กลางจอได้พอดี */
+    overflow-y: auto; 
+    scroll-behavior: smooth; 
+    scrollbar-width: none; 
+    /* 🔴 ปรับ Padding บนและล่าง เพื่อให้ตอนเลื่อน บรรทัดแรกและบรรทัดสุดท้ายมาหยุดตรงกลางพอดี */
+    padding: 30vh 20px 40vh 20px; 
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 25px; /* ระยะห่างระหว่างแต่ละท่อน */
+    gap: 25px; 
 }
 .lyrics-container::-webkit-scrollbar { 
     display: none; /* ซ่อน Scrollbar ของ Chrome/Safari */
