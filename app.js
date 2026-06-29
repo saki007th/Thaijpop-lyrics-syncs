@@ -34,6 +34,31 @@ window.isAdmin = false;
 window.isYTApiReady = false;
 window.currentFilter = 'All'; 
 
+// ==========================================
+// ระบบเปลี่ยนสีธีม (Theme System)
+// ==========================================
+const themes = {
+    'default': 'linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff)',
+    'ocean': 'linear-gradient(120deg, #2193b0, #6dd5ed, #2193b0, #6dd5ed)',
+    'sunset': 'linear-gradient(120deg, #ff4e50, #f9d423, #ff4e50, #f9d423)',
+    'neon': 'linear-gradient(120deg, #ff0099, #493240, #ff0099, #493240)',
+    'emerald': 'linear-gradient(120deg, #11998e, #38ef7d, #11998e, #38ef7d)'
+};
+
+window.setTheme = function(themeName) {
+    const glowColor = themes[themeName] || themes['default'];
+    // เปลี่ยนค่าตัวแปร CSS ของทั้งเอกสารแบบ Real-time
+    document.documentElement.style.setProperty('--theme-glow', glowColor);
+    // บันทึกลงเครื่องผู้ใช้
+    localStorage.setItem('selectedTheme', themeName);
+}
+
+// เมื่อโหลดหน้าเว็บ ให้ดึงธีมล่าสุดที่เคยเลือกไว้มาใช้งาน
+const savedTheme = localStorage.getItem('selectedTheme') || 'default';
+window.setTheme(savedTheme);
+// ==========================================
+
+
 window.onYouTubeIframeAPIReady = function() {
     window.isYTApiReady = true; 
 };
@@ -109,7 +134,8 @@ async function fetchSongs() {
         document.getElementById('loadingOverlay').style.display = 'none';
         
         if (!document.getElementById('view-player').classList.contains('active') && 
-            !document.getElementById('view-add').classList.contains('active')) {
+            !document.getElementById('view-add').classList.contains('active') &&
+            !document.getElementById('view-settings').classList.contains('active')) {
             window.showView('view-list');
         } else {
             window.renderSongList();
@@ -132,6 +158,7 @@ window.showView = function(viewId) {
     document.getElementById(viewId).classList.add('active');
     
     const headerTitle = document.getElementById('headerTitle');
+    
     if (viewId === 'view-list') {
         headerTitle.innerText = 'คลังเพลงของฉัน';
         document.getElementById('btnAddSong').style.display = window.isAdmin ? 'block' : 'none';
@@ -148,6 +175,7 @@ window.showView = function(viewId) {
         }
     } else if (viewId === 'view-player') {
         headerTitle.innerText = 'กำลังเล่นเพลง';
+        document.getElementById('btnAddSong').style.display = 'none';
         
         const lyricControlBtnGroup = document.getElementById('lyricControlBtnGroup');
         const timestampEditorSection = document.getElementById('timestampEditorSection');
@@ -166,6 +194,11 @@ window.showView = function(viewId) {
             if(timestampEditorSection) timestampEditorSection.style.display = 'none';
             if(btnResetSync) btnResetSync.style.display = 'none';
         }
+    } else if (viewId === 'view-settings') {
+        headerTitle.innerText = 'การตั้งค่า';
+        document.getElementById('btnAddSong').style.display = 'none';
+    } else {
+        document.getElementById('btnAddSong').style.display = 'none';
     }
 }
 
@@ -504,14 +537,10 @@ window.syncTimestampEditorUI = function() {
     });
 }
 
-// ----------------------------------------------------
-// อัปเดตฟังก์ชันเลื่อนเนื้อเพลง (คำนวณแบบแม่นยำ ไม่ดึงหน้าจอ)
-// ----------------------------------------------------
 window.updateLyricDisplay = function() {
     const container = document.getElementById('lyricsContainer');
     if (!container) return;
 
-    // ล้างสถานะ active สีขาวออกจากทุกบรรทัด
     const allLines = container.querySelectorAll('.lyric-line');
     allLines.forEach(line => line.classList.remove('active'));
 
@@ -521,8 +550,6 @@ window.updateLyricDisplay = function() {
         if (activeLine) {
             activeLine.classList.add('active'); 
             
-            // ใช้การคำนวณระยะ Scroll แบบเฉพาะเจาะจง 
-            // จะเลื่อนแค่ "กล่องเนื้อเพลง" โดยไม่ดึงหน้าจอหลักให้เลื่อนตาม
             const containerCenter = container.clientHeight / 2;
             const lineCenter = activeLine.offsetTop + (activeLine.clientHeight / 2);
             
@@ -532,11 +559,9 @@ window.updateLyricDisplay = function() {
             });
         }
     } else if (window.currentLyricIndex === -1) {
-        // หากยังไม่เริ่มเพลง ให้กลับไปบนสุด
         container.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // อัปเดตแผงเวลาของฝั่ง Admin
     window.syncTimestampEditorUI();
 }
 
