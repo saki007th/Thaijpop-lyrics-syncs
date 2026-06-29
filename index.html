@@ -34,7 +34,7 @@
         </div>
 
         <div id="view-settings" class="view">
-            <h3 style="font-weight: normal; color: #b0bec5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 0;">เลือกสีออร่าที่ต้องการ</h3>
+            <h3 style="font-weight: normal; color: #b0bec5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 0;">✨ เลือกสีออร่าการ์ดเพลง</h3>
             <div class="theme-list">
                 <button onclick="setTheme('default')" class="theme-btn" style="background: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff);">🌈 Apple Glow (ค่าเริ่มต้น)</button>
                 <button onclick="setTheme('ocean')" class="theme-btn" style="background: linear-gradient(120deg, #2193b0, #6dd5ed, #2193b0); color: #000;">🌊 Ocean Blue</button>
@@ -42,7 +42,16 @@
                 <button onclick="setTheme('neon')" class="theme-btn" style="background: linear-gradient(120deg, #ff0099, #493240, #ff0099);">🌸 Cyberpunk Pink</button>
                 <button onclick="setTheme('emerald')" class="theme-btn" style="background: linear-gradient(120deg, #11998e, #38ef7d, #11998e); color: #000;">💎 Emerald Green</button>
             </div>
-            <button class="btn-secondary" onclick="showView('view-list')" style="margin-top: 30px;">🏠 กลับคลังเพลง</button>
+
+            <h3 style="font-weight: normal; color: #b0bec5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 30px;">🎨 เลือกสีพื้นหลังจอ</h3>
+            <div class="bg-color-list" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+                <button onclick="setBackground('black')" class="bg-btn" style="background: #000000;">🖤 ดำสนิท</button>
+                <button onclick="setBackground('darkgray')" class="bg-btn" style="background: #1c1c1e;">🩶 เทาเข้ม</button>
+                <button onclick="setBackground('midnight')" class="bg-btn" style="background: #0a0f24;">🌌 มิดไนท์บลู</button>
+                <button onclick="setBackground('deeppurple')" class="bg-btn" style="background: #1a0b2e;">🔮 ม่วงหม่น</button>
+            </div>
+
+            <button class="btn-secondary" onclick="showView('view-list')" style="margin-top: 40px;">🏠 กลับคลังเพลง</button>
         </div>
 
         <div id="view-add" class="view">
