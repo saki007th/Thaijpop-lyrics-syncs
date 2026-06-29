@@ -252,12 +252,29 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
 }
+
+.lyrics-container {
+    position: relative; /* 🔴 สำคัญมาก: ช่วยให้ JS คำนวณระยะกึ่งกลางได้เป๊ะ */
+    height: 100%;
+    overflow-y: auto; 
+    scroll-behavior: smooth; 
+    scrollbar-width: none; 
+    
+    /* 🔴 ดันพื้นที่ด้านบน 100px และเผื่อพื้นที่ด้านล่าง 200px ให้เลื่อนสุดได้ */
+    padding: 100px 20px 200px 20px; 
+    box-sizing: border-box;
+    
+    display: block; /* 🔴 เปลี่ยนจาก flex เป็น block เพื่อแก้บั๊กเบราว์เซอร์กินพื้นที่ด้านล่าง */
+    
+    mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+}
 .lyrics-container::-webkit-scrollbar { display: none; }
 
 .lyric-line {
     font-size: 1.2em;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.3); /* สีหม่นๆ สำหรับท่อนที่ไม่ได้ร้อง */
+    color: rgba(255, 255, 255, 0.3); 
     text-align: center;
     transition: all 0.3s ease; 
     transform-origin: center;
@@ -265,9 +282,14 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     word-break: break-word;
     line-height: 1.5;
     padding: 5px 0;
+    margin-bottom: 25px; /* 🔴 ใช้ margin เว้นระยะห่างแต่ละท่อน แทนคำสั่ง gap เดิม */
 }
 
-/* สไตล์ไฮไลต์ท่อนปัจจุบัน */
+/* เอา margin ของท่อนสุดท้ายออกให้พอดีขอบ */
+.lyric-line:last-child {
+    margin-bottom: 0;
+}
+
 .lyric-line.active {
     font-size: 1.45em; 
     color: #ffffff; 
