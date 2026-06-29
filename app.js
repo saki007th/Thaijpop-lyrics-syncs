@@ -507,11 +507,12 @@ window.syncTimestampEditorUI = function() {
 /* =========================================
    แก้ไขใหม่: ฟังก์ชันเลื่อนเนื้อเพลง
    ========================================= */
+   ========================================= */
 window.updateLyricDisplay = function() {
     const container = document.getElementById('lyricsContainer');
     if (!container) return;
 
-    // ล้างสถานะ active
+    // ล้างสถานะ active สีขาวออกจากทุกบรรทัด
     const allLines = container.querySelectorAll('.lyric-line');
     allLines.forEach(line => line.classList.remove('active'));
 
@@ -521,14 +522,22 @@ window.updateLyricDisplay = function() {
         if (activeLine) {
             activeLine.classList.add('active'); 
             
-            // ใช้ scrollIntoView จะแม่นยำกว่าการคำนวณ offset แมนนวลมากครับ 
-            // มันจะจับ element ที่ active มาไว้ตรงกลางจอ (block: 'center') อัตโนมัติเลย
-            activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // ใช้การคำนวณระยะ Scroll แบบเฉพาะเจาะจง 
+            // (คำสั่งนี้จะเลื่อนแค่ "กล่องเนื้อเพลง" โดยไม่ดึงหน้าจอหลักให้เลื่อนตาม)
+            const containerCenter = container.clientHeight / 2;
+            const lineCenter = activeLine.offsetTop + (activeLine.clientHeight / 2);
+            
+            container.scrollTo({
+                top: lineCenter - containerCenter,
+                behavior: 'smooth'
+            });
         }
     } else if (window.currentLyricIndex === -1) {
+        // หากยังไม่เริ่มเพลง ให้กลับไปบนสุด
         container.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // อัปเดตแผงเวลาของฝั่ง Admin
     window.syncTimestampEditorUI();
 }
 
