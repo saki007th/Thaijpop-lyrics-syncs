@@ -116,7 +116,7 @@ async function fetchSongs() {
         }
     } catch (error) {
         console.error("Error fetching songs:", error);
-        alert("เชื่อมต่อฐานข้อมูลไม่สำเร็จ");
+        alert("เชื่อมต่อฐานข้อมูลไม่สำเร็จ กรุณาตรวจสอบสิทธิ์ Firebase");
         document.getElementById('loadingOverlay').style.display = 'none';
     }
 }
@@ -504,9 +504,9 @@ window.syncTimestampEditorUI = function() {
     });
 }
 
-/* =========================================
-   อัปเดตฟังก์ชันเลื่อนเนื้อเพลง (แก้ปัญหาวิดีโอหลุดจอ)
-   ========================================= */
+// ----------------------------------------------------
+// อัปเดตฟังก์ชันเลื่อนเนื้อเพลง (คำนวณแบบแม่นยำ ไม่ดึงหน้าจอ)
+// ----------------------------------------------------
 window.updateLyricDisplay = function() {
     const container = document.getElementById('lyricsContainer');
     if (!container) return;
@@ -522,7 +522,7 @@ window.updateLyricDisplay = function() {
             activeLine.classList.add('active'); 
             
             // ใช้การคำนวณระยะ Scroll แบบเฉพาะเจาะจง 
-            // (คำสั่งนี้จะเลื่อนแค่ "กล่องเนื้อเพลง" โดยไม่ดึงหน้าจอหลักให้เลื่อนตาม)
+            // จะเลื่อนแค่ "กล่องเนื้อเพลง" โดยไม่ดึงหน้าจอหลักให้เลื่อนตาม
             const containerCenter = container.clientHeight / 2;
             const lineCenter = activeLine.offsetTop + (activeLine.clientHeight / 2);
             
@@ -535,10 +535,6 @@ window.updateLyricDisplay = function() {
         // หากยังไม่เริ่มเพลง ให้กลับไปบนสุด
         container.scrollTo({ top: 0, behavior: 'smooth' });
     }
-
-    // อัปเดตแผงเวลาของฝั่ง Admin
-    window.syncTimestampEditorUI();
-}
 
     // อัปเดตแผงเวลาของฝั่ง Admin
     window.syncTimestampEditorUI();
