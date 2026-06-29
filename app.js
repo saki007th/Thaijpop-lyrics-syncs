@@ -32,6 +32,7 @@ window.syncInterval = null;
 window.isLoggedIn = false; 
 window.isAdmin = false;
 window.isYTApiReady = false;
+window.currentFilter = 'All'; // ตัวแปรเก็บสถานะศิลปินที่เลือกปัจจุบัน
 
 window.onYouTubeIframeAPIReady = function() {
     window.isYTApiReady = true; 
@@ -138,6 +139,7 @@ window.showView = function(viewId) {
         const searchInput = document.getElementById('searchInput');
         if(searchInput) searchInput.value = '';
         
+        window.currentFilter = 'All'; // รีเซ็ตฟิลเตอร์เมื่อกลับหน้าแรก
         window.renderSongList();
         clearInterval(window.syncInterval);
         window.currentSongId = null;
@@ -239,20 +241,42 @@ window.saveSong = async function() {
     }
 }
 
-window.filterSongs = function() {
+// ----------------------------------------------------
+// ระบบ Filter & ค้นหา
+// ----------------------------------------------------
+window.filterByArtist = function(artistName) {
+    window.currentFilter = artistName;
     const query = document.getElementById('searchInput').value.toLowerCase();
-    window.renderSongList(query);
+    window.renderSongList(query, artistName);
 }
 
-window.renderSongList = function(query = '') {
+window.filterSongs = function() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    window.renderSongList(query, window.currentFilter);
+}
+
+window.renderSongList = function(query = '', artistFilter = 'All') {
     const listContainer = document.getElementById('songList');
+    const chipContainer = document.getElementById('artistChips');
     listContainer.innerHTML = '';
 
+    // สร้างปุ่มลัดชื่อศิลปินอัตโนมัติ
+    if (chipContainer) {
+        const artists = ['All', ...new Set(window.songs.map(s => s.artist || 'ไม่ระบุศิลปิน'))];
+        chipContainer.innerHTML = artists.map(a => 
+            `<button class="chip ${artistFilter === a ? 'active' : ''}" onclick="filterByArtist('${a}')">${a === 'All' ? 'ทั้งหมด' : a}</button>`
+        ).join('');
+    }
+
+    // กรองข้อมูลตามที่ค้นหา + ศิลปินที่เลือก
     const filteredSongs = window.songs.filter(song => {
         const q = query.toLowerCase();
+        const artist = song.artist || 'ไม่ระบุศิลปิน';
         const titleMatch = song.title && song.title.toLowerCase().includes(q);
-        const artistMatch = song.artist && song.artist.toLowerCase().includes(q);
-        return titleMatch || artistMatch;
+        const artistMatch = artist.toLowerCase().includes(q);
+        const artistFilterMatch = (artistFilter === 'All' || artist === artistFilter);
+        
+        return (titleMatch || artistMatch) && artistFilterMatch;
     });
 
     if (filteredSongs.length === 0) {
@@ -281,12 +305,12 @@ window.renderSongList = function(query = '') {
                 <div class="song-item-title-container">
                     <div class="song-item-title">
                         ${song.title}
-                        <span style="font-size: 0.85em; color: #b0bec5; display: block; margin-top: 2px;">🎤 ${song.artist || 'ไม่ระบุศิลปิน'}</span>
+                        <span style="font-size: 0.85em; color: #8e8e93; display: block; margin-top: 4px;">🎤 ${song.artist || 'ไม่ระบุศิลปิน'}</span>
                     </div>
                 </div>
             </div>
             <div class="song-item-actions">
-                <button class="btn-action" style="background: linear-gradient(45deg, #11998e, #38ef7d);" onclick="playSong('${song.id}')">▶</button>
+                <button class="btn-action" style="background: #0a84ff; color: white;" onclick="playSong('${song.id}')">▶ เล่น</button>
                 ${actionsHtml}
             </div>
         `;
@@ -294,6 +318,9 @@ window.renderSongList = function(query = '') {
     });
 }
 
+// ----------------------------------------------------
+// ระบบเล่นเพลง & เนื้อเพลง
+// ----------------------------------------------------
 window.deleteSong = async function(id) {
     if (!window.isAdmin) return;
     if(confirm('ต้องการลบเพลงนี้ใช่หรือไม่?')) {
@@ -469,8 +496,8 @@ window.syncTimestampEditorUI = function() {
 
         if (row && label && input) {
             if (index === window.currentLyricIndex) {
-                row.style.background = 'rgba(0, 180, 219, 0.25)';
-                label.style.color = '#00b4db';
+                row.style.background = 'rgba(10, 132, 255, 0.25)';
+                label.style.color = '#0a84ff';
                 label.style.fontWeight = 'bold';
             } else {
                 row.style.background = 'transparent';
