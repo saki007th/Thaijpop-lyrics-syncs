@@ -74,20 +74,10 @@ input:focus, textarea:focus { outline: none; border-color: #0a84ff; background: 
 textarea { height: 160px; resize: vertical; line-height: 1.5; }
 .search-input { margin-top: 10px; margin-bottom: 5px; background: #1c1c1e; border-radius: 10px; padding: 12px 16px; font-size: 1.05em; }
 
-/* --- ส่วนเพิ่ม: แถบปุ่มลัดชื่อศิลปิน (Chips) --- */
+/* แถบปุ่มลัดชื่อศิลปิน (Chips) */
 .artist-chips { 
     display: flex; 
-    gap: 8px; 
-    overflow-x: auto; 
-    padding: 5px 0 10px 0; 
-    margin-bottom: 10px;
-    scrollbar-width: none; 
-}
-
-/* --- ส่วนเพิ่ม: แถบปุ่มลัดชื่อศิลปิน (Chips) แบบแสดงทั้งหมด --- */
-.artist-chips { 
-    display: flex; 
-    flex-wrap: wrap; /* บังคับให้ปุ่มตกลงมาบรรทัดใหม่เมื่อพื้นที่ไม่พอ */
+    flex-wrap: wrap; 
     gap: 8px; 
     padding: 5px 0 15px 0; 
     margin-bottom: 10px;
@@ -107,6 +97,7 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 }
 .chip.active { background: #0a84ff; color: #ffffff; border-color: #0a84ff; }
 .chip:hover { background: #2c2c2e; }
+
 #songList {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
@@ -115,12 +106,11 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     overflow-y: auto; 
     padding-bottom: 20px;
 }
-
 #songList::-webkit-scrollbar { width: 5px; }
 #songList::-webkit-scrollbar-track { background: transparent; }
 #songList::-webkit-scrollbar-thumb { background: #48484a; border-radius: 10px; }
 
-/* --- ปรับ UI การ์ดเพลง ให้รองรับแสงสีรุ้ง Apple Intelligence --- */
+/* การ์ดเพลง */
 .song-item { 
     position: relative;
     padding: 16px; 
@@ -135,8 +125,6 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     z-index: 1;
     transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); 
 }
-
-/* สร้างแสงออร่าสีรุ้งซ่อนไว้ด้านหลังการ์ด */
 .song-item::before {
     content: "";
     position: absolute;
@@ -150,8 +138,6 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     transition: opacity 0.3s ease;
     animation: appleAiGlow 6s ease-in-out infinite;
 }
-
-/* เลเยอร์สีดำทับแสงไว้ เพื่อให้การ์ดตรงกลางยังคงเป็นสีเข้ม */
 .song-item::after {
     content: "";
     position: absolute;
@@ -161,7 +147,6 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     z-index: -1;
     transition: background 0.3s ease;
 }
-
 .song-item:hover { transform: scale(1.03) translateY(-3px); }
 .song-item:hover::before { opacity: 1; }
 .song-item:hover::after { background: rgba(44, 44, 46, 0.95); }
@@ -176,77 +161,17 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 .song-item-actions { display: flex; gap: 8px; flex-shrink: 0; width: 100%; justify-content: center; }
 .btn-action { margin: 0; padding: 8px; border-radius: 10px; font-size: 0.9em; flex-grow: 1; text-align: center; }
 
-@keyframes slideUp { 0% { transform: translateY(15px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
-.slide-up-anim { animation: slideUp 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
-
-/* --- ระบบเนื้อเพลงแบบ Auto-scroll สไตล์ Apple Music --- */
-.lyrics-wrapper {
-    position: relative;
-    width: 100%;
-    height: 30vh; /* 🔴 ลดความสูงลงจาก 40vh เพื่อไม่ให้ชนขอบล่างเกินไป */
-    margin: 15px 0 90px 0; /* 🔴 เพิ่ม margin ด้านล่าง 90px เพื่อเว้นที่ให้ปุ่มลอย */
-    overflow: hidden;
-    mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
-    z-index: 1;
-}
-
-.lyrics-container {
-    height: 100%;
-    overflow-y: auto; 
-    scroll-behavior: smooth; 
-    scrollbar-width: none; 
-    /* 🔴 ปรับ Padding บนและล่าง เพื่อให้ตอนเลื่อน บรรทัดแรกและบรรทัดสุดท้ายมาหยุดตรงกลางพอดี */
-    padding: 30vh 20px 40vh 20px; 
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: 25px; 
-}
-.lyrics-container::-webkit-scrollbar { 
-    display: none; /* ซ่อน Scrollbar ของ Chrome/Safari */
-}
-
-/* สไตล์ของเนื้อเพลงแต่ละท่อน (สถานะปกติ) */
-.lyric-line {
-    font-size: 1.2em;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.4); /* สีจางๆ */
-    text-align: center;
-    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); /* แอนิเมชันเวลาเปลี่ยนท่อน */
-    transform-origin: center;
-    white-space: pre-wrap;
-    word-break: break-word;
-    line-height: 1.5;
-    cursor: pointer;
-}
-
-.lyric-line:hover { color: rgba(255, 255, 255, 0.7); }
-
-/* สไตล์ของเนื้อเพลงท่อนที่กำลังร้อง (สถานะ Active) */
-.lyric-line.active {
-    font-size: 1.5em; /* ตัวใหญ่ขึ้น */
-    color: #ffffff; /* สีสว่างชัดเจน */
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.3); /* เรืองแสงเบาๆ */
-    transform: scale(1.05); /* เด้งขยายออกมานิดนึง */
-}
-
-/* ซ่อนเนื้อเพลงท่อนที่ผ่านมาแล้ว */
-#lyricPrev { display: none !important; }
-
-/* --- YouTube Video Container พร้อม Ambient Light --- */
+/* YouTube Video Container พร้อม Ambient Light */
 .youtube-container { 
     position: relative; 
     width: 100%; 
     padding-bottom: 56.25%; 
-    margin-bottom: 30px; 
+    margin-bottom: 20px; 
     border-radius: 16px; 
     background: #1c1c1e; 
     flex-shrink: 0; 
     z-index: 1; 
 }
-
-/* สร้างแสง Ambient เรืองแสงอยู่ด้านหลังวิดีโอ */
 .youtube-container::before {
     content: "";
     position: absolute;
@@ -259,7 +184,6 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     opacity: 0.75; 
     animation: appleAiGlow 8s ease-in-out infinite; 
 }
-
 .youtube-container iframe { 
     position: absolute; 
     top: 0; 
@@ -271,43 +195,108 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     z-index: 2; 
     box-shadow: 0 4px 20px rgba(0,0,0,0.6); 
 }
+@keyframes appleAiGlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* =========================================
+   แก้ไขใหม่: ระบบ Auto-scroll เนื้อเพลง
+   ========================================= */
+.lyrics-wrapper {
+    position: relative;
+    width: 100%;
+    height: 35vh; /* ความสูงคงที่ ให้วิดีโอกับเนื้อเพลงแบ่งสัดส่วนกันสวยๆ */
+    margin: 10px 0;
+    border-radius: 24px;
+    z-index: 1;
+}
+
+/* คงแสง AI Glow เอาไว้ด้านหลัง wrapper */
+.lyrics-wrapper::before {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 26px;
+    background: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff);
+    background-size: 300% 300%;
+    z-index: -2;
+    filter: blur(8px);
+    animation: appleAiGlow 6s ease-in-out infinite;
+}
+
+.lyrics-wrapper::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 24px;
+    background: rgba(28, 28, 30, 0.85);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    z-index: -1;
+}
+
+.lyrics-container {
+    height: 100%;
+    overflow-y: auto; 
+    scroll-behavior: smooth; 
+    scrollbar-width: none; 
+    padding: 15vh 20px; /* เว้นที่ว่างให้ท่อนแรกลงมาอยู่กลางจอได้พอดี */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 20px; 
+    
+    /* เอฟเฟกต์ Fade หัวท้าย */
+    mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+}
+.lyrics-container::-webkit-scrollbar { display: none; }
+
+.lyric-line {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.3); /* สีหม่นๆ สำหรับท่อนที่ไม่ได้ร้อง */
+    text-align: center;
+    transition: all 0.3s ease; 
+    transform-origin: center;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.5;
+    padding: 5px 0;
+}
+
+/* สไตล์ไฮไลต์ท่อนปัจจุบัน */
+.lyric-line.active {
+    font-size: 1.45em; 
+    color: #ffffff; 
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.4); 
+    transform: scale(1.05); 
+}
+
+/* =========================================
+   แก้ไขใหม่: ปุ่มควบคุมธรรมดา (เลิกติดขอบจอ)
+   ========================================= */
+#lyricControlBtnGroup { 
+    display: flex; 
+    gap: 12px; 
+    width: 100%; 
+    margin-top: 10px; /* วางต่อจากเนื้อเพลงเลย ไม่บังแน่นอน */
+}
+#lyricControlBtnGroup button { margin-top: 0; }
 
 .timestamp-editor-container { margin-top: 30px; background: #1c1c1e; border-radius: 16px; padding: 20px; flex-shrink: 0; }
 .timestamp-list { max-height: 180px; overflow-y: auto; padding-right: 8px; margin-top: 10px; }
 .timestamp-list::-webkit-scrollbar { width: 5px; }
 .timestamp-list::-webkit-scrollbar-thumb { background: #48484a; border-radius: 10px; }
 
-/* --- ทำปุ่มควบคุมให้ลอยติดขอบจอด้านล่างแบบ Apple --- */
-#lyricControlBtnGroup { 
-    display: flex; 
-    gap: 12px; 
-    position: fixed; 
-    bottom: 25px; 
-    left: 50%; 
-    transform: translateX(-50%); 
-    width: 90%; 
-    max-width: 500px; 
-    z-index: 50; 
-    background: rgba(28, 28, 30, 0.8); 
-    backdrop-filter: blur(20px); 
-    -webkit-backdrop-filter: blur(20px);
-    padding: 12px; 
-    border-radius: 20px; 
-    border: 0.5px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-}
-#lyricControlBtnGroup button { margin-top: 0; }
-
-/* เผื่อพื้นที่ด้านล่างสุดของหน้าเล่นเพลง ไม่ให้ปุ่มลอยมาบังเนื้อหา และไม่บี้แบน */
 #view-player { 
     flex-direction: column; 
     min-height: 80vh; 
-    padding-bottom: 100px; 
+    padding-bottom: 30px; 
 } 
-/* บังคับให้แสดงผลเฉพาะตอนที่ถูกเรียกใช้งาน (มีคลาส active) */
-#view-player.active {
-    display: flex;
-}
+#view-player.active { display: flex; }
 
 .view { display: none; animation: fadeIn 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
 .view.active { display: block; }
