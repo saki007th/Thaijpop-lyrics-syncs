@@ -35,9 +35,8 @@ window.isYTApiReady = false;
 window.currentFilter = 'All'; 
 
 // ==========================================
-// ระบบเปลี่ยนสีธีม และ พื้นหลัง (Theme & Background)
+// ระบบเปลี่ยนสีธีม และ พื้นหลัง
 // ==========================================
-// 1. ระบบสีออร่า (Theme Glow)
 const themes = {
     'default': 'linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff)',
     'ocean': 'linear-gradient(120deg, #2193b0, #6dd5ed, #2193b0, #6dd5ed)',
@@ -52,7 +51,6 @@ window.setTheme = function(themeName) {
     localStorage.setItem('selectedTheme', themeName);
 }
 
-// 2. ระบบสีพื้นหลังจอ (Background Color)
 const backgrounds = {
     'black': '#000000',
     'darkgray': '#1c1c1e',
@@ -66,13 +64,19 @@ window.setBackground = function(bgName) {
     localStorage.setItem('selectedBg', bgName);
 }
 
-// โหลดค่าที่เคยบันทึกไว้เมื่อเปิดเว็บ
 const savedTheme = localStorage.getItem('selectedTheme') || 'default';
 window.setTheme(savedTheme);
 
 const savedBg = localStorage.getItem('selectedBg') || 'black';
 window.setBackground(savedBg);
+
 // ==========================================
+// ระบบสลับ UI กล่องข้อแนะนำนักร้องหลายคน
+// ==========================================
+window.toggleMultiSingerHelp = function() {
+    const isChecked = document.getElementById('inputIsMultiSinger').checked;
+    document.getElementById('multiSingerHelp').style.display = isChecked ? 'block' : 'none';
+}
 
 
 window.onYouTubeIframeAPIReady = function() {
@@ -144,7 +148,8 @@ async function fetchSongs() {
                 artist: data.artist,
                 audioPath: data.audioPath,
                 lyrics: data.lyrics,
-                timestamps: data.timestamps || []
+                timestamps: data.timestamps || [],
+                isMultiSinger: data.isMultiSinger || false // ดึงข้อมูลสถานะนักร้องหลายคนมาด้วย
             });
         });
         document.getElementById('loadingOverlay').style.display = 'none';
@@ -226,6 +231,11 @@ window.openAddView = function() {
     document.getElementById('inputArtist').value = '';
     document.getElementById('inputAudio').value = '';
     document.getElementById('inputLyrics').value = '';
+    
+    // รีเซ็ตการตั้งค่านักร้องหลายคน
+    document.getElementById('inputIsMultiSinger').checked = false;
+    window.toggleMultiSingerHelp();
+
     window.showView('view-add');
 }
 
@@ -240,6 +250,11 @@ window.editSong = function(id) {
     document.getElementById('inputArtist').value = song.artist || '';
     document.getElementById('inputAudio').value = song.audioPath;
     document.getElementById('inputLyrics').value = song.lyrics;
+
+    // ดึงค่าสถานะนักร้องหลายคนมาแสดงในฟอร์ม
+    document.getElementById('inputIsMultiSinger').checked = song.isMultiSinger || false;
+    window.toggleMultiSingerHelp();
+
     window.showView('view-add');
 }
 
@@ -250,7 +265,7 @@ window.saveSong = async function() {
     const artist = document.getElementById('inputArtist').value.trim();
     const audioPath = document.getElementById('inputAudio').value.trim();
     const lyrics = document.getElementById('inputLyrics').value.trim();
-    const btnSave = document.getElementById('btnSave');
+    const isMultiSinger = document.getElementById('inputIsMultiSinger').checked;
 
     if (!title || !lyrics || !window.extractYouTubeID(audioPath)) {
         alert("ข้อมูลไม่ครบถ้วน หรือลิงก์ YouTube ไม่ถูกต้อง");
@@ -263,9 +278,9 @@ window.saveSong = async function() {
     try {
         if (window.editingSongId) {
             const songRef = doc(db, "songs", window.editingSongId);
-            await updateDoc(songRef, { title, artist, audioPath, lyrics });
+            await updateDoc(songRef, { title, artist, audioPath, lyrics, isMultiSinger });
         } else {
-            await addDoc(songsCollection, { title, artist, audioPath, lyrics, timestamps: [] });
+            await addDoc(songsCollection, { title, artist, audioPath, lyrics, timestamps: [], isMultiSinger });
         }
         await fetchSongs();
         window.showView('view-list'); 
@@ -360,7 +375,7 @@ window.deleteSong = async function(id) {
 }
 
 // ----------------------------------------------------
-// ระบบเนื้อเพลง
+// ระบบเนื้อเพลง (รองรับโหมดนักร้องหลายคน)
 // ----------------------------------------------------
 window.renderLyricsToContainer = function() {
     const container = document.getElementById('lyricsContainer');
@@ -372,11 +387,29 @@ window.renderLyricsToContainer = function() {
         return;
     }
 
+    const currentSong = window.songs.find(s => s.id === window.currentSongId);
+    const isMulti = currentSong ? currentSong.isMultiSinger : false;
+
     window.currentLyricsArray.forEach((lyric, index) => {
         const lineDiv = document.createElement('div');
         lineDiv.className = 'lyric-line';
         lineDiv.id = `lyric-line-${index}`;
-        lineDiv.innerText = lyric;
+
+        let htmlContent = lyric;
+
+        // หากเป็นโหมดนักร้องหลายคน ให้แยกชื่อออกจากวงเล็บเหลี่ยม [] มาทำเป็นป้ายชื่อ
+        if (isMulti) {
+            const match = lyric.match(/^\[(.*?)\]\s*([\s\S]*)$/);
+            if (match) {
+                const singerName = match[1];
+                const text = match[2];
+                htmlContent = `<div class="singer-label">${singerName}</div><div>${text}</div>`;
+            } else {
+                htmlContent = `<div>${lyric}</div>`;
+            }
+        }
+
+        lineDiv.innerHTML = htmlContent;
         container.appendChild(lineDiv);
     });
 }
@@ -476,7 +509,16 @@ window.renderTimestampEditor = function() {
         row.style.borderRadius = '6px';
         row.style.marginBottom = '4px';
 
-        const textSnippet = lyric.split('\n')[0] || `ท่อนที่ ${index + 1}`;
+        // ปรับการดึงข้อความมาแสดงในระบบ Editor ให้ซ่อนแท็กชื่อนักร้อง
+        let textSnippet = lyric.split('\n')[0] || `ท่อนที่ ${index + 1}`;
+        if (song.isMultiSinger) {
+            const match = lyric.match(/^\[(.*?)\]\s*([\s\S]*)$/);
+            if (match) {
+                textSnippet = match[2].split('\n')[0]; 
+                if (!textSnippet) textSnippet = `[${match[1]}]`; 
+            }
+        }
+
         const label = document.createElement('span');
         label.className = 'ts-label';
         label.style.fontSize = '0.85em';
