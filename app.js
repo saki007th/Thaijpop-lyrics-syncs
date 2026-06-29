@@ -32,7 +32,7 @@ window.syncInterval = null;
 window.isLoggedIn = false; 
 window.isAdmin = false;
 window.isYTApiReady = false;
-window.currentFilter = 'All'; // ตัวแปรเก็บสถานะศิลปินที่เลือกปัจจุบัน
+window.currentFilter = 'All'; 
 
 window.onYouTubeIframeAPIReady = function() {
     window.isYTApiReady = true; 
@@ -116,7 +116,7 @@ async function fetchSongs() {
         }
     } catch (error) {
         console.error("Error fetching songs:", error);
-        alert("เชื่อมต่อฐานข้อมูลไม่สำเร็จ กรุณาตรวจสอบสิทธิ์ Rules ว่าอนุญาตให้อ่านข้อมูลได้หรือไม่");
+        alert("เชื่อมต่อฐานข้อมูลไม่สำเร็จ");
         document.getElementById('loadingOverlay').style.display = 'none';
     }
 }
@@ -139,7 +139,7 @@ window.showView = function(viewId) {
         const searchInput = document.getElementById('searchInput');
         if(searchInput) searchInput.value = '';
         
-        window.currentFilter = 'All'; // รีเซ็ตฟิลเตอร์เมื่อกลับหน้าแรก
+        window.currentFilter = 'All'; 
         window.renderSongList();
         clearInterval(window.syncInterval);
         window.currentSongId = null;
@@ -153,7 +153,6 @@ window.showView = function(viewId) {
         const timestampEditorSection = document.getElementById('timestampEditorSection');
         const btnResetSync = document.getElementById('btnResetSync');
 
-        // ตรวจสอบสิทธิ์ Admin เพื่อซ่อนหรือแสดงเครื่องมือแก้ไข
         if (window.isAdmin) {
             if(lyricControlBtnGroup) lyricControlBtnGroup.style.display = 'flex';
             if(timestampEditorSection) timestampEditorSection.style.display = 'block';
@@ -196,10 +195,7 @@ window.editSong = function(id) {
 }
 
 window.saveSong = async function() {
-    if (!window.isAdmin) {
-        alert("ต้องเข้าสู่ระบบด้วยอีเมล Admin ก่อนจึงจะบันทึกได้ครับ");
-        return;
-    }
+    if (!window.isAdmin) return;
     
     const title = document.getElementById('inputTitle').value.trim();
     const artist = document.getElementById('inputArtist').value.trim();
@@ -207,13 +203,8 @@ window.saveSong = async function() {
     const lyrics = document.getElementById('inputLyrics').value.trim();
     const btnSave = document.getElementById('btnSave');
 
-    if (!title || !lyrics) {
-        alert("กรุณากรอกชื่อเพลงและเนื้อเพลงครับ");
-        return;
-    }
-
-    if (!window.extractYouTubeID(audioPath)) {
-        alert("ลิงก์ YouTube ไม่ถูกต้อง");
+    if (!title || !lyrics || !window.extractYouTubeID(audioPath)) {
+        alert("ข้อมูลไม่ครบถ้วน หรือลิงก์ YouTube ไม่ถูกต้อง");
         return;
     }
 
@@ -227,10 +218,8 @@ window.saveSong = async function() {
         } else {
             await addDoc(songsCollection, { title, artist, audioPath, lyrics, timestamps: [] });
         }
-        
         await fetchSongs();
         window.showView('view-list'); 
-
     } catch (e) {
         console.error(e);
         alert("บันทึกไม่สำเร็จ");
@@ -241,9 +230,6 @@ window.saveSong = async function() {
     }
 }
 
-// ----------------------------------------------------
-// ระบบ Filter & ค้นหา
-// ----------------------------------------------------
 window.filterByArtist = function(artistName) {
     window.currentFilter = artistName;
     const query = document.getElementById('searchInput').value.toLowerCase();
@@ -260,7 +246,6 @@ window.renderSongList = function(query = '', artistFilter = 'All') {
     const chipContainer = document.getElementById('artistChips');
     listContainer.innerHTML = '';
 
-    // สร้างปุ่มลัดชื่อศิลปินอัตโนมัติ
     if (chipContainer) {
         const artists = ['All', ...new Set(window.songs.map(s => s.artist || 'ไม่ระบุศิลปิน'))];
         chipContainer.innerHTML = artists.map(a => 
@@ -268,26 +253,21 @@ window.renderSongList = function(query = '', artistFilter = 'All') {
         ).join('');
     }
 
-    // กรองข้อมูลตามที่ค้นหา + ศิลปินที่เลือก
     const filteredSongs = window.songs.filter(song => {
         const q = query.toLowerCase();
         const artist = song.artist || 'ไม่ระบุศิลปิน';
-        const titleMatch = song.title && song.title.toLowerCase().includes(q);
-        const artistMatch = artist.toLowerCase().includes(q);
-        const artistFilterMatch = (artistFilter === 'All' || artist === artistFilter);
-        
-        return (titleMatch || artistMatch) && artistFilterMatch;
+        return ((song.title && song.title.toLowerCase().includes(q)) || artist.toLowerCase().includes(q)) 
+            && (artistFilter === 'All' || artist === artistFilter);
     });
 
     if (filteredSongs.length === 0) {
-        listContainer.innerHTML = '<p style="color:rgba(255,255,255,0.5); text-align:center; margin-top:40px;">' + (window.songs.length === 0 ? 'ยังไม่มีเพลงในคลัง' : 'ไม่พบเพลงที่ค้นหา') + '</p>';
+        listContainer.innerHTML = '<p style="color:rgba(255,255,255,0.5); text-align:center; margin-top:40px;">ไม่พบเพลงที่ค้นหา</p>';
         return;
     }
 
     filteredSongs.forEach(song => {
         const item = document.createElement('div');
         item.className = 'song-item';
-        
         const videoId = window.extractYouTubeID(song.audioPath);
         const thumbUrl = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : '';
         
@@ -318,9 +298,6 @@ window.renderSongList = function(query = '', artistFilter = 'All') {
     });
 }
 
-// ----------------------------------------------------
-// ระบบเล่นเพลง & เนื้อเพลง (ปรับปรุง Auto-scroll)
-// ----------------------------------------------------
 window.deleteSong = async function(id) {
     if (!window.isAdmin) return;
     if(confirm('ต้องการลบเพลงนี้ใช่หรือไม่?')) {
@@ -329,12 +306,13 @@ window.deleteSong = async function(id) {
             await fetchSongs();
         } catch(e) {
             console.error(e);
-            alert("ลบไม่สำเร็จ");
         }
     }
 }
 
-// ฟังก์ชันสำหรับสร้างรายการเนื้อเพลงทั้งหมดลงในคอนเทนเนอร์
+// ----------------------------------------------------
+// ระบบเนื้อเพลง
+// ----------------------------------------------------
 window.renderLyricsToContainer = function() {
     const container = document.getElementById('lyricsContainer');
     if(!container) return;
@@ -365,7 +343,7 @@ window.playSong = function(id) {
     window.currentLyricsArray = song.lyrics.split(/\n\s*\n/);
     window.currentLyricIndex = -1;
     window.renderTimestampEditor();
-    window.renderLyricsToContainer(); // สร้างเนื้อเพลงทั้งหมดเตรียมไว้
+    window.renderLyricsToContainer(); 
     window.updateLyricDisplay();
     window.showView('view-player');
 
@@ -383,10 +361,6 @@ window.playSong = function(id) {
                 videoId: videoId,
                 playerVars: { 'playsinline': 1, 'controls': 1 }
             });
-        } else {
-            alert("สคริปต์ YouTube ยังโหลดไม่เสร็จ กรุณารอสักครู่แล้วลองกดเล่นอีกครั้งครับ");
-            window.showView('view-list');
-            return;
         }
     }
 
@@ -432,9 +406,7 @@ window.saveTimestampsToFirebase = async function() {
     if (song) {
         try {
             await updateDoc(doc(db, "songs", window.currentSongId), { timestamps: song.timestamps });
-        } catch(e) {
-            console.error("Failed to save timestamp to Firebase", e);
-        }
+        } catch(e) {}
     }
 }
 
@@ -454,7 +426,6 @@ window.renderTimestampEditor = function() {
         row.style.padding = '5px 8px';
         row.style.borderRadius = '6px';
         row.style.marginBottom = '4px';
-        row.style.transition = 'background 0.2s ease';
 
         const textSnippet = lyric.split('\n')[0] || `ท่อนที่ ${index + 1}`;
         const label = document.createElement('span');
@@ -533,37 +504,31 @@ window.syncTimestampEditorUI = function() {
     });
 }
 
-// อัปเดตระบบแสดงผลเนื้อเพลงและเลื่อนจออัตโนมัติ
+/* =========================================
+   แก้ไขใหม่: ฟังก์ชันเลื่อนเนื้อเพลง
+   ========================================= */
 window.updateLyricDisplay = function() {
     const container = document.getElementById('lyricsContainer');
     if (!container) return;
 
-    // ลบสถานะไฮไลต์ (active) ออกจากทุกบรรทัดก่อน
+    // ล้างสถานะ active
     const allLines = container.querySelectorAll('.lyric-line');
     allLines.forEach(line => line.classList.remove('active'));
 
-    // ตรวจสอบและจัดการเลื่อนเนื้อเพลง
     if (window.currentLyricIndex >= 0 && window.currentLyricIndex < window.currentLyricsArray.length) {
         const activeLine = document.getElementById(`lyric-line-${window.currentLyricIndex}`);
         
         if (activeLine) {
-            activeLine.classList.add('active'); // ไฮไลต์บรรทัดปัจจุบัน
+            activeLine.classList.add('active'); 
             
-            // คำนวณตำแหน่งเพื่อเลื่อนท่อนปัจจุบันมาไว้ตรงกลางจอกล่องเนื้อเพลงพอดี
-            const containerCenter = container.clientHeight / 2;
-            const lineCenter = activeLine.offsetTop + (activeLine.clientHeight / 2);
-            
-            container.scrollTo({
-                top: lineCenter - containerCenter,
-                behavior: 'smooth'
-            });
+            // ใช้ scrollIntoView จะแม่นยำกว่าการคำนวณ offset แมนนวลมากครับ 
+            // มันจะจับ element ที่ active มาไว้ตรงกลางจอ (block: 'center') อัตโนมัติเลย
+            activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     } else if (window.currentLyricIndex === -1) {
-        // หากยังไม่เริ่มเพลง หรือเริ่มใหม่ ให้เลื่อนขึ้นไปบนสุด
         container.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // อัปเดตแผงเวลาของฝั่ง Admin
     window.syncTimestampEditorUI();
 }
 
