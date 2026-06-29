@@ -85,23 +85,28 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 }
 
 /* --- ส่วนเพิ่ม: แถบปุ่มลัดชื่อศิลปิน (Chips) แบบแสดงทั้งหมด --- */
-/* --- ปรับปรุง: แถบปุ่มลัดชื่อศิลปิน (Chips) แบบพับ/ขยายได้ --- */
 .artist-chips { 
     display: flex; 
-    flex-wrap: wrap; 
+    flex-wrap: wrap; /* บังคับให้ปุ่มตกลงมาบรรทัดใหม่เมื่อพื้นที่ไม่พอ */
     gap: 8px; 
-    overflow: hidden; 
-    height: 31px; /* ความสูงพอดีสำหรับ 1 บรรทัด */
-    padding: 0; 
-    margin-bottom: 0;
-    align-content: flex-start;
+    padding: 5px 0 15px 0; 
+    margin-bottom: 10px;
 }
-
-/* คลาสสำหรับเมื่อกดปุ่มขยายให้แสดงผลทุกบรรทัด */
-.artist-chips.expanded { 
-    height: auto; 
+.chip { 
+    background: #1c1c1e; 
+    color: #8e8e93; 
+    border: 1px solid #3a3a3c; 
+    padding: 6px 16px; 
+    border-radius: 20px; 
+    font-size: 0.85em; 
+    white-space: nowrap;
+    transition: all 0.2s;
+    cursor: pointer;
+    width: auto;
+    margin-top: 0;
 }
-
+.chip.active { background: #0a84ff; color: #ffffff; border-color: #0a84ff; }
+.chip:hover { background: #2c2c2e; }
 #songList {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
