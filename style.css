@@ -179,93 +179,56 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 @keyframes slideUp { 0% { transform: translateY(15px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
 .slide-up-anim { animation: slideUp 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
 
-/* --- กล่องเนื้อเพลง Apple Intelligence Glow --- */
-.lyric-box { 
+/* --- ระบบเนื้อเพลงแบบ Auto-scroll สไตล์ Apple Music --- */
+.lyrics-wrapper {
     position: relative;
-    padding: 25px 20px; /* ลด padding บน-ล่างลงนิดหน่อยให้มีพื้นที่ */
-    border-radius: 24px; 
-    min-height: 140px; 
-    
-    /* 🔴 จุดที่แก้ไขเพื่อแก้ปัญหาข้อความยาว */
-    max-height: 35vh; /* จำกัดความสูงไม่ให้เกิน 35% ของหน้าจอ */
-    overflow-y: auto; /* ถ้าเนื้อเพลงยาวเกิน ให้เลื่อนอ่านได้เฉพาะในกล่องนี้ */
-    display: flex; 
-    align-items: flex-start; /* ให้อ่านจากบนลงล่าง ไม่ดันออกกลางจอ */
-    justify-content: center; 
-    
-    text-align: center; 
-    font-size: clamp(1.1em, 4vw, 1.4em); /* ปรับขนาดฟอนต์ให้ยืดหยุ่นขึ้นนิดนึง */
-    font-weight: 700; 
-    line-height: 1.6; 
-    letter-spacing: -0.5px;
-    margin: 15px 0; 
-    flex-grow: 1; 
-    white-space: pre-wrap; 
-    word-break: break-word; 
-    overflow-wrap: break-word;
-    box-sizing: border-box; 
     width: 100%;
-    color: #ffffff;
-    border: none;
+    height: 40vh; /* ความสูงของจอเนื้อเพลง ปรับได้ตามชอบ */
+    margin: 15px 0;
+    overflow: hidden;
+    /* สร้างเอฟเฟกต์ Fade (จางหาย) ที่ขอบบนและขอบล่าง */
+    mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
     z-index: 1;
 }
 
-/* เพิ่ม Scrollbar สวยๆ สไตล์ Apple สำหรับกล่องเนื้อเพลง (กรณีท่อนนั้นยาวจริงๆ) */
-.lyric-box::-webkit-scrollbar { 
-    width: 4px; 
-}
-.lyric-box::-webkit-scrollbar-thumb { 
-    background: rgba(255, 255, 255, 0.3); 
-    border-radius: 10px; 
-}
-
-.lyric-box::before {
-    content: "";
-    position: absolute;
-    inset: -3px; 
-    border-radius: 26px; 
-    background: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff);
-    background-size: 300% 300%;
-    z-index: -2;
-    filter: blur(8px);
-    animation: appleAiGlow 6s ease-in-out infinite;
-}
-
-.lyric-box::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: 24px;
-    background: rgba(28, 28, 30, 0.85); 
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    z-index: -1;
-}
-
-@keyframes appleAiGlow {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-.lyric-sub { 
-    text-align: center; 
-    font-size: 1em; 
-    font-weight: 600;
-    color: #8e8e93; 
-    white-space: pre-wrap; 
-    word-break: break-word;
-    overflow-wrap: break-word;
-    min-height: 3em; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    padding: 10px 20px; 
+.lyrics-container {
+    height: 100%;
+    overflow-y: auto; /* ให้ผู้ใช้ใช้นิ้วเลื่อนดูเนื้อเพลงได้ */
+    scroll-behavior: smooth; /* ทำให้เวลาโค้ดสั่งเลื่อน มันจะสมูท */
+    scrollbar-width: none; /* ซ่อน Scrollbar ของ Firefox */
+    padding: 40vh 20px; /* ใช้ Padding ดันเพื่อให้ท่อนแรกและท่อนสุดท้ายอยู่กลางจอได้พอดี */
     box-sizing: border-box;
-    opacity: 0; 
-    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 25px; /* ระยะห่างระหว่างแต่ละท่อน */
+}
+.lyrics-container::-webkit-scrollbar { 
+    display: none; /* ซ่อน Scrollbar ของ Chrome/Safari */
+}
+
+/* สไตล์ของเนื้อเพลงแต่ละท่อน (สถานะปกติ) */
+.lyric-line {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4); /* สีจางๆ */
+    text-align: center;
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); /* แอนิเมชันเวลาเปลี่ยนท่อน */
+    transform-origin: center;
+    white-space: pre-wrap;
+    word-break: break-word;
     line-height: 1.5;
-    transition: color 0.3s;
+    cursor: pointer;
+}
+
+.lyric-line:hover { color: rgba(255, 255, 255, 0.7); }
+
+/* สไตล์ของเนื้อเพลงท่อนที่กำลังร้อง (สถานะ Active) */
+.lyric-line.active {
+    font-size: 1.5em; /* ตัวใหญ่ขึ้น */
+    color: #ffffff; /* สีสว่างชัดเจน */
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.3); /* เรืองแสงเบาๆ */
+    transform: scale(1.05); /* เด้งขยายออกมานิดนึง */
 }
 
 /* ซ่อนเนื้อเพลงท่อนที่ผ่านมาแล้ว */
