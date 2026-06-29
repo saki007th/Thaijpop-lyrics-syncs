@@ -24,13 +24,10 @@
     <div class="container">
         <div id="view-list" class="view active">
             <button id="btnAddSong" onclick="openAddView()" style="display: none;">✨ เพิ่มเพลงใหม่</button>
-            
             <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหาชื่อเพลง หรือ ศิลปิน..." oninput="filterSongs()">
-
             <div id="artistChips" class="artist-chips">
                 <button class="chip active" onclick="filterByArtist('All')">ทั้งหมด</button>
             </div>
-
             <h3 style="margin-top:20px; font-weight: normal; color: #b0bec5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">เลือกเพลงที่ต้องการฟัง</h3>
             <div id="songList"></div>
         </div>
@@ -59,11 +56,9 @@
                 <div id="youtubePlayer"></div>
             </div>
             
-    <div class="lyrics-wrapper">
-    <div id="lyricsContainer" class="lyrics-container">
-        <!-- เนื้อเพลงทั้งหมดจะถูกสร้างลงในนี้ด้วย JavaScript -->
-    </div>
-    </div>
+            <div class="lyrics-wrapper">
+                <div id="lyricsContainer" class="lyrics-container"></div>
+            </div>
             
             <div class="button-group" id="lyricControlBtnGroup">
                 <button class="btn-secondary" onclick="prevLyric()" style="flex: 1;">⏮ ย้อนกลับ</button>
