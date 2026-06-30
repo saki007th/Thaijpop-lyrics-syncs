@@ -13,28 +13,26 @@
     </div>
 
     <header>
-        <div class="header-spacer"></div>
+        <div class="header-spacer" style="width: 110px;"></div>
         <div id="headerTitle" class="header-title">คลังเพลงของฉัน</div>
-        <div class="header-btn-group" style="width: 140px;">
-            <button class="btn-auth" onclick="showView('view-settings')" style="font-size: 1.2em; padding: 0 10px;">⚙️</button>
+        <div class="header-btn-group" style="width: 110px;">
+            <button class="btn-auth" onclick="showView('view-settings')" style="font-size: 1.1em; padding: 0 8px;">⚙️</button>
             <button id="btnHeaderLogin" class="btn-auth btn-login" onclick="loginWithGoogle()">เข้าสู่ระบบ</button>
             <button id="btnHeaderLogout" class="btn-auth btn-logout" style="display:none;" onclick="logout()">ออกจากระบบ</button>
         </div>
     </header>
 
     <div class="container">
-        <!-- หน้าคลังเพลง -->
         <div id="view-list" class="view active">
             <button id="btnAddSong" onclick="openAddView()" style="display: none;">✨ เพิ่มเพลงใหม่</button>
             <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหาชื่อเพลง หรือ ศิลปิน..." oninput="filterSongs()">
             <div id="artistChips" class="artist-chips">
                 <button class="chip active" onclick="filterByArtist('All')">ทั้งหมด</button>
             </div>
-            <h3 style="margin-top:20px; font-weight: normal; color: #b0bec5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">เลือกเพลงที่ต้องการฟัง</h3>
+            <h3 style="margin-top:15px; font-weight: normal; color: #b0bec5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">เลือกเพลงที่ต้องการฟัง</h3>
             <div id="songList"></div>
         </div>
 
-        <!-- หน้าตั้งค่า (เลือกธีม และ สีพื้นหลัง) -->
         <div id="view-settings" class="view">
             <h3 style="font-weight: normal; color: #b0bec5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 0;">✨ เลือกสีออร่าการ์ดเพลง</h3>
             <div class="theme-list">
@@ -56,7 +54,6 @@
             <button class="btn-secondary" onclick="showView('view-list')" style="margin-top: 40px;">🏠 กลับคลังเพลง</button>
         </div>
 
-        <!-- หน้าเพิ่ม/แก้ไขเพลง -->
         <div id="view-add" class="view">
             <label>ชื่อเพลง:</label>
             <input type="text" id="inputTitle" placeholder="เช่น ソワレ (Soirée)">
@@ -72,11 +69,10 @@
             <button class="btn-secondary" onclick="showView('view-list')">❌ ยกเลิก</button>
         </div>
 
-        <!-- หน้าเล่นเพลง -->
         <div id="view-player" class="view">
-            <div id="playerSongInfo" style="text-align: center; margin-bottom: 15px; line-height: 1.4;">
-                <div id="playerTitle" style="font-size: 1.3em; font-weight: bold; color: #00b4db;">ชื่อเพลง</div>
-                <div id="playerArtist" style="font-size: 0.95em; color: #b0bec5; margin-top: 2px;">ศิลปิน</div>
+            <div id="playerSongInfo" style="text-align: center; margin-bottom: 8px; line-height: 1.2;">
+                <div id="playerTitle" style="font-size: 1.1em; font-weight: bold; color: #00b4db;">ชื่อเพลง</div>
+                <div id="playerArtist" style="font-size: 0.85em; color: #b0bec5; margin-top: 2px;">ศิลปิน</div>
             </div>
 
             <div class="youtube-container">
@@ -92,7 +88,6 @@
                 <button onclick="nextLyric()" style="flex: 2; font-size: 1.2em;">⏭ ถัดไป</button>
             </div>
 
-            <!-- ส่วนตั้งเวลา & เพิ่มชื่อนักร้อง -->
             <div class="timestamp-editor-container" id="timestampEditorSection">
                 <h4 style="margin: 0 0 10px 0; font-weight: normal; color: #b0bec5; font-size: 0.95em; display: flex; justify-content: space-between;">
                     <span id="tsEditorTitle">⏱ ตั้งเวลา & ใส่ชื่อคนร้อง (Admin)</span>
