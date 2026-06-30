@@ -33,13 +33,20 @@ window.isYTApiReady = false;
 window.currentFilter = 'All'; 
 
 // ==========================================
-// ฟังก์ชันปิด Dropdown เมื่อคลิกที่อื่น
+// ฟังก์ชันปิด Dropdown แบบครอบคลุม
 // ==========================================
 document.addEventListener('click', function(e) {
     if (!e.target.closest('.ts-singer-dropdown')) {
         document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show'));
     }
 });
+
+// ปิด Dropdown หากมีการเลื่อนสกอร์เมาส์ในหน้าต่าง เพื่อไม่ให้เมนูลอยค้าง
+window.addEventListener('scroll', function(e) {
+    if (e.target.id === 'timestampList' || e.target.id === 'lyricsContainer') {
+        document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show'));
+    }
+}, true);
 
 // ==========================================
 // ฟังก์ชันสกัดชื่อศิลปินจาก Text ที่พิมพ์
@@ -352,7 +359,7 @@ window.deleteSong = async function(id) {
 }
 
 // ----------------------------------------------------
-// ระบบเนื้อเพลง (พร้อมป้ายชื่อเรืองแสงแบบใหม่)
+// ระบบเนื้อเพลง
 // ----------------------------------------------------
 window.renderLyricsToContainer = function() {
     const container = document.getElementById('lyricsContainer');
@@ -375,10 +382,13 @@ window.renderLyricsToContainer = function() {
         const singerString = (currentSong.singers && currentSong.singers[index]) ? currentSong.singers[index] : null;
 
         if (singerString) {
-            // สร้างป้ายชื่อแยกตามคนที่เลือก (ถ้าเลือกร้อง 2 คน จะมี 2 ป้ายต่อกัน)
-            const singersArr = singerString.split(',').map(s => s.trim());
-            const badgesHtml = singersArr.map(s => `<span class="singer-badge">${s}</span>`).join('');
-            htmlContent = `<div class="singer-badges">${badgesHtml}</div><div>${lyric}</div>`;
+            const singersArr = singerString.split(',').map(s => s.trim()).filter(s => s);
+            if (singersArr.length > 0) {
+                const badgesHtml = singersArr.map(s => `<span class="singer-badge">${s}</span>`).join('');
+                htmlContent = `<div class="singer-badges">${badgesHtml}</div><div>${lyric}</div>`;
+            } else {
+                htmlContent = `<div>${lyric}</div>`;
+            }
         } else {
             htmlContent = `<div>${lyric}</div>`;
         }
@@ -452,21 +462,41 @@ window.playSong = function(id) {
     }, 100); 
 }
 
+// ==========================================
+// 🔴 แก้ปัญหาการบันทึก Array แบบมีช่องโหว่ (ข้อมูลหาย)
+// ==========================================
 window.saveTimestampsToFirebase = async function() {
     if (!window.isAdmin) return;
     const song = window.songs.find(s => s.id === window.currentSongId);
     if (song) {
         try {
+            const lyricCount = window.currentLyricsArray.length;
+            
+            // สร้าง Array ใหม่ที่เติมค่า null/"" ลงในช่องที่ว่าง เพื่อให้ Firebase บันทึกได้สมบูรณ์
+            const safeTimestamps = Array.from({length: lyricCount}, (_, i) => 
+                (song.timestamps && song.timestamps[i] != null) ? song.timestamps[i] : null
+            );
+            
+            const safeSingers = Array.from({length: lyricCount}, (_, i) => 
+                (song.singers && song.singers[i] != null) ? song.singers[i] : ""
+            );
+
             await updateDoc(doc(db, "songs", window.currentSongId), { 
-                timestamps: song.timestamps,
-                singers: song.singers || []
+                timestamps: safeTimestamps,
+                singers: safeSingers
             });
-        } catch(e) {}
+            
+            song.timestamps = safeTimestamps;
+            song.singers = safeSingers;
+            
+        } catch(e) {
+            console.error("Firebase Update Error:", e);
+        }
     }
 }
 
 // ----------------------------------------------------
-// ระบบ Sync พร้อม Dropdown เลือกนักร้อง
+// ระบบ Sync พร้อม Dropdown เลือกนักร้องแบบ Fixed ลอยไม่โดนตัด
 // ----------------------------------------------------
 window.renderTimestampEditor = function() {
     const container = document.getElementById('timestampList');
@@ -503,17 +533,15 @@ window.renderTimestampEditor = function() {
         controlsDiv.style.alignItems = 'center';
 
         if (window.isAdmin) {
-            // ดึงรายชื่อนักร้องอัตโนมัติจากช่องศิลปิน
             const allSingers = window.getSingersList(song.artist);
             
-            // สร้าง Custom Dropdown
             const dropdown = document.createElement('div');
             dropdown.className = 'ts-singer-dropdown';
             
             const toggleBtn = document.createElement('button');
             toggleBtn.className = 'ts-dropdown-toggle';
             
-            const currentSingers = (song.singers && song.singers[index]) ? song.singers[index].split(',').map(s=>s.trim()) : [];
+            const currentSingers = (song.singers && song.singers[index]) ? song.singers[index].split(',').map(s=>s.trim()).filter(s=>s) : [];
             toggleBtn.innerText = currentSingers.length > 0 ? currentSingers.join(', ') : '👤 เลือกร้อง';
             
             const menu = document.createElement('div');
@@ -535,7 +563,7 @@ window.renderTimestampEditor = function() {
                     const songIdx = window.songs.findIndex(s => s.id === window.currentSongId);
                     if (songIdx !== -1) {
                         if (!window.songs[songIdx].singers) window.songs[songIdx].singers = [];
-                        window.songs[songIdx].singers[index] = selected.length > 0 ? selected.join(', ') : null;
+                        window.songs[songIdx].singers[index] = selected.length > 0 ? selected.join(', ') : "";
                         window.saveTimestampsToFirebase();
                         window.renderLyricsToContainer();
                         window.updateLyricDisplay();
@@ -547,11 +575,27 @@ window.renderTimestampEditor = function() {
                 menu.appendChild(itemLabel);
             });
             
+            // 🔴 ตั้งค่า Position ให้กล่องเมนู เลื่อนพ้นขอบโดยอิงจากตำแหน่งบนจอแทน
             toggleBtn.onclick = (e) => {
-                document.querySelectorAll('.ts-dropdown-menu').forEach(m => {
-                    if (m !== menu) m.classList.remove('show');
-                });
-                menu.classList.toggle('show');
+                e.stopPropagation();
+                const isShowing = menu.classList.contains('show');
+                document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show'));
+                
+                if (!isShowing) {
+                    menu.classList.add('show');
+                    const rect = toggleBtn.getBoundingClientRect();
+                    menu.style.position = 'fixed'; // ลอยเหนือทุกสิ่ง
+                    menu.style.left = rect.left + 'px';
+                    menu.style.top = (rect.bottom + 5) + 'px'; 
+                    
+                    // ป้องกันล้นขอบจอด้านล่าง ให้กระเด้งไปเปิดด้านบนแทน
+                    setTimeout(() => {
+                        const menuRect = menu.getBoundingClientRect();
+                        if (menuRect.bottom > window.innerHeight) {
+                            menu.style.top = (rect.top - menuRect.height - 5) + 'px';
+                        }
+                    }, 0);
+                }
             };
             
             dropdown.appendChild(toggleBtn);
