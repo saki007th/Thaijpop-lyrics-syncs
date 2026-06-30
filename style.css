@@ -96,14 +96,29 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 .lyrics-container { position: relative; height: 100%; overflow-y: auto; scroll-behavior: smooth; scrollbar-width: none; padding: 100px 20px 200px 20px; box-sizing: border-box; display: block; mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%); }
 .lyrics-container::-webkit-scrollbar { display: none; }
 
-.lyric-line { font-size: 1.2em; font-weight: 600; color: rgba(255, 255, 255, 0.3); text-align: center; transition: all 0.3s ease; transform-origin: center; white-space: pre-wrap; word-break: break-word; line-height: 1.5; padding: 5px 0; margin-bottom: 25px; }
+
+/* =========================================
+   อัปเดตสไตล์เนื้อเพลง จัดซ้าย ขวา กลาง
+   ========================================= */
+.lyric-line { 
+    font-size: 1.2em; font-weight: 600; color: rgba(255, 255, 255, 0.3); 
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); 
+    white-space: pre-wrap; word-break: break-word; line-height: 1.5; 
+    padding: 5px 20px; /* เพิ่มช่องว่างด้านข้าง ให้ข้อความไม่ติดขอบเกินไป */
+    margin-bottom: 25px; 
+    display: flex; flex-direction: column; width: 100%; box-sizing: border-box;
+}
 .lyric-line:last-child { margin-bottom: 0; }
 .lyric-line.active { font-size: 1.45em; color: #ffffff; text-shadow: 0 0 15px rgba(255, 255, 255, 0.4); transform: scale(1.05); }
+
+/* คลาสจัดวางตำแหน่งเนื้อเพลงและให้ขยายออกจากมุมที่ถูกต้อง */
+.lyric-line.align-left { text-align: left; align-items: flex-start; transform-origin: left center; }
+.lyric-line.align-right { text-align: right; align-items: flex-end; transform-origin: right center; }
+.lyric-line.align-center { text-align: center; align-items: center; transform-origin: center; }
 
 /* สไตล์ป้ายชื่อนักร้อง */
 .singer-badges {
     display: flex;
-    justify-content: center;
     gap: 8px;
     margin-bottom: 8px;
     flex-wrap: wrap;
@@ -129,9 +144,8 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     transform: translateY(-3px) scale(1.05);
 }
 
-/* =========================================
-   สไตล์ Dropdown สำหรับหน้า Admin ที่แก้ไขใหม่
-   ========================================= */
+
+/* Dropdown สำหรับหน้า Admin */
 .ts-singer-dropdown { position: relative; }
 .ts-dropdown-toggle {
     background: rgba(10, 132, 255, 0.15) !important;
@@ -152,14 +166,13 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 }
 .ts-dropdown-toggle:hover { background: rgba(10, 132, 255, 0.25) !important; }
 
-/* เปลี่ยนจาก position: absolute เป็น position: fixed ที่คุมด้วย JS เพื่อไม่ให้โดนกรอบตัด */
 .ts-dropdown-menu {
     display: none;
     background: #2c2c2e;
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 10px;
     padding: 8px;
-    z-index: 99999; /* 🔴 ดันให้ลอยอยู่บนสุดของจอเสมอ */
+    z-index: 99999;
     box-shadow: 0 10px 25px rgba(0,0,0,0.8);
     min-width: 140px;
     max-height: 180px;
