@@ -18,21 +18,25 @@ body {
 header { 
     background: rgba(28, 28, 30, 0.7); 
     backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); 
-    color: #f5f5f7; padding: 12px 20px; 
+    color: #f5f5f7; 
+    /* 🔴 ลด Padding ของ Header ลง */
+    padding: 6px 16px; 
     display: flex; justify-content: space-between; align-items: center; 
     position: sticky; top: 0; z-index: 10; 
     border-bottom: 0.5px solid rgba(255, 255, 255, 0.1); 
 }
-.header-title { font-size: 1.2em; font-weight: 600; flex-grow: 1; text-align: center; letter-spacing: -0.5px; }
+/* 🔴 ลดขนาดฟอนต์ Title ด้านบน */
+.header-title { font-size: 1.05em; font-weight: 600; flex-grow: 1; text-align: center; letter-spacing: -0.5px; }
 .header-btn-group { display: flex; justify-content: flex-end; align-items: center; }
-.header-spacer { width: 140px; } 
 
-.btn-auth { background: transparent; border: none; padding: 6px 12px; font-size: 0.9em; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
+/* 🔴 ลดขนาดปุ่ม Login ให้เล็กลง */
+.btn-auth { background: transparent; border: none; padding: 4px 8px; font-size: 0.85em; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
 .btn-login { color: #0a84ff; }
 .btn-logout { color: #ff453a; }
 .btn-auth:hover { opacity: 0.7; }
 
-.container { padding: 20px; max-width: 650px; margin: auto; flex-grow: 1; width: 100%; box-sizing: border-box; }
+/* 🔴 ลดช่องว่างพื้นที่ด้านบนและล่างของจอหลัก */
+.container { padding: 12px 20px; max-width: 650px; margin: auto; flex-grow: 1; width: 100%; box-sizing: border-box; }
 
 button { 
     background: #0a84ff; color: white; border: none; 
@@ -56,7 +60,7 @@ input:focus, textarea:focus { outline: none; border-color: #0a84ff; background: 
 textarea { height: 160px; resize: vertical; line-height: 1.5; }
 .search-input { margin-top: 10px; margin-bottom: 5px; background: #1c1c1e; border-radius: 10px; padding: 12px 16px; font-size: 1.05em; }
 
-.artist-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 5px 0 15px 0; margin-bottom: 10px; }
+.artist-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 5px 0 10px 0; margin-bottom: 5px; }
 .chip { background: #1c1c1e; color: #8e8e93; border: 1px solid #3a3a3c; padding: 6px 16px; border-radius: 20px; font-size: 0.85em; white-space: nowrap; transition: all 0.2s; cursor: pointer; width: auto; margin-top: 0; }
 .chip.active { background: #0a84ff; color: #ffffff; border-color: #0a84ff; }
 .chip:hover { background: #2c2c2e; }
@@ -83,7 +87,8 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 .btn-action { margin: 0; padding: 8px; border-radius: 10px; font-size: 0.9em; flex-grow: 1; text-align: center; }
 
 /* YouTube Video Container */
-.youtube-container { position: relative; width: 100%; padding-bottom: 56.25%; margin-bottom: 20px; border-radius: 16px; background: #1c1c1e; flex-shrink: 0; z-index: 1; }
+/* 🔴 ลด Margin ด้านล่างวิดีโอ เพื่อให้มีพื้นที่เนื้อเพลงเยอะขึ้น */
+.youtube-container { position: relative; width: 100%; padding-bottom: 56.25%; margin-bottom: 12px; border-radius: 16px; background: #1c1c1e; flex-shrink: 0; z-index: 1; }
 .youtube-container::before { content: ""; position: absolute; inset: -5px; border-radius: 20px; background: var(--theme-glow); background-size: 300% 300%; z-index: -1; filter: blur(20px); opacity: 0.75; animation: appleAiGlow 8s ease-in-out infinite; }
 .youtube-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 16px; z-index: 2; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
 
@@ -96,95 +101,35 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 .lyrics-container { position: relative; height: 100%; overflow-y: auto; scroll-behavior: smooth; scrollbar-width: none; padding: 100px 20px 200px 20px; box-sizing: border-box; display: block; mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%); }
 .lyrics-container::-webkit-scrollbar { display: none; }
 
-
-/* =========================================
-   อัปเดตสไตล์เนื้อเพลง จัดซ้าย ขวา กลาง
-   ========================================= */
 .lyric-line { 
     font-size: 1.2em; font-weight: 600; color: rgba(255, 255, 255, 0.3); 
     transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); 
     white-space: pre-wrap; word-break: break-word; line-height: 1.5; 
-    padding: 5px 20px; /* เพิ่มช่องว่างด้านข้าง ให้ข้อความไม่ติดขอบเกินไป */
+    padding: 5px 20px; 
     margin-bottom: 25px; 
     display: flex; flex-direction: column; width: 100%; box-sizing: border-box;
 }
 .lyric-line:last-child { margin-bottom: 0; }
 .lyric-line.active { font-size: 1.45em; color: #ffffff; text-shadow: 0 0 15px rgba(255, 255, 255, 0.4); transform: scale(1.05); }
 
-/* คลาสจัดวางตำแหน่งเนื้อเพลงและให้ขยายออกจากมุมที่ถูกต้อง */
 .lyric-line.align-left { text-align: left; align-items: flex-start; transform-origin: left center; }
 .lyric-line.align-right { text-align: right; align-items: flex-end; transform-origin: right center; }
 .lyric-line.align-center { text-align: center; align-items: center; transform-origin: center; }
 
 /* สไตล์ป้ายชื่อนักร้อง */
-.singer-badges {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-}
-.singer-badge {
-    font-size: 0.65em;
-    color: rgba(255, 255, 255, 0.5);
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 4px 14px;
-    border-radius: 20px;
-    font-weight: bold;
-    letter-spacing: 0.5px;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-}
-.lyric-line.active .singer-badge {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.6);
-    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.25);
-    transform: translateY(-3px) scale(1.05);
-}
-
+.singer-badges { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.singer-badge { font-size: 0.65em; color: rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 4px 14px; border-radius: 20px; font-weight: bold; letter-spacing: 0.5px; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
+.lyric-line.active .singer-badge { color: #ffffff; background: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.6); box-shadow: 0 4px 15px rgba(255, 255, 255, 0.25); transform: translateY(-3px) scale(1.05); }
 
 /* Dropdown สำหรับหน้า Admin */
 .ts-singer-dropdown { position: relative; }
-.ts-dropdown-toggle {
-    background: rgba(10, 132, 255, 0.15) !important;
-    border: 1px solid rgba(10, 132, 255, 0.4) !important;
-    color: #0a84ff !important;
-    padding: 4px 8px !important;
-    border-radius: 6px !important;
-    font-size: 0.8em !important;
-    font-weight: 500;
-    cursor: pointer;
-    width: 100px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-align: center;
-    margin: 0 !important;
-    transition: background 0.2s;
-}
+.ts-dropdown-toggle { background: rgba(10, 132, 255, 0.15) !important; border: 1px solid rgba(10, 132, 255, 0.4) !important; color: #0a84ff !important; padding: 4px 8px !important; border-radius: 6px !important; font-size: 0.8em !important; font-weight: 500; cursor: pointer; width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; margin: 0 !important; transition: background 0.2s; }
 .ts-dropdown-toggle:hover { background: rgba(10, 132, 255, 0.25) !important; }
 
-.ts-dropdown-menu {
-    display: none;
-    background: #2c2c2e;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 10px;
-    padding: 8px;
-    z-index: 99999;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.8);
-    min-width: 140px;
-    max-height: 180px;
-    overflow-y: auto;
-}
+.ts-dropdown-menu { display: none; background: #2c2c2e; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px; z-index: 99999; box-shadow: 0 10px 25px rgba(0,0,0,0.8); min-width: 140px; max-height: 180px; overflow-y: auto; }
 .ts-dropdown-menu.show { display: flex; flex-direction: column; gap: 8px; }
-.ts-dropdown-item {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 0.85em; color: #f5f5f7; cursor: pointer;
-}
+.ts-dropdown-item { display: flex; align-items: center; gap: 8px; font-size: 0.85em; color: #f5f5f7; cursor: pointer; }
 .ts-dropdown-item input { width: 16px; height: 16px; margin: 0; cursor: pointer; }
-
 
 #lyricControlBtnGroup { display: flex; gap: 12px; width: 100%; margin-top: 10px; }
 #lyricControlBtnGroup button { margin-top: 0; }
