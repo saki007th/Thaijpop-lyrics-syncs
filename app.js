@@ -32,25 +32,19 @@ window.isAdmin = false;
 window.isYTApiReady = false;
 window.currentFilter = 'All'; 
 
-// ==========================================
-// ฟังก์ชันปิด Dropdown แบบครอบคลุม
-// ==========================================
+// ปิด Dropdown ครอบคลุม
 document.addEventListener('click', function(e) {
     if (!e.target.closest('.ts-singer-dropdown')) {
         document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show'));
     }
 });
-
-// ปิด Dropdown หากมีการเลื่อนสกอร์เมาส์ในหน้าต่าง เพื่อไม่ให้เมนูลอยค้าง
 window.addEventListener('scroll', function(e) {
     if (e.target.id === 'timestampList' || e.target.id === 'lyricsContainer') {
         document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show'));
     }
 }, true);
 
-// ==========================================
-// ฟังก์ชันสกัดชื่อศิลปินจาก Text ที่พิมพ์
-// ==========================================
+// สกัดชื่อศิลปิน
 window.getSingersList = function(artistStr) {
     if (!artistStr) return [];
     let parts = [];
@@ -64,9 +58,7 @@ window.getSingersList = function(artistStr) {
     return parts.map(p => p.trim()).filter(p => p);
 };
 
-// ==========================================
 // ระบบเปลี่ยนสีธีม และ พื้นหลัง
-// ==========================================
 const themes = {
     'default': 'linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff)',
     'ocean': 'linear-gradient(120deg, #2193b0, #6dd5ed, #2193b0, #6dd5ed)',
@@ -358,20 +350,33 @@ window.deleteSong = async function(id) {
     }
 }
 
-// ----------------------------------------------------
-// ระบบเนื้อเพลง
-// ----------------------------------------------------
+// ==========================================
+// 🔴 อัปเดต: ระบบเนื้อเพลง (จัด ซ้าย-ขวา อัตโนมัติ)
+// ==========================================
 window.renderLyricsToContainer = function() {
     const container = document.getElementById('lyricsContainer');
     if(!container) return;
     container.innerHTML = ''; 
     
     if (window.currentLyricsArray.length === 0) {
-        container.innerHTML = '<div class="lyric-line">ไม่มีเนื้อเพลง</div>';
+        container.innerHTML = '<div class="lyric-line align-center">ไม่มีเนื้อเพลง</div>';
         return;
     }
 
     const currentSong = window.songs.find(s => s.id === window.currentSongId);
+
+    // ดึงรายชื่อนักร้องเดี่ยว (คนที่ร้องคนเดียวในท่อน) เพื่อเอาไว้สลับซ้าย-ขวา
+    let uniqueSingers = [];
+    if (currentSong && currentSong.singers) {
+        currentSong.singers.forEach(s => {
+            if(s) {
+                const arr = s.split(',').map(x=>x.trim()).filter(x=>x);
+                if(arr.length === 1 && !uniqueSingers.includes(arr[0])) {
+                    uniqueSingers.push(arr[0]);
+                }
+            }
+        });
+    }
 
     window.currentLyricsArray.forEach((lyric, index) => {
         const lineDiv = document.createElement('div');
@@ -379,12 +384,29 @@ window.renderLyricsToContainer = function() {
         lineDiv.id = `lyric-line-${index}`;
 
         let htmlContent = lyric;
-        const singerString = (currentSong.singers && currentSong.singers[index]) ? currentSong.singers[index] : null;
+        let alignClass = 'align-center'; // ค่าเริ่มต้น: ตรงกลางเสมอ
+
+        const singerString = (currentSong && currentSong.singers && currentSong.singers[index]) ? currentSong.singers[index] : null;
 
         if (singerString) {
             const singersArr = singerString.split(',').map(s => s.trim()).filter(s => s);
             if (singersArr.length > 0) {
                 const badgesHtml = singersArr.map(s => `<span class="singer-badge">${s}</span>`).join('');
+                
+                // ตรวจสอบว่าร้องกี่คน เพื่อจัด ซ้าย ขวา หรือ กลาง
+                if (singersArr.length === 1) {
+                    const singerIdx = uniqueSingers.indexOf(singersArr[0]);
+                    // สลับ ซ้าย-ขวา (เลขคู่ไปซ้าย เลขคี่ไปขวา)
+                    if (singerIdx % 2 === 0) {
+                        alignClass = 'align-left';
+                    } else {
+                        alignClass = 'align-right';
+                    }
+                } else {
+                    // ถ้าร้องพร้อมกันหลายคน ให้อยู่ตรงกลาง
+                    alignClass = 'align-center';
+                }
+
                 htmlContent = `<div class="singer-badges">${badgesHtml}</div><div>${lyric}</div>`;
             } else {
                 htmlContent = `<div>${lyric}</div>`;
@@ -393,6 +415,7 @@ window.renderLyricsToContainer = function() {
             htmlContent = `<div>${lyric}</div>`;
         }
 
+        lineDiv.classList.add(alignClass); // ใส่คลาสจัดตำแหน่ง
         lineDiv.innerHTML = htmlContent;
         container.appendChild(lineDiv);
     });
@@ -462,21 +485,15 @@ window.playSong = function(id) {
     }, 100); 
 }
 
-// ==========================================
-// 🔴 แก้ปัญหาการบันทึก Array แบบมีช่องโหว่ (ข้อมูลหาย)
-// ==========================================
 window.saveTimestampsToFirebase = async function() {
     if (!window.isAdmin) return;
     const song = window.songs.find(s => s.id === window.currentSongId);
     if (song) {
         try {
             const lyricCount = window.currentLyricsArray.length;
-            
-            // สร้าง Array ใหม่ที่เติมค่า null/"" ลงในช่องที่ว่าง เพื่อให้ Firebase บันทึกได้สมบูรณ์
             const safeTimestamps = Array.from({length: lyricCount}, (_, i) => 
                 (song.timestamps && song.timestamps[i] != null) ? song.timestamps[i] : null
             );
-            
             const safeSingers = Array.from({length: lyricCount}, (_, i) => 
                 (song.singers && song.singers[i] != null) ? song.singers[i] : ""
             );
@@ -485,7 +502,6 @@ window.saveTimestampsToFirebase = async function() {
                 timestamps: safeTimestamps,
                 singers: safeSingers
             });
-            
             song.timestamps = safeTimestamps;
             song.singers = safeSingers;
             
@@ -496,7 +512,7 @@ window.saveTimestampsToFirebase = async function() {
 }
 
 // ----------------------------------------------------
-// ระบบ Sync พร้อม Dropdown เลือกนักร้องแบบ Fixed ลอยไม่โดนตัด
+// ระบบ Sync 
 // ----------------------------------------------------
 window.renderTimestampEditor = function() {
     const container = document.getElementById('timestampList');
@@ -534,10 +550,8 @@ window.renderTimestampEditor = function() {
 
         if (window.isAdmin) {
             const allSingers = window.getSingersList(song.artist);
-            
             const dropdown = document.createElement('div');
             dropdown.className = 'ts-singer-dropdown';
-            
             const toggleBtn = document.createElement('button');
             toggleBtn.className = 'ts-dropdown-toggle';
             
@@ -550,7 +564,6 @@ window.renderTimestampEditor = function() {
             allSingers.forEach(singer => {
                 const itemLabel = document.createElement('label');
                 itemLabel.className = 'ts-dropdown-item';
-                
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.value = singer;
@@ -575,7 +588,6 @@ window.renderTimestampEditor = function() {
                 menu.appendChild(itemLabel);
             });
             
-            // 🔴 ตั้งค่า Position ให้กล่องเมนู เลื่อนพ้นขอบโดยอิงจากตำแหน่งบนจอแทน
             toggleBtn.onclick = (e) => {
                 e.stopPropagation();
                 const isShowing = menu.classList.contains('show');
@@ -584,11 +596,10 @@ window.renderTimestampEditor = function() {
                 if (!isShowing) {
                     menu.classList.add('show');
                     const rect = toggleBtn.getBoundingClientRect();
-                    menu.style.position = 'fixed'; // ลอยเหนือทุกสิ่ง
+                    menu.style.position = 'fixed'; 
                     menu.style.left = rect.left + 'px';
                     menu.style.top = (rect.bottom + 5) + 'px'; 
                     
-                    // ป้องกันล้นขอบจอด้านล่าง ให้กระเด้งไปเปิดด้านบนแทน
                     setTimeout(() => {
                         const menuRect = menu.getBoundingClientRect();
                         if (menuRect.bottom > window.innerHeight) {
