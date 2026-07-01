@@ -69,10 +69,25 @@
             <button class="btn-secondary" onclick="showView('view-list')">❌ ยกเลิก</button>
         </div>
 
-        <div id="view-player" class="view">
-            <div id="playerSongInfo" style="text-align: center; margin-bottom: 8px; line-height: 1.2;">
-                <div id="playerTitle" style="font-size: 1.1em; font-weight: bold; color: #00b4db;">ชื่อเพลง</div>
-                <div id="playerArtist" style="font-size: 0.85em; color: #b0bec5; margin-top: 2px;">ศิลปิน</div>
+       <div id="view-player" class="view">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div id="playerSongInfo" style="text-align: left; line-height: 1.2;">
+                    <div id="playerTitle" style="font-size: 1.1em; font-weight: bold; color: #00b4db;">ชื่อเพลง</div>
+                    <div id="playerArtist" style="font-size: 0.85em; color: #b0bec5; margin-top: 2px;">ศิลปิน</div>
+                </div>
+                <button id="btnToggleLayout" class="btn-secondary" onclick="togglePlayerLayout()" style="width: auto; margin-top: 0; padding: 6px 12px; font-size: 0.9em; border-radius: 8px;">🖥️ แนวนอน</button>
+                
+            <div id="playerContentLayout" class="layout-vertical">
+                <div class="youtube-container">
+                    <div id="youtubePlayer"></div>
+                </div>
+                
+                <div class="lyrics-wrapper">
+                    <div id="lyricsContainer" class="lyrics-container"></div>
+                </div>
+            </div>
+            
+            <div class="button-group" id="lyricControlBtnGroup">
             </div>
 
             <div class="youtube-container">
