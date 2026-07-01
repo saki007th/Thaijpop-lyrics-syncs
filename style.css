@@ -153,3 +153,93 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 .bg-btn { flex: 1; min-width: 120px; border-radius: 12px; padding: 12px; font-size: 0.9em; font-weight: bold; color: white; border: 2px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
 .bg-btn:hover { border-color: rgba(255,255,255,0.5); transform: translateY(-2px); }
 .bg-btn:active { transform: scale(0.95); }
+
+/* ====================================================
+   💻 DESKTOP LAYOUT (Media Queries for screens >= 1024px)
+   ==================================================== */
+@media screen and (min-width: 1024px) {
+    /* 1. ขยาย Container และจัดตำแหน่งให้อยู่ตรงกลาง */
+    .container {
+        max-width: 1200px;
+        padding: 24px 40px;
+    }
+
+    /* 2. หน้าคลังเพลง: ขยายกริดให้แสดงการ์ดเพลงได้มากขึ้น */
+    #songList {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 24px;
+        max-height: 75vh;
+    }
+
+    /* 3. หน้า Player: จัด Layout แบบ Split Screen (ซ้าย-ขวา) */
+    #view-player.active {
+        display: grid;
+        grid-template-columns: 400px 1fr; /* ซ้าย 400px, ขวาที่เหลือ */
+        grid-template-rows: auto auto auto auto auto auto;
+        column-gap: 40px;
+        row-gap: 15px;
+        align-items: start;
+        padding-bottom: 0;
+    }
+
+    /* -- จัดวางองค์ประกอบฝั่งซ้าย -- */
+    #playerSongInfo { 
+        grid-column: 1; 
+        grid-row: 1; 
+        text-align: left !important; 
+    }
+    
+    .youtube-container { 
+        grid-column: 1; 
+        grid-row: 2; 
+        margin-bottom: 0; 
+    }
+    
+    #lyricControlBtnGroup { 
+        grid-column: 1; 
+        grid-row: 3; 
+        margin-top: 5px; 
+    }
+    
+    #timestampEditorSection { 
+        grid-column: 1; 
+        grid-row: 4; 
+        margin-top: 5px; 
+    }
+    
+    #btnResetSync { 
+        grid-column: 1; 
+        grid-row: 5; 
+        margin-top: 10px !important; 
+    }
+    
+    #view-player > button:last-child { 
+        grid-column: 1; 
+        grid-row: 6; 
+        margin-top: 20px !important; 
+    }
+
+    /* -- จัดวางองค์ประกอบฝั่งขวา (เนื้อเพลง) -- */
+    .lyrics-wrapper {
+        grid-column: 2;
+        grid-row: 1 / span 6; 
+        height: calc(100vh - 140px); 
+        margin: 0;
+        position: sticky;
+        top: 80px; 
+    }
+
+    .lyrics-container {
+        padding: 60px 40px 150px 40px; 
+    }
+
+    /* ปรับฟอนต์เนื้อเพลงให้ใหญ่ขึ้น */
+    .lyric-line { font-size: 1.3em; }
+    .lyric-line.active { font-size: 1.6em; }
+
+    /* 4. หน้าตั้งค่าและเพิ่มเพลง */
+    #view-add, #view-settings {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+}
