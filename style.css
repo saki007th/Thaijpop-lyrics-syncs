@@ -157,33 +157,44 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 .lyric-line:last-child { margin-bottom: 0; 
 }
 
-/* 1. ปรับขนาดเนื้อเพลงท่อนที่กำลังร้อง (โหมดปกติ) */
+/* =========================================
+   อัปเดต: ระบบเนื้อเพลงแบบ Fit บรรทัดเดียว
+   ========================================= */
+
+/* 1. คืนค่าสีขาวให้ท่อนที่กำลังร้อง และบังคับไม่ให้เบราว์เซอร์ตัดคำเอง */
 .lyric-line.active { 
-    font-size: 1.5em; /* 🔴 ลดลงจาก 2em เพื่อไม่ให้ใหญ่คับจอ */
-    color: #ffffff; 
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.2); 
+    color: #ffffff !important; /* 🔴 ล็อกให้เป็นสีขาวเสมอ */
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.8), 0 0 25px rgba(255, 255, 255, 0.4) !important; 
     transform: scale(1.05); 
-    margin: 20px 0; /* 🔴 ลดระยะห่างลงจาก 40px เพื่อไม่ให้ดันจนล้น */
+    margin: 25px 0; 
+    white-space: pre !important; /* 🔴 บังคับไม่ให้ตัดคำขึ้นบรรทัดใหม่เอง (ยกเว้นเคาะ Enter มาจากหลังบ้าน) */
 }
 
-/* 2. ปรับขนาดอัตโนมัติเมื่ออยู่ในโหมด "แนวนอน" */
+/* 2. เปลี่ยนกล่องเนื้อเพลงให้เป็น Container เพื่อวัดขนาดความกว้างแบบเรียลไทม์ */
+.layout-horizontal .lyrics-wrapper {
+    container-type: inline-size; 
+}
+
+/* 3. ปรับขนาดฟอนต์ให้ Fit อัตโนมัติเมื่ออยู่แนวนอน */
 .layout-horizontal .lyric-line.active {
-    /* 🔴 ปรับ clamp ใหม่: เล็กสุด 1.4em, ขยายตามจอที่ 1.8vw, ใหญ่สุดไม่เกิน 2em */
-    font-size: clamp(1.4em, 1.8vw, 2em); 
-    line-height: 1.5; /* เพิ่มช่องว่างระหว่างบรรทัดนิดหน่อยให้อ่านง่ายขึ้น */
+    /* 🔴 ใช้ cqw (Container Query Width) เพื่อยืดหดฟอนต์ตามความกว้างกล่อง ไม่ให้ล้นกรอบ */
+    font-size: clamp(1.2em, 3.5cqw, 1.8em) !important; 
+    line-height: 1.6;
 }
 
-/* 3. ปรับป้ายชื่อคนร้องในท่อนปัจจุบัน */
+/* 4. ปรับขนาดป้ายชื่อคนร้อง */
 .lyric-line.active .singer-badge {
     font-size: 0.6em; 
     padding: 6px 16px;
     margin-bottom: 8px;
+    white-space: normal; /* ป้ายชื่อปล่อยให้แสดงผลตามปกติ */
 }
 
-/* 4. ปรับท่อนที่ไม่ได้ร้อง */
+/* 5. ท่อนที่ยังไม่ถึง ให้เป็นสีจาง และห้ามตัดคำเช่นเดียวกัน */
 .lyric-line {
-    font-size: 1em; /* เล็กลงนิดนึงเพื่อสร้างความต่าง */
+    font-size: 1.1em; 
     color: rgba(255, 255, 255, 0.3); 
+    white-space: pre !important; /* ห้ามตัดคำมั่วซั่ว */
 }
 
 .lyric-line.align-left { text-align: left; align-items: flex-start; transform-origin: left center; }
