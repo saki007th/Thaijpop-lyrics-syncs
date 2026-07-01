@@ -79,7 +79,17 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 .song-item:hover::after { background: rgba(44, 44, 46, 0.95); }
 
 .song-info-wrapper { display: flex; flex-direction: column; align-items: flex-start; flex-grow: 1; min-width: 0; overflow: hidden; width: 100%; }
-.song-thumbnail { width: 100%; height: 120px; border-radius: 10px; object-fit: cover; margin-bottom: 12px; flex-shrink: 0; background: #2c2c2e; }
+
+.song-thumbnail { 
+    width: 100%; 
+    aspect-ratio: 16 / 9; /* ปรับเป็นสัดส่วนมาตรฐานวิดีโอ */
+    border-radius: 10px; 
+    object-fit: cover; 
+    margin-bottom: 12px; 
+    flex-shrink: 0; 
+    background: #2c2c2e; 
+}
+
 .song-item-title-container { width: 100%; flex-grow: 1; min-width: 0; overflow-x: auto; white-space: nowrap; scrollbar-width: none; -ms-overflow-style: none; }
 .song-item-title-container::-webkit-scrollbar { display: none; }
 .song-item-title { font-size: 1.05em; font-weight: 600; letter-spacing: -0.3px; display: inline-block; padding-right: 10px; color: #ffffff; }
@@ -87,8 +97,17 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 .btn-action { margin: 0; padding: 8px; border-radius: 10px; font-size: 0.9em; flex-grow: 1; text-align: center; }
 
 /* YouTube Video Container */
-/* 🔴 ลด Margin ด้านล่างวิดีโอ เพื่อให้มีพื้นที่เนื้อเพลงเยอะขึ้น */
-.youtube-container { position: relative; width: 100%; padding-bottom: 56.25%; margin-bottom: 12px; border-radius: 16px; background: #1c1c1e; flex-shrink: 0; z-index: 1; }
+.youtube-container { 
+    position: relative; 
+    width: 100%; 
+    aspect-ratio: 16 / 9; /* แทนการใช้ padding-bottom % */
+    margin-bottom: 16px; 
+    border-radius: 16px; 
+    background: #1c1c1e; 
+    flex-shrink: 0; 
+    z-index: 1; 
+}
+
 .youtube-container::before { content: ""; position: absolute; inset: -5px; border-radius: 20px; background: var(--theme-glow); background-size: 300% 300%; z-index: -1; filter: blur(20px); opacity: 0.75; animation: appleAiGlow 8s ease-in-out infinite; }
 .youtube-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 16px; z-index: 2; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
 
