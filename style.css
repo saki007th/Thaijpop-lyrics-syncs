@@ -161,13 +161,14 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
    อัปเดต: ระบบเนื้อเพลงแบบ Fit บรรทัดเดียว
    ========================================= */
 
-/* 1. คืนค่าสีขาวให้ท่อนที่กำลังร้อง และบังคับไม่ให้เบราว์เซอร์ตัดคำเอง */
+/* 1. คืนค่าสีขาว และเปลี่ยนการตัดคำให้ยืดหยุ่นขึ้น */
 .lyric-line.active { 
-    color: #ffffff !important; /* 🔴 ล็อกให้เป็นสีขาวเสมอ */
+    color: #ffffff !important; 
     text-shadow: 0 0 12px rgba(255, 255, 255, 0.8), 0 0 25px rgba(255, 255, 255, 0.4) !important; 
     transform: scale(1.05); 
     margin: 25px 0; 
-    white-space: pre !important; /* 🔴 บังคับไม่ให้ตัดคำขึ้นบรรทัดใหม่เอง (ยกเว้นเคาะ Enter มาจากหลังบ้าน) */
+    white-space: pre-wrap !important; /* 🔴 เปลี่ยนจาก pre เป็น pre-wrap */
+    word-break: break-word; /* 🔴 เพิ่มการสั่งให้ตัดคำเมื่อชนขอบ */
 }
 
 /* 2. เปลี่ยนกล่องเนื้อเพลงให้เป็น Container เพื่อวัดขนาดความกว้างแบบเรียลไทม์ */
@@ -175,11 +176,11 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     container-type: inline-size; 
 }
 
-/* 3. ปรับขนาดฟอนต์ให้ Fit อัตโนมัติเมื่ออยู่แนวนอน */
+/* 3. ปรับขนาดฟอนต์แนวนอน */
 .layout-horizontal .lyric-line.active {
-    /* 🔴 ใช้ cqw (Container Query Width) เพื่อยืดหดฟอนต์ตามความกว้างกล่อง ไม่ให้ล้นกรอบ */
-    font-size: clamp(1.2em, 3.5cqw, 1.8em) !important; 
-    line-height: 1.6;
+    /* 🔴 ปรับ clamp ให้ค่าต่ำสุดและการขยายเล็กลง เพื่อให้อยู่ในบรรทัดเดียวได้ง่ายขึ้น */
+    font-size: clamp(1em, 2.5cqw, 1.6em) !important; 
+    line-height: 1.5;
 }
 
 /* 4. ปรับขนาดป้ายชื่อคนร้อง */
@@ -190,11 +191,12 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     white-space: normal; /* ป้ายชื่อปล่อยให้แสดงผลตามปกติ */
 }
 
-/* 5. ท่อนที่ยังไม่ถึง ให้เป็นสีจาง และห้ามตัดคำเช่นเดียวกัน */
+/* 5. ท่อนที่ยังไม่ถึง ให้เป็นสีจาง */
 .lyric-line {
     font-size: 1.1em; 
     color: rgba(255, 255, 255, 0.3); 
-    white-space: pre !important; /* ห้ามตัดคำมั่วซั่ว */
+    white-space: pre-wrap !important; /* 🔴 เปลี่ยนเป็น pre-wrap เช่นกัน */
+    word-break: break-word;
 }
 
 .lyric-line.align-left { text-align: left; align-items: flex-start; transform-origin: left center; }
