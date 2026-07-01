@@ -745,3 +745,34 @@ window.resetSync = function() {
         }
     }
 }
+
+// สถานะ Layout ปัจจุบัน
+window.isLandscapeLayout = false;
+
+// ฟังก์ชันสลับมุมมอง
+window.togglePlayerLayout = function() {
+    window.isLandscapeLayout = !window.isLandscapeLayout;
+    
+    const layoutContainer = document.getElementById('playerContentLayout');
+    const mainContainer = document.querySelector('.container');
+    const toggleBtn = document.getElementById('btnToggleLayout');
+
+    if (window.isLandscapeLayout) {
+        // เปลี่ยนเป็นโหมดแนวนอน
+        layoutContainer.classList.remove('layout-vertical');
+        layoutContainer.classList.add('layout-horizontal');
+        mainContainer.classList.add('wide-mode'); // ขยาย container
+        toggleBtn.innerText = '📱 แนวตั้ง';
+    } else {
+        // เปลี่ยนกลับเป็นโหมดแนวตั้ง
+        layoutContainer.classList.remove('layout-horizontal');
+        layoutContainer.classList.add('layout-vertical');
+        mainContainer.classList.remove('wide-mode'); // หด container กลับ
+        toggleBtn.innerText = '🖥️ แนวนอน';
+    }
+    
+    // อัปเดตตำแหน่งการเลื่อนเนื้อเพลงให้ตรงจุดกึ่งกลางของ Layout ใหม่
+    setTimeout(() => {
+        window.updateLyricDisplay();
+    }, 300);
+};
