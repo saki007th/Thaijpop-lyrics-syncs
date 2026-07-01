@@ -745,3 +745,17 @@ window.resetSync = function() {
         }
     }
 }
+// ==========================================
+// 📱 ระบบสลับมุมมอง (Desktop Split / Mobile Stacked)
+// ==========================================
+window.toggleViewMode = function() {
+    const player = document.getElementById('view-player');
+    if (player) {
+        player.classList.toggle('stacked-mode');
+        
+        // เลื่อนหน้าจอขึ้นไปด้านบนสุดเพื่อให้เห็นวิดีโอทันทีที่สลับโหมด
+        if (player.classList.contains('stacked-mode')) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+}
