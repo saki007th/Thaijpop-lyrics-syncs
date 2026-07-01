@@ -150,6 +150,21 @@ async function fetchSongs() {
         });
         document.getElementById('loadingOverlay').style.display = 'none';
         
+        // 🔴 เช็ค Deep Link จาก URL parameter '?song=xxxx'
+        const urlParams = new URLSearchParams(window.location.search);
+        const songIdFromUrl = urlParams.get('song');
+
+        if (songIdFromUrl) {
+            const foundSong = window.songs.find(s => s.id === songIdFromUrl);
+            if (foundSong) {
+                window.renderSongList();
+                window.playSong(foundSong.id);
+                // เคลียร์ URL ให้สะอาดหลังจากโหลดเสร็จ (اختياري)
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return; // หยุดทำงาน เพื่อเข้าสู่หน้าเล่นเพลงทันที
+            }
+        }
+        
         if (!document.getElementById('view-player').classList.contains('active') && 
             !document.getElementById('view-add').classList.contains('active') &&
             !document.getElementById('view-settings').classList.contains('active')) {
@@ -452,7 +467,7 @@ window.playSong = function(id) {
     window.updateLyricDisplay();
     window.showView('view-player');
 
-    const videoId = window.extractYouTubeID(song.audioPath);
+const videoId = window.extractYouTubeID(song.audioPath);
     
     if (window.ytPlayer) {
         if (typeof window.ytPlayer.loadVideoById === 'function') window.ytPlayer.loadVideoById(videoId);
@@ -460,7 +475,11 @@ window.playSong = function(id) {
         if (window.isYTApiReady || (window.YT && window.YT.Player)) {
             window.ytPlayer = new YT.Player('youtubePlayer', {
                 height: '100%', width: '100%', videoId: videoId,
-                playerVars: { 'playsinline': 1, 'controls': 1 }
+                playerVars: { 'playsinline': 1, 'controls': 1 },
+                // 🔴 เพิ่มการจับ Event เมื่อสถานะวิดีโอเปลี่ยน
+                events: {
+                    'onStateChange': window.onPlayerStateChange
+                }
             });
         }
     }
@@ -952,3 +971,60 @@ window.togglePlayerLayout = function() {
 // โหลดค่า Layout เริ่มต้นตอนเปิดเว็บ
 const savedLayout = localStorage.getItem('selectedLayout') || 'vertical';
 window.setPlayerLayout(savedLayout);
+
+// ==========================================
+// ระบบเล่นต่อเนื่อง (Autoplay Next)
+// ==========================================
+window.onPlayerStateChange = function(event) {
+    // โค้ด 0 คือ YT.PlayerState.ENDED (เมื่อวิดีโอเล่นจบ)
+    if (event.data === 0) {
+        window.playNextSongInList();
+    }
+};
+
+window.playNextSongInList = function() {
+    if (!window.songs || window.songs.length === 0) return;
+    
+    // หาตำแหน่งเพลงปัจจุบันในรายการ
+    const currentIndex = window.songs.findIndex(s => s.id === window.currentSongId);
+    let nextIndex = currentIndex + 1;
+    
+    // ถ้าถึงเพลงสุดท้ายในคลังแล้ว ให้วนกลับไปเล่นเพลงแรกสุดใหม่
+    if (nextIndex >= window.songs.length) {
+        nextIndex = 0;
+    }
+    
+    const nextSong = window.songs[nextIndex];
+    if (nextSong) {
+        window.playSong(nextSong.id);
+    }
+};
+
+// ==========================================
+// ระบบแชร์ลิงก์ตรง (Deep Linking Share)
+// ==========================================
+window.shareSong = function() {
+    if (!window.currentSongId) return;
+    
+    // สร้าง URL พร้อมพ่วง ID เพลง
+    const shareUrl = window.location.origin + window.location.pathname + '?song=' + window.currentSongId;
+    
+    // คัดลอกลง Clipboard แบบเงียบๆ
+    navigator.clipboard.writeText(shareUrl).then(() => {
+        const btn = document.getElementById('btnShareSong');
+        const originalText = btn.innerText;
+        btn.innerText = '✅ คัดลอกแล้ว';
+        btn.style.background = 'rgba(52, 199, 89, 0.2)';
+        btn.style.color = '#34c759';
+        
+        // คืนค่าปุ่มกลับเป็นเหมือนเดิมหลังผ่านไป 2 วินาที
+        setTimeout(() => {
+            btn.innerText = originalText;
+            btn.style.background = '#2c2c2e';
+            btn.style.color = '#f5f5f7';
+        }, 2000);
+    }).catch(err => {
+        console.error('Could not copy text: ', err);
+        alert("คัดลอกลิงก์ไม่สำเร็จ กรุณาก๊อปปี้ลิงก์นี้: " + shareUrl);
+    });
+};
