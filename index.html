@@ -79,12 +79,19 @@
         </div>
 
 <div id="view-player" class="view">
+            <!-- ส่วนหัว: ข้อมูลเพลง และ กลุ่มปุ่มเครื่องมือ -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <div id="playerSongInfo" style="text-align: left; line-height: 1.2;">
                     <div id="playerTitle" style="font-size: 1.1em; font-weight: bold; color: #00b4db;">ชื่อเพลง</div>
                     <div id="playerArtist" style="font-size: 0.85em; color: #b0bec5; margin-top: 2px;">ศิลปิน</div>
                 </div>
-                <button id="btnToggleLayout" class="btn-secondary" onclick="togglePlayerLayout()" style="width: auto; margin-top: 0; padding: 6px 12px; font-size: 0.9em; border-radius: 8px;">🖥️ แนวนอน</button>
+                
+                <div style="display: flex; gap: 8px;">
+                    <!-- 🔴 ปุ่มแชร์เพลง -->
+                    <button id="btnShareSong" class="btn-secondary" onclick="shareSong()" style="width: auto; margin-top: 0; padding: 6px 12px; font-size: 0.9em; border-radius: 8px;">🔗 แชร์</button>
+                    
+                    <button id="btnToggleLayout" class="btn-secondary" onclick="togglePlayerLayout()" style="width: auto; margin-top: 0; padding: 6px 12px; font-size: 0.9em; border-radius: 8px;">🖥️ แนวนอน</button>
+                </div>
             </div>
 
             <div id="playerContentLayout" class="layout-vertical">
@@ -96,7 +103,7 @@
                     <div id="lyricsContainer" class="lyrics-container"></div>
                 </div>
             </div> 
-            
+     
             <div class="button-group" id="lyricControlBtnGroup">
                 <button class="btn-secondary" onclick="prevLyric()" style="flex: 1;">⏮ ย้อนกลับ</button>
                 <button onclick="nextLyric()" style="flex: 2; font-size: 1.2em;">⏭ ถัดไป</button>
