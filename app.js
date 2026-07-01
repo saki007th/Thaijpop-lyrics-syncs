@@ -169,14 +169,20 @@ window.extractYouTubeID = function(url) {
     return (match && match[2].length === 11) ? match[2] : null;
 }
 
+// ----------------------------------------------------
+// ระบบนำทาง (Navigation) และจัดการแสดงผล View
+// ----------------------------------------------------
 window.showView = function(viewId) {
     document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
     document.getElementById(viewId).classList.add('active');
     
     const headerTitle = document.getElementById('headerTitle');
+    const mainContainer = document.querySelector('.container');
+    const savedLayoutMode = localStorage.getItem('selectedLayout') || 'vertical';
     
     if (viewId === 'view-list') {
         headerTitle.innerText = 'คลังเพลงของฉัน';
+        if(mainContainer) mainContainer.classList.remove('wide-mode'); // หดหน้าจอคลังเพลงให้แคบตามปกติ
         document.getElementById('btnAddSong').style.display = window.isAdmin ? 'block' : 'none';
         const searchInput = document.getElementById('searchInput');
         if(searchInput) searchInput.value = '';
@@ -189,6 +195,9 @@ window.showView = function(viewId) {
         headerTitle.innerText = 'กำลังเล่นเพลง';
         document.getElementById('btnAddSong').style.display = 'none';
         
+        // สั่งเปิด Layout เครื่องเล่นตามที่ผู้ใช้เซฟล่าสุด
+        window.setPlayerLayout(savedLayoutMode);
+
         const lyricControlBtnGroup = document.getElementById('lyricControlBtnGroup');
         const timestampEditorSection = document.getElementById('timestampEditorSection');
         const btnResetSync = document.getElementById('btnResetSync');
@@ -205,8 +214,19 @@ window.showView = function(viewId) {
     } else if (viewId === 'view-settings') {
         headerTitle.innerText = 'การตั้งค่า';
         document.getElementById('btnAddSong').style.display = 'none';
+        if(mainContainer) mainContainer.classList.remove('wide-mode'); // หน้าตั้งค่าไม่ควรขยายกว้าง
+
+        // จัดการปุ่มกลับไปหน้าเล่นเพลง
+        const btnReturn = document.getElementById('btnReturnToPlayer');
+        if (btnReturn) {
+            btnReturn.style.display = window.currentSongId ? 'block' : 'none';
+        }
+        
+        // ไฮไลต์ปุ่มเลือก Layout ปัจจุบันให้เห็นเด่นชัด
+        window.setPlayerLayout(savedLayoutMode);
     } else {
         document.getElementById('btnAddSong').style.display = 'none';
+        if(mainContainer) mainContainer.classList.remove('wide-mode');
     }
 }
 
@@ -351,7 +371,7 @@ window.deleteSong = async function(id) {
 }
 
 // ==========================================
-// 🔴 อัปเดต: ระบบเนื้อเพลง (จัด ซ้าย-ขวา อัตโนมัติ)
+// ระบบเนื้อเพลง (จัด ซ้าย-ขวา อัตโนมัติ)
 // ==========================================
 window.renderLyricsToContainer = function() {
     const container = document.getElementById('lyricsContainer');
@@ -512,7 +532,7 @@ window.saveTimestampsToFirebase = async function() {
 }
 
 // ----------------------------------------------------
-// ระบบ Sync 
+// ระบบ Sync Timestamp และตั้งค่านักร้อง
 // ----------------------------------------------------
 window.renderTimestampEditor = function() {
     const container = document.getElementById('timestampList');
@@ -746,33 +766,67 @@ window.resetSync = function() {
     }
 }
 
-// สถานะ Layout ปัจจุบัน
-window.isLandscapeLayout = false;
+// ==========================================
+// ระบบจัดการ Layout (แนวตั้ง / แนวนอน) 
+// ==========================================
 
-// ฟังก์ชันสลับมุมมอง
-window.togglePlayerLayout = function() {
-    window.isLandscapeLayout = !window.isLandscapeLayout;
+// ฟังก์ชันหลักที่ใช้จัดการสลับ Layout และบันทึกค่าลง LocalStorage
+window.setPlayerLayout = function(layoutMode) {
+    localStorage.setItem('selectedLayout', layoutMode);
+    window.isLandscapeLayout = (layoutMode === 'horizontal');
     
     const layoutContainer = document.getElementById('playerContentLayout');
     const mainContainer = document.querySelector('.container');
     const toggleBtn = document.getElementById('btnToggleLayout');
+    
+    // อัปเดตสถานะปุ่มไฮไลต์ในหน้าตั้งค่า
+    const btnOptVertical = document.getElementById('btnOptVertical');
+    const btnOptHorizontal = document.getElementById('btnOptHorizontal');
+    
+    if (btnOptVertical && btnOptHorizontal) {
+        if (layoutMode === 'horizontal') {
+            btnOptHorizontal.style.borderColor = '#0a84ff';
+            btnOptVertical.style.borderColor = 'rgba(255,255,255,0.1)';
+        } else {
+            btnOptVertical.style.borderColor = '#0a84ff';
+            btnOptHorizontal.style.borderColor = 'rgba(255,255,255,0.1)';
+        }
+    }
 
-    if (window.isLandscapeLayout) {
-        // เปลี่ยนเป็นโหมดแนวนอน
-        layoutContainer.classList.remove('layout-vertical');
-        layoutContainer.classList.add('layout-horizontal');
-        mainContainer.classList.add('wide-mode'); // ขยาย container
-        toggleBtn.innerText = '📱 แนวตั้ง';
+    // จัดการคลาสสลับโครงสร้างหน้าจอ
+    if (layoutMode === 'horizontal') {
+        if (layoutContainer) {
+            layoutContainer.classList.remove('layout-vertical');
+            layoutContainer.classList.add('layout-horizontal');
+        }
+        // ขยายหน้าจอเมื่ออยู่ในหน้าเล่นเพลงเท่านั้น
+        const viewPlayer = document.getElementById('view-player');
+        if (mainContainer && viewPlayer && viewPlayer.classList.contains('active')) {
+            mainContainer.classList.add('wide-mode');
+        }
+        if (toggleBtn) toggleBtn.innerText = '📱 แนวตั้ง';
     } else {
-        // เปลี่ยนกลับเป็นโหมดแนวตั้ง
-        layoutContainer.classList.remove('layout-horizontal');
-        layoutContainer.classList.add('layout-vertical');
-        mainContainer.classList.remove('wide-mode'); // หด container กลับ
-        toggleBtn.innerText = '🖥️ แนวนอน';
+        if (layoutContainer) {
+            layoutContainer.classList.remove('layout-horizontal');
+            layoutContainer.classList.add('layout-vertical');
+        }
+        if (mainContainer) mainContainer.classList.remove('wide-mode');
+        if (toggleBtn) toggleBtn.innerText = '🖥️ แนวนอน';
     }
     
-    // อัปเดตตำแหน่งการเลื่อนเนื้อเพลงให้ตรงจุดกึ่งกลางของ Layout ใหม่
-    setTimeout(() => {
-        window.updateLyricDisplay();
-    }, 300);
+    // สั่งคำนวณตำแหน่งเนื้อเพลงใหม่ให้สมดุล
+    if (typeof window.updateLyricDisplay === 'function') {
+        setTimeout(() => { window.updateLyricDisplay(); }, 100);
+    }
 };
+
+// ปุ่มกดสลับโหมดดั้งเดิมในหน้าเครื่องเล่นให้มาเรียกใช้คำสั่งหลักแทน
+window.togglePlayerLayout = function() {
+    const currentLayout = localStorage.getItem('selectedLayout') || 'vertical';
+    const nextLayout = currentLayout === 'horizontal' ? 'vertical' : 'horizontal';
+    window.setPlayerLayout(nextLayout);
+};
+
+// โหลดค่า Layout เริ่มต้นตอนเปิดเว็บ
+const savedLayout = localStorage.getItem('selectedLayout') || 'vertical';
+window.setPlayerLayout(savedLayout);
