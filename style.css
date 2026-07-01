@@ -244,8 +244,9 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 
 /* คลาสสำหรับขยายจอเมื่อเล่นโหมดแนวนอน เพื่อไม่ให้อึดอัด */
 .container.wide-mode {
-    max-width: 1000px; /* ขยายให้กว้างขึ้นสำหรับ Desktop */
-    transition: max-width 0.3s ease;
+    max-width: 1400px; /* 🔴 เปลี่ยนจาก 1000px เป็น 1400px เพื่อให้ขยายได้ใหญ่ขึ้นบนจอคอม */
+    width: 95%; /* 🔴 เพิ่มบรรทัดนี้ เพื่อให้ใช้พื้นที่หน้าจอได้อย่างคุ้มค่า */
+    transition: max-width 0.3s ease, width 0.3s ease;
 }
 
 /* Responsive: ถ้าหน้าจอเล็กกว่า 768px (มือถือ/แท็บเล็ตแนวตั้ง) ให้บังคับเป็นแนวตั้งเสมอ */
