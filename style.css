@@ -47,6 +47,17 @@ button:disabled { background: #3a3a3c; color: #8e8e93; cursor: not-allowed; tran
 .btn-secondary { background: #2c2c2e; color: #f5f5f7; }
 .btn-secondary:hover { background: #3a3a3c; }
 
+/* 🔴 เพิ่ม CSS สำหรับจัดกลุ่มปุ่มด้านล่าง */
+.action-btns-wrapper {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    margin-top: 15px;
+}
+.action-btns-wrapper button {
+    margin-top: 0 !important;
+}
+
 label { font-size: 0.85em; color: #8e8e93; margin-top: 15px; margin-bottom: 5px; display: block; font-weight: 500; }
 input, textarea { 
     width: 100%; padding: 14px 16px; background: #1c1c1e; 
@@ -154,13 +165,11 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
    💻 DESKTOP LAYOUT (Media Queries for screens >= 1024px)
    ==================================================== */
 @media screen and (min-width: 1024px) {
-    /* 1. ขยาย Container และจัดตำแหน่งให้อยู่ตรงกลาง */
     .container {
         max-width: 1200px;
         padding: 24px 40px;
     }
 
-    /* 2. หน้าคลังเพลง: ขยายกริดให้แสดงการ์ดเพลงได้มากขึ้น */
     #songList {
         grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
         gap: 24px;
@@ -175,57 +184,54 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
         column-gap: 40px;
         row-gap: 15px;
         align-items: start;
-        align-content: start; /* 🔴 ดึงเนื้อหาให้ชิดด้านบน ป้องกันพื้นที่กระจายตัว */
+        align-content: start; 
         padding-bottom: 0;
         transition: grid-template-columns 0.3s ease;
     }
 
-    /* 🔴 ขยาย Grid ฝั่งซ้ายให้ใหญ่ขึ้นสำหรับผู้ใช้ทั่วไป */
+    /* 🔴 ปรับขนาดวิดีโอให้เท่ากับกรอบเนื้อเพลง (50:50) สำหรับผู้ใช้ทั่วไป */
     #view-player.active.user-mode {
-        grid-template-columns: 500px 1fr; /* ปรับขนาดวิดีโอเป็น 500px ให้สมดุล */
+        grid-template-columns: 1fr 1fr; 
+    }
+
+    /* 🔴 โหมดสลับมุมมองกลับไปเป็นแนวตั้งแบบมือถือ */
+    #view-player.active.stacked-mode {
+        display: flex !important;
+        flex-direction: column !important;
+        padding-bottom: 50px;
+    }
+    #view-player.active.stacked-mode .lyrics-wrapper {
+        height: 50vh !important; /* ปรับความสูงกล่องเนื้อเพลงในโหมดแนวตั้งให้พอดี */
+        position: relative !important;
+        top: 0 !important;
+        margin-top: 20px !important;
+    }
+    #view-player.active.stacked-mode .lyrics-container {
+        padding: 100px 20px 200px 20px !important;
     }
 
     /* -- จัดวางองค์ประกอบฝั่งซ้าย -- */
-    #playerSongInfo { 
-        grid-column: 1; 
-        grid-row: 1; 
-        text-align: left !important; 
-    }
+    #playerSongInfo { grid-column: 1; grid-row: 1; text-align: left !important; }
+    .youtube-container { grid-column: 1; grid-row: 2; margin-bottom: 0; }
+    #lyricControlBtnGroup { grid-column: 1; grid-row: 3; margin-top: 5px; }
+    #timestampEditorSection { grid-column: 1; grid-row: 4; margin-top: 5px; }
+    #btnResetSync { grid-column: 1; grid-row: 5; margin-top: 10px !important; }
     
-    .youtube-container { 
-        grid-column: 1; 
-        grid-row: 2; 
-        margin-bottom: 0; 
-    }
-    
-    #lyricControlBtnGroup { 
-        grid-column: 1; 
-        grid-row: 3; 
-        margin-top: 5px; 
-    }
-    
-    #timestampEditorSection { 
-        grid-column: 1; 
-        grid-row: 4; 
-        margin-top: 5px; 
-    }
-    
-    #btnResetSync { 
-        grid-column: 1; 
-        grid-row: 5; 
-        margin-top: 10px !important; 
-    }
-    
-    #view-player > button:last-child { 
+    /* ควบคุมตำแหน่งกลุ่มปุ่มสลับมุมมองและกลับหน้าแรก */
+    #bottomActionBtns { 
         grid-column: 1; 
         grid-row: 6; 
-        margin-top: 20px !important; 
+        margin-top: 20px; 
+    }
+    #view-player.user-mode > #bottomActionBtns {
+        grid-row: 3; 
+        margin-top: 0;
     }
 
-    /* 🔴 ดันปุ่ม "กลับคลังเพลง" ขึ้นมาติดวิดีโอ สำหรับผู้ใช้ทั่วไป */
-    #view-player.user-mode > button:last-child {
-        grid-row: 3; 
-        margin-top: 0 !important;
+    /* จัดปุ่มให้อยู่ตรงกลางตอนเป็นแนวตั้ง */
+    #view-player.stacked-mode > #bottomActionBtns {
+        margin-top: 20px !important;
+        justify-content: center;
     }
 
     /* -- จัดวางองค์ประกอบฝั่งขวา (เนื้อเพลง) -- */
@@ -242,11 +248,9 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
         padding: 60px 40px 150px 40px; 
     }
 
-    /* ปรับฟอนต์เนื้อเพลงให้ใหญ่ขึ้น */
     .lyric-line { font-size: 1.3em; }
     .lyric-line.active { font-size: 1.6em; }
 
-    /* 4. หน้าตั้งค่าและเพิ่มเพลง */
     #view-add, #view-settings {
         max-width: 600px;
         margin: 0 auto;
