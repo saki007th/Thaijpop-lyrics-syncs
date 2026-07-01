@@ -172,28 +172,6 @@ window.extractYouTubeID = function(url) {
 window.showView = function(viewId) {
     document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
     document.getElementById(viewId).classList.add('active');
-
-    } else if (viewId === 'view-player') {
-        headerTitle.innerText = 'กำลังเล่นเพลง';
-        document.getElementById('btnAddSong').style.display = 'none';
-        
-        const playerContainer = document.getElementById('view-player'); // 🔴 ประกาศตัวแปรคอนเทนเนอร์หลัก
-        const lyricControlBtnGroup = document.getElementById('lyricControlBtnGroup');
-        const timestampEditorSection = document.getElementById('timestampEditorSection');
-        const btnResetSync = document.getElementById('btnResetSync');
-
-        if (window.isAdmin) {
-            playerContainer.classList.remove('user-mode'); // 🔴 ถอดโหมดผู้ใช้ออก คืนพื้นที่ให้ Admin
-            if(lyricControlBtnGroup) lyricControlBtnGroup.style.display = 'flex';
-            if(timestampEditorSection) timestampEditorSection.style.display = 'block';
-            if(btnResetSync) btnResetSync.style.display = 'block';
-        } else {
-            playerContainer.classList.add('user-mode'); // 🔴 เปิดโหมดผู้ใช้ ขยายวิดีโอ ดันปุ่มขึ้น
-            if(lyricControlBtnGroup) lyricControlBtnGroup.style.display = 'none';
-            if(timestampEditorSection) timestampEditorSection.style.display = 'none';
-            if(btnResetSync) btnResetSync.style.display = 'none';
-        }
-    } else if (viewId === 'view-settings') {
     
     const headerTitle = document.getElementById('headerTitle');
     
@@ -211,15 +189,18 @@ window.showView = function(viewId) {
         headerTitle.innerText = 'กำลังเล่นเพลง';
         document.getElementById('btnAddSong').style.display = 'none';
         
+        const playerContainer = document.getElementById('view-player');
         const lyricControlBtnGroup = document.getElementById('lyricControlBtnGroup');
         const timestampEditorSection = document.getElementById('timestampEditorSection');
         const btnResetSync = document.getElementById('btnResetSync');
 
         if (window.isAdmin) {
+            if (playerContainer) playerContainer.classList.remove('user-mode');
             if(lyricControlBtnGroup) lyricControlBtnGroup.style.display = 'flex';
             if(timestampEditorSection) timestampEditorSection.style.display = 'block';
             if(btnResetSync) btnResetSync.style.display = 'block';
         } else {
+            if (playerContainer) playerContainer.classList.add('user-mode');
             if(lyricControlBtnGroup) lyricControlBtnGroup.style.display = 'none';
             if(timestampEditorSection) timestampEditorSection.style.display = 'none';
             if(btnResetSync) btnResetSync.style.display = 'none';
@@ -372,9 +353,6 @@ window.deleteSong = async function(id) {
     }
 }
 
-// ==========================================
-// 🔴 อัปเดต: ระบบเนื้อเพลง (จัด ซ้าย-ขวา อัตโนมัติ)
-// ==========================================
 window.renderLyricsToContainer = function() {
     const container = document.getElementById('lyricsContainer');
     if(!container) return;
