@@ -140,15 +140,27 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 .lyrics-container::-webkit-scrollbar { display: none; }
 
 .lyric-line { 
-    font-size: 1.2em; font-weight: 600; color: rgba(255, 255, 255, 0.3); 
+    font-size: 1.15em; 
+    font-weight: 600; 
+    color: rgba(255, 255, 255, 0.4); /* เพิ่มความชัดเจนให้ท่อนที่ยังมาไม่ถึง */
     transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); 
-    white-space: pre-wrap; word-break: break-word; line-height: 1.5; 
-    padding: 5px 20px; 
-    margin-bottom: 25px; 
-    display: flex; flex-direction: column; width: 100%; box-sizing: border-box;
+    white-space: pre-wrap; 
+    word-break: break-word; 
+    line-height: 1.4; 
+    padding: 6px 16px; 
+    margin-bottom: 18px; /* ระยะห่างระหว่างท่อนที่กระชับขึ้น */
+    display: flex; 
+    flex-direction: column; 
+    width: 100%; 
+    box-sizing: border-box; 
 }
 .lyric-line:last-child { margin-bottom: 0; }
-.lyric-line.active { font-size: 1.45em; color: #ffffff; text-shadow: 0 0 15px rgba(255, 255, 255, 0.4); transform: scale(1.05); }
+.lyric-line.active { 
+    font-size: 1.35em; /* รักษาสมดุลขนาดตัวอักษรเพื่อเลี่ยงปัญหายาวเกินหน้าจอ */
+    color: #ffffff; 
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.4); 
+    transform: scale(1.03); 
+}
 
 .lyric-line.align-left { text-align: left; align-items: flex-start; transform-origin: left center; }
 .lyric-line.align-right { text-align: right; align-items: flex-end; transform-origin: right center; }
