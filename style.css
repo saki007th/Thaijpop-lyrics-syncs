@@ -203,3 +203,66 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 .bg-btn { flex: 1; min-width: 120px; border-radius: 12px; padding: 12px; font-size: 0.9em; font-weight: bold; color: white; border: 2px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
 .bg-btn:hover { border-color: rgba(255,255,255,0.5); transform: translateY(-2px); }
 .bg-btn:active { transform: scale(0.95); }
+
+/* --- ระบบ Layout สลับโหมด แนวตั้ง/แนวนอน --- */
+
+#playerContentLayout {
+    display: flex;
+    gap: 16px;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+/* โหมด 1: แนวตั้ง (แบบเดิม) */
+.layout-vertical {
+    flex-direction: column;
+}
+.layout-vertical .youtube-container {
+    width: 100%;
+}
+.layout-vertical .lyrics-wrapper {
+    width: 100%;
+    height: 42vh; /* ความสูงตามที่คุณตั้งไว้เดิม */
+    margin: 0; /* ปรับลด margin เพราะเราใช้ gap แทนแล้ว */
+}
+
+/* โหมด 2: แนวนอน (YouTube ซ้าย, เนื้อเพลงขวา) */
+.layout-horizontal {
+    flex-direction: row;
+    align-items: stretch; /* ยืดให้ความสูงของกล่องเนื้อเพลงเท่ากับวิดีโอ */
+}
+.layout-horizontal .youtube-container {
+    flex: 1; /* แบ่งพื้นที่ 50% */
+    margin-bottom: 0;
+}
+.layout-horizontal .lyrics-wrapper {
+    flex: 1; /* แบ่งพื้นที่ 50% */
+    margin: 0;
+    height: auto; 
+    aspect-ratio: 16 / 9; /* บังคับกรอบเนื้อเพลงให้เป็น 16:9 สัดส่วนเดียวกับวิดีโอ */
+}
+
+/* คลาสสำหรับขยายจอเมื่อเล่นโหมดแนวนอน เพื่อไม่ให้อึดอัด */
+.container.wide-mode {
+    max-width: 1000px; /* ขยายให้กว้างขึ้นสำหรับ Desktop */
+    transition: max-width 0.3s ease;
+}
+
+/* Responsive: ถ้าหน้าจอเล็กกว่า 768px (มือถือ/แท็บเล็ตแนวตั้ง) ให้บังคับเป็นแนวตั้งเสมอ */
+@media (max-width: 768px) {
+    #btnToggleLayout { 
+        display: none; /* ซ่อนปุ่มสลับโหมดบนมือถือ เพราะที่แคบเกินไป */
+    }
+    #playerContentLayout { 
+        flex-direction: column !important; 
+    }
+    .layout-horizontal .youtube-container,
+    .layout-horizontal .lyrics-wrapper {
+        flex: none;
+        width: 100%;
+    }
+    .layout-horizontal .lyrics-wrapper {
+        height: 42vh;
+        aspect-ratio: auto;
+    }
+}
