@@ -177,12 +177,10 @@ window.showView = function(viewId) {
     document.getElementById(viewId).classList.add('active');
     
     const headerTitle = document.getElementById('headerTitle');
-    const mainContainer = document.querySelector('.container');
     const savedLayoutMode = localStorage.getItem('selectedLayout') || 'vertical';
     
     if (viewId === 'view-list') {
         headerTitle.innerText = 'คลังเพลงของฉัน';
-        if(mainContainer) mainContainer.classList.remove('wide-mode'); // หดหน้าจอคลังเพลงให้แคบตามปกติ
         document.getElementById('btnAddSong').style.display = window.isAdmin ? 'block' : 'none';
         const searchInput = document.getElementById('searchInput');
         if(searchInput) searchInput.value = '';
@@ -191,13 +189,11 @@ window.showView = function(viewId) {
         clearInterval(window.syncInterval);
         window.currentSongId = null;
         if (window.ytPlayer && typeof window.ytPlayer.stopVideo === 'function') window.ytPlayer.stopVideo();
+        
     } else if (viewId === 'view-player') {
         headerTitle.innerText = 'กำลังเล่นเพลง';
         document.getElementById('btnAddSong').style.display = 'none';
         
-        // สั่งเปิด Layout เครื่องเล่นตามที่ผู้ใช้เซฟล่าสุด
-        window.setPlayerLayout(savedLayoutMode);
-
         const lyricControlBtnGroup = document.getElementById('lyricControlBtnGroup');
         const timestampEditorSection = document.getElementById('timestampEditorSection');
         const btnResetSync = document.getElementById('btnResetSync');
@@ -211,10 +207,10 @@ window.showView = function(viewId) {
             if(timestampEditorSection) timestampEditorSection.style.display = 'none';
             if(btnResetSync) btnResetSync.style.display = 'none';
         }
+        
     } else if (viewId === 'view-settings') {
         headerTitle.innerText = 'การตั้งค่า';
         document.getElementById('btnAddSong').style.display = 'none';
-        if(mainContainer) mainContainer.classList.remove('wide-mode'); // หน้าตั้งค่าไม่ควรขยายกว้าง
 
         // จัดการปุ่มกลับไปหน้าเล่นเพลง
         const btnReturn = document.getElementById('btnReturnToPlayer');
@@ -222,12 +218,12 @@ window.showView = function(viewId) {
             btnReturn.style.display = window.currentSongId ? 'block' : 'none';
         }
         
-        // ไฮไลต์ปุ่มเลือก Layout ปัจจุบันให้เห็นเด่นชัด
-        window.setPlayerLayout(savedLayoutMode);
     } else {
         document.getElementById('btnAddSong').style.display = 'none';
-        if(mainContainer) mainContainer.classList.remove('wide-mode');
     }
+
+    // คำนวณ Layout ทุกครั้งที่มีการเปลี่ยนหน้า เพื่อปรับการขยายจอ
+    window.setPlayerLayout(savedLayoutMode);
 }
 
 window.openAddView = function() {
@@ -770,7 +766,6 @@ window.resetSync = function() {
 // ระบบจัดการ Layout (แนวตั้ง / แนวนอน) 
 // ==========================================
 
-// ฟังก์ชันหลักที่ใช้จัดการสลับ Layout และบันทึกค่าลง LocalStorage
 window.setPlayerLayout = function(layoutMode) {
     localStorage.setItem('selectedLayout', layoutMode);
     window.isLandscapeLayout = (layoutMode === 'horizontal');
@@ -779,7 +774,7 @@ window.setPlayerLayout = function(layoutMode) {
     const mainContainer = document.querySelector('.container');
     const toggleBtn = document.getElementById('btnToggleLayout');
     
-    // อัปเดตสถานะปุ่มไฮไลต์ในหน้าตั้งค่า
+    // 1. อัปเดตสถานะปุ่มไฮไลต์ในหน้าตั้งค่า
     const btnOptVertical = document.getElementById('btnOptVertical');
     const btnOptHorizontal = document.getElementById('btnOptHorizontal');
     
@@ -793,16 +788,11 @@ window.setPlayerLayout = function(layoutMode) {
         }
     }
 
-    // จัดการคลาสสลับโครงสร้างหน้าจอ
+    // 2. จัดการ Layout หน้าเครื่องเล่นเพลง
     if (layoutMode === 'horizontal') {
         if (layoutContainer) {
             layoutContainer.classList.remove('layout-vertical');
             layoutContainer.classList.add('layout-horizontal');
-        }
-        // ขยายหน้าจอเมื่ออยู่ในหน้าเล่นเพลงเท่านั้น
-        const viewPlayer = document.getElementById('view-player');
-        if (mainContainer && viewPlayer && viewPlayer.classList.contains('active')) {
-            mainContainer.classList.add('wide-mode');
         }
         if (toggleBtn) toggleBtn.innerText = '📱 แนวตั้ง';
     } else {
@@ -810,17 +800,28 @@ window.setPlayerLayout = function(layoutMode) {
             layoutContainer.classList.remove('layout-horizontal');
             layoutContainer.classList.add('layout-vertical');
         }
-        if (mainContainer) mainContainer.classList.remove('wide-mode');
         if (toggleBtn) toggleBtn.innerText = '🖥️ แนวนอน';
     }
     
-    // สั่งคำนวณตำแหน่งเนื้อเพลงใหม่ให้สมดุล
+    // 3. ระบบขยายจออัจฉริยะ (ขยายเฉพาะตอนอยู่ "หน้าแรก" และ "หน้าเล่นเพลง")
+    if (mainContainer) {
+        const isPlayerActive = document.getElementById('view-player').classList.contains('active');
+        const isListActive = document.getElementById('view-list').classList.contains('active');
+        
+        // ถ้าเลือกแนวนอน และกำลังดูหน้าคลังเพลงหรือเล่นเพลง ให้ขยายหน้าจอออก
+        if (layoutMode === 'horizontal' && (isPlayerActive || isListActive)) {
+            mainContainer.classList.add('wide-mode');
+        } else {
+            mainContainer.classList.remove('wide-mode'); // หดจอกลับเมื่อเป็นแนวตั้ง หรือเข้าหน้าตั้งค่า
+        }
+    }
+    
+    // 4. สั่งขยับเนื้อเพลงให้ตรงจุดกึ่งกลาง
     if (typeof window.updateLyricDisplay === 'function') {
         setTimeout(() => { window.updateLyricDisplay(); }, 100);
     }
 };
 
-// ปุ่มกดสลับโหมดดั้งเดิมในหน้าเครื่องเล่นให้มาเรียกใช้คำสั่งหลักแทน
 window.togglePlayerLayout = function() {
     const currentLayout = localStorage.getItem('selectedLayout') || 'vertical';
     const nextLayout = currentLayout === 'horizontal' ? 'vertical' : 'horizontal';
