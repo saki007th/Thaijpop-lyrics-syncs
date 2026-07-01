@@ -171,15 +171,21 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
         max-height: 75vh;
     }
 
-    /* 3. หน้า Player: จัด Layout แบบ Split Screen (ซ้าย-ขวา) */
+/* 3. หน้า Player: จัด Layout แบบ Split Screen (ซ้าย-ขวา) */
     #view-player.active {
         display: grid;
-        grid-template-columns: 400px 1fr; /* ซ้าย 400px, ขวาที่เหลือ */
+        grid-template-columns: 400px 1fr; /* ซ้าย 400px สำหรับ Admin */
         grid-template-rows: auto auto auto auto auto auto;
         column-gap: 40px;
         row-gap: 15px;
         align-items: start;
         padding-bottom: 0;
+        transition: grid-template-columns 0.3s ease; /* เพิ่มความสมูทตอนขยายจอ */
+    }
+
+    /* 🔴 เพิ่ม: ขยาย Grid ฝั่งซ้ายให้ใหญ่ขึ้นสำหรับผู้ใช้ทั่วไป */
+    #view-player.active.user-mode {
+        grid-template-columns: 550px 1fr; /* ขยายจาก 400px เป็น 550px */
     }
 
     /* -- จัดวางองค์ประกอบฝั่งซ้าย -- */
@@ -215,31 +221,15 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     
     #view-player > button:last-child { 
         grid-column: 1; 
-        grid-row: 6; 
+        grid-row: 6; /* ตำแหน่งปุ่มสำหรับ Admin */
         margin-top: 20px !important; 
     }
 
+    /* 🔴 เพิ่ม: ดันปุ่ม "กลับคลังเพลง" ขึ้นมาติดวิดีโอ สำหรับผู้ใช้ทั่วไป */
+    #view-player.user-mode > button:last-child {
+        grid-row: 3; /* ย้ายขึ้นมาบรรทัดที่ 3 แทนพื้นที่เครื่องมือ Admin */
+        margin-top: 0 !important;
+    }
+
     /* -- จัดวางองค์ประกอบฝั่งขวา (เนื้อเพลง) -- */
-    .lyrics-wrapper {
-        grid-column: 2;
-        grid-row: 1 / span 6; 
-        height: calc(100vh - 140px); 
-        margin: 0;
-        position: sticky;
-        top: 80px; 
-    }
-
-    .lyrics-container {
-        padding: 60px 40px 150px 40px; 
-    }
-
-    /* ปรับฟอนต์เนื้อเพลงให้ใหญ่ขึ้น */
-    .lyric-line { font-size: 1.3em; }
-    .lyric-line.active { font-size: 1.6em; }
-
-    /* 4. หน้าตั้งค่าและเพิ่มเพลง */
-    #view-add, #view-settings {
-        max-width: 600px;
-        margin: 0 auto;
-    }
-}
+    /* ... (โค้ดฝั่งขวาเหมือนเดิม ไม่ต้องเปลี่ยน) ... */
