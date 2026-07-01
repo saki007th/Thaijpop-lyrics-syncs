@@ -179,13 +179,14 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
         column-gap: 40px;
         row-gap: 15px;
         align-items: start;
+        align-content: start; /* 🔴 เพิ่มคำสั่งนี้ เพื่อดึงให้เนื้อหาชิดด้านบนเสมอ ไม่กระจายตัว */
         padding-bottom: 0;
-        transition: grid-template-columns 0.3s ease; /* เพิ่มความสมูทตอนขยายจอ */
+        transition: grid-template-columns 0.3s ease;
     }
 
-    /* 🔴 เพิ่ม: ขยาย Grid ฝั่งซ้ายให้ใหญ่ขึ้นสำหรับผู้ใช้ทั่วไป */
+    /* 🔴 ขยาย Grid ฝั่งซ้ายให้ใหญ่ขึ้นสำหรับผู้ใช้ทั่วไป */
     #view-player.active.user-mode {
-        grid-template-columns: 550px 1fr; /* ขยายจาก 400px เป็น 550px */
+        grid-template-columns: 500px 1fr; /* ปรับขนาดเป็น 500px จะสมดุลกับกล่องเนื้อเพลงมากกว่า */
     }
 
     /* -- จัดวางองค์ประกอบฝั่งซ้าย -- */
@@ -221,15 +222,12 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     
     #view-player > button:last-child { 
         grid-column: 1; 
-        grid-row: 6; /* ตำแหน่งปุ่มสำหรับ Admin */
+        grid-row: 6; 
         margin-top: 20px !important; 
     }
 
-    /* 🔴 เพิ่ม: ดันปุ่ม "กลับคลังเพลง" ขึ้นมาติดวิดีโอ สำหรับผู้ใช้ทั่วไป */
+    /* 🔴 ดันปุ่ม "กลับคลังเพลง" ขึ้นมาติดวิดีโอ สำหรับผู้ใช้ทั่วไป */
     #view-player.user-mode > button:last-child {
-        grid-row: 3; /* ย้ายขึ้นมาบรรทัดที่ 3 แทนพื้นที่เครื่องมือ Admin */
+        grid-row: 3; 
         margin-top: 0 !important;
     }
-
-    /* -- จัดวางองค์ประกอบฝั่งขวา (เนื้อเพลง) -- */
-    /* ... (โค้ดฝั่งขวาเหมือนเดิม ไม่ต้องเปลี่ยน) ... */
