@@ -189,18 +189,15 @@ window.showView = function(viewId) {
         headerTitle.innerText = 'กำลังเล่นเพลง';
         document.getElementById('btnAddSong').style.display = 'none';
         
-        const playerContainer = document.getElementById('view-player');
         const lyricControlBtnGroup = document.getElementById('lyricControlBtnGroup');
         const timestampEditorSection = document.getElementById('timestampEditorSection');
         const btnResetSync = document.getElementById('btnResetSync');
 
         if (window.isAdmin) {
-            if (playerContainer) playerContainer.classList.remove('user-mode');
             if(lyricControlBtnGroup) lyricControlBtnGroup.style.display = 'flex';
             if(timestampEditorSection) timestampEditorSection.style.display = 'block';
             if(btnResetSync) btnResetSync.style.display = 'block';
         } else {
-            if (playerContainer) playerContainer.classList.add('user-mode');
             if(lyricControlBtnGroup) lyricControlBtnGroup.style.display = 'none';
             if(timestampEditorSection) timestampEditorSection.style.display = 'none';
             if(btnResetSync) btnResetSync.style.display = 'none';
@@ -353,6 +350,9 @@ window.deleteSong = async function(id) {
     }
 }
 
+// ==========================================
+// 🔴 อัปเดต: ระบบเนื้อเพลง (จัด ซ้าย-ขวา อัตโนมัติ)
+// ==========================================
 window.renderLyricsToContainer = function() {
     const container = document.getElementById('lyricsContainer');
     if(!container) return;
@@ -742,20 +742,6 @@ window.resetSync = function() {
             window.updateLyricDisplay();
             if (window.ytPlayer && typeof window.ytPlayer.seekTo === 'function') window.ytPlayer.seekTo(0);
             alert('ล้างเวลาซิงค์เรียบร้อยครับ');
-        }
-    }
-}
-// ==========================================
-// 📱 ระบบสลับมุมมอง (Desktop Split / Mobile Stacked)
-// ==========================================
-window.toggleViewMode = function() {
-    const player = document.getElementById('view-player');
-    if (player) {
-        player.classList.toggle('stacked-mode');
-        
-        // เลื่อนหน้าจอขึ้นไปด้านบนสุดเพื่อให้เห็นวิดีโอทันทีที่สลับโหมด
-        if (player.classList.contains('stacked-mode')) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
 }

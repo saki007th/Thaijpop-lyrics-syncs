@@ -19,20 +19,23 @@ header {
     background: rgba(28, 28, 30, 0.7); 
     backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); 
     color: #f5f5f7; 
+    /* 🔴 ลด Padding ของ Header ลง */
     padding: 6px 16px; 
     display: flex; justify-content: space-between; align-items: center; 
     position: sticky; top: 0; z-index: 10; 
     border-bottom: 0.5px solid rgba(255, 255, 255, 0.1); 
 }
-
+/* 🔴 ลดขนาดฟอนต์ Title ด้านบน */
 .header-title { font-size: 1.05em; font-weight: 600; flex-grow: 1; text-align: center; letter-spacing: -0.5px; }
 .header-btn-group { display: flex; justify-content: flex-end; align-items: center; }
 
+/* 🔴 ลดขนาดปุ่ม Login ให้เล็กลง */
 .btn-auth { background: transparent; border: none; padding: 4px 8px; font-size: 0.85em; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
 .btn-login { color: #0a84ff; }
 .btn-logout { color: #ff453a; }
 .btn-auth:hover { opacity: 0.7; }
 
+/* 🔴 ลดช่องว่างพื้นที่ด้านบนและล่างของจอหลัก */
 .container { padding: 12px 20px; max-width: 650px; margin: auto; flex-grow: 1; width: 100%; box-sizing: border-box; }
 
 button { 
@@ -46,17 +49,6 @@ button:active { transform: scale(0.95); opacity: 0.8; }
 button:disabled { background: #3a3a3c; color: #8e8e93; cursor: not-allowed; transform: none; }
 .btn-secondary { background: #2c2c2e; color: #f5f5f7; }
 .btn-secondary:hover { background: #3a3a3c; }
-
-/* 🔴 เพิ่ม CSS สำหรับจัดกลุ่มปุ่มด้านล่าง */
-.action-btns-wrapper {
-    display: flex;
-    gap: 12px;
-    width: 100%;
-    margin-top: 15px;
-}
-.action-btns-wrapper button {
-    margin-top: 0 !important;
-}
 
 label { font-size: 0.85em; color: #8e8e93; margin-top: 15px; margin-bottom: 5px; display: block; font-weight: 500; }
 input, textarea { 
@@ -95,6 +87,7 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 .btn-action { margin: 0; padding: 8px; border-radius: 10px; font-size: 0.9em; flex-grow: 1; text-align: center; }
 
 /* YouTube Video Container */
+/* 🔴 ลด Margin ด้านล่างวิดีโอ เพื่อให้มีพื้นที่เนื้อเพลงเยอะขึ้น */
 .youtube-container { position: relative; width: 100%; padding-bottom: 56.25%; margin-bottom: 12px; border-radius: 16px; background: #1c1c1e; flex-shrink: 0; z-index: 1; }
 .youtube-container::before { content: ""; position: absolute; inset: -5px; border-radius: 20px; background: var(--theme-glow); background-size: 300% 300%; z-index: -1; filter: blur(20px); opacity: 0.75; animation: appleAiGlow 8s ease-in-out infinite; }
 .youtube-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 16px; z-index: 2; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
@@ -160,99 +153,3 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 .bg-btn { flex: 1; min-width: 120px; border-radius: 12px; padding: 12px; font-size: 0.9em; font-weight: bold; color: white; border: 2px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
 .bg-btn:hover { border-color: rgba(255,255,255,0.5); transform: translateY(-2px); }
 .bg-btn:active { transform: scale(0.95); }
-
-/* ====================================================
-   💻 DESKTOP LAYOUT (Media Queries for screens >= 1024px)
-   ==================================================== */
-@media screen and (min-width: 1024px) {
-    .container {
-        max-width: 1200px;
-        padding: 24px 40px;
-    }
-
-    #songList {
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-        gap: 24px;
-        max-height: 75vh;
-    }
-
-    /* 3. หน้า Player: จัด Layout แบบ Split Screen (ซ้าย-ขวา) */
-    #view-player.active {
-        display: grid;
-        grid-template-columns: 400px 1fr; /* ซ้าย 400px สำหรับ Admin */
-        grid-template-rows: auto auto auto auto auto auto;
-        column-gap: 40px;
-        row-gap: 15px;
-        align-items: start;
-        align-content: start; 
-        padding-bottom: 0;
-        transition: grid-template-columns 0.3s ease;
-    }
-
-    /* 🔴 ปรับขนาดวิดีโอให้เท่ากับกรอบเนื้อเพลง (50:50) สำหรับผู้ใช้ทั่วไป */
-    #view-player.active.user-mode {
-        grid-template-columns: 1fr 1fr; 
-    }
-
-    /* 🔴 โหมดสลับมุมมองกลับไปเป็นแนวตั้งแบบมือถือ */
-    #view-player.active.stacked-mode {
-        display: flex !important;
-        flex-direction: column !important;
-        padding-bottom: 50px;
-    }
-    #view-player.active.stacked-mode .lyrics-wrapper {
-        height: 50vh !important; /* ปรับความสูงกล่องเนื้อเพลงในโหมดแนวตั้งให้พอดี */
-        position: relative !important;
-        top: 0 !important;
-        margin-top: 20px !important;
-    }
-    #view-player.active.stacked-mode .lyrics-container {
-        padding: 100px 20px 200px 20px !important;
-    }
-
-    /* -- จัดวางองค์ประกอบฝั่งซ้าย -- */
-    #playerSongInfo { grid-column: 1; grid-row: 1; text-align: left !important; }
-    .youtube-container { grid-column: 1; grid-row: 2; margin-bottom: 0; }
-    #lyricControlBtnGroup { grid-column: 1; grid-row: 3; margin-top: 5px; }
-    #timestampEditorSection { grid-column: 1; grid-row: 4; margin-top: 5px; }
-    #btnResetSync { grid-column: 1; grid-row: 5; margin-top: 10px !important; }
-    
-    /* ควบคุมตำแหน่งกลุ่มปุ่มสลับมุมมองและกลับหน้าแรก */
-    #bottomActionBtns { 
-        grid-column: 1; 
-        grid-row: 6; 
-        margin-top: 20px; 
-    }
-    #view-player.user-mode > #bottomActionBtns {
-        grid-row: 3; 
-        margin-top: 0;
-    }
-
-    /* จัดปุ่มให้อยู่ตรงกลางตอนเป็นแนวตั้ง */
-    #view-player.stacked-mode > #bottomActionBtns {
-        margin-top: 20px !important;
-        justify-content: center;
-    }
-
-    /* -- จัดวางองค์ประกอบฝั่งขวา (เนื้อเพลง) -- */
-    .lyrics-wrapper {
-        grid-column: 2;
-        grid-row: 1 / span 6; 
-        height: calc(100vh - 140px); 
-        margin: 0;
-        position: sticky;
-        top: 80px; 
-    }
-
-    .lyrics-container {
-        padding: 60px 40px 150px 40px; 
-    }
-
-    .lyric-line { font-size: 1.3em; }
-    .lyric-line.active { font-size: 1.6em; }
-
-    #view-add, #view-settings {
-        max-width: 600px;
-        margin: 0 auto;
-    }
-}
