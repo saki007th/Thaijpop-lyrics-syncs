@@ -154,12 +154,36 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     width: 100%; 
     box-sizing: border-box; 
 }
-.lyric-line:last-child { margin-bottom: 0; }
+.lyric-line:last-child { margin-bottom: 0; 
+}
+
+/* 1. ปรับขนาดเนื้อเพลงท่อนที่กำลังร้อง (โหมดปกติ) */
 .lyric-line.active { 
-    font-size: 1.35em; /* รักษาสมดุลขนาดตัวอักษรเพื่อเลี่ยงปัญหายาวเกินหน้าจอ */
+    font-size: 2em; /* 🔴 ใหญ่ขึ้นจากเดิม 1.35em */
     color: #ffffff; 
-    text-shadow: 0 0 12px rgba(255, 255, 255, 0.4); 
-    transform: scale(1.03); 
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.2); 
+    transform: scale(1.05); 
+    margin: 40px 0; /* 🔴 เพิ่มระยะห่างบน-ล่าง ดันท่อนอื่นออกไปให้ท่อนนี้ดูเต็มจอ */
+}
+
+/* 2. ปรับขนาดอัตโนมัติเมื่ออยู่ในโหมด "แนวนอน" */
+.layout-horizontal .lyric-line.active {
+    /* 🔴 ใช้ clamp() เพื่อปรับขนาดอัตโนมัติ: เล็กสุด 1.8em, ขยายตามจอที่ 2.5vw, ใหญ่สุดไม่เกิน 2.8em */
+    font-size: clamp(1.8em, 2.5vw, 2.8em); 
+    line-height: 1.4;
+}
+
+/* 3. ปรับป้ายชื่อคนร้องในท่อนปัจจุบันให้สมดุลกับตัวหนังสือที่ใหญ่ขึ้น */
+.lyric-line.active .singer-badge {
+    font-size: 0.5em; /* ปรับสัดส่วนป้ายชื่อไม่ให้ใหญ่แย่งซีนเนื้อเพลง */
+    padding: 6px 18px;
+    margin-bottom: 8px;
+}
+
+/* 4. (เสริม) ปรับท่อนที่ไม่ได้ร้องให้จางและเล็กลงนิดหน่อย เพื่อดันให้ท่อนปัจจุบันเด่นที่สุด */
+.lyric-line {
+    font-size: 1.1em; 
+    color: rgba(255, 255, 255, 0.25); /* ทำให้ท่อนอื่นจางลงอีกนิด */
 }
 
 .lyric-line.align-left { text-align: left; align-items: flex-start; transform-origin: left center; }
