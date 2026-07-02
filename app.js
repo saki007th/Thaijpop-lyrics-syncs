@@ -3,7 +3,7 @@ import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } 
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const ALLOWED_EMAILS = ["sashikiwa@gmail.com", "panupong.bb27115@gmail.com"]; 
-
+ 
 const firebaseConfig = {
     apiKey: "AIzaSyDV-gefPFqCmAvYmrSXeb5W1JUKf4Ev50Q",
     authDomain: "musix-syn.firebaseapp.com",
