@@ -188,27 +188,50 @@ window.extractYouTubeID = function(url) {
 // ระบบนำทาง (Navigation) และจัดการแสดงผล View
 // ----------------------------------------------------
 window.showView = function(viewId) {
-    document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(el => {
+        // 🔴 ป้องกันการซ่อนหน้าเล่นเพลงหากมันกำลังเป็น Mini Player อยู่
+        if (el.id === 'view-player' && viewId === 'view-list' && window.currentSongId && window.ytPlayer) {
+            return; 
+        }
+        el.classList.remove('active');
+    });
+    
     document.getElementById(viewId).classList.add('active');
     
     const headerTitle = document.getElementById('headerTitle');
+    const mainContainer = document.querySelector('.container');
     const savedLayoutMode = localStorage.getItem('selectedLayout') || 'vertical';
+    const viewPlayerEl = document.getElementById('view-player');
     
     if (viewId === 'view-list') {
         headerTitle.innerText = 'คลังเพลงของฉัน';
+        if(mainContainer) mainContainer.classList.remove('wide-mode'); 
         document.getElementById('btnAddSong').style.display = window.isAdmin ? 'block' : 'none';
         const searchInput = document.getElementById('searchInput');
         if(searchInput) searchInput.value = '';
         window.currentFilter = 'All'; 
         window.renderSongList();
-        clearInterval(window.syncInterval);
-        window.currentSongId = null;
-        if (window.ytPlayer && typeof window.ytPlayer.stopVideo === 'function') window.ytPlayer.stopVideo();
+        
+        // 🔴 ระบบ Mini Player: ถ้าย้อนกลับคลัง โดยที่เพลงยังเล่นอยู่ ให้เปิดโหมดย่อส่วน
+        if (window.currentSongId && window.ytPlayer) {
+            viewPlayerEl.classList.add('mini-mode');
+            viewPlayerEl.classList.add('active'); // บังคับให้หน้าเล่นเพลงอยู่ต่อในโหมดย่อ
+        } else {
+            // ถ้าไม่มีเพลงเล่น ให้เคลียร์ทุกอย่างตามปกติ
+            viewPlayerEl.classList.remove('mini-mode');
+            clearInterval(window.syncInterval);
+            window.currentSongId = null;
+            if (window.ytPlayer && typeof window.ytPlayer.stopVideo === 'function') window.ytPlayer.stopVideo();
+        }
         
     } else if (viewId === 'view-player') {
         headerTitle.innerText = 'กำลังเล่นเพลง';
         document.getElementById('btnAddSong').style.display = 'none';
         
+        // 🔴 ยกเลิกโหมด Mini Player เมื่อผู้ใช้กดขยายกลับมาหน้าเครื่องเล่น
+        viewPlayerEl.classList.remove('mini-mode');
+        window.setPlayerLayout(savedLayoutMode);
+
         const lyricControlBtnGroup = document.getElementById('lyricControlBtnGroup');
         const timestampEditorSection = document.getElementById('timestampEditorSection');
         const btnResetSync = document.getElementById('btnResetSync');
@@ -226,19 +249,17 @@ window.showView = function(viewId) {
     } else if (viewId === 'view-settings') {
         headerTitle.innerText = 'การตั้งค่า';
         document.getElementById('btnAddSong').style.display = 'none';
+        if(mainContainer) mainContainer.classList.remove('wide-mode');
 
-        // จัดการปุ่มกลับไปหน้าเล่นเพลง
         const btnReturn = document.getElementById('btnReturnToPlayer');
         if (btnReturn) {
             btnReturn.style.display = window.currentSongId ? 'block' : 'none';
         }
-        
+        window.setPlayerLayout(savedLayoutMode);
     } else {
         document.getElementById('btnAddSong').style.display = 'none';
+        if(mainContainer) mainContainer.classList.remove('wide-mode');
     }
-
-    // คำนวณ Layout ทุกครั้งที่มีการเปลี่ยนหน้า เพื่อปรับการขยายจอ
-    window.setPlayerLayout(savedLayoutMode);
 }
 
 window.openAddView = function() {
@@ -395,8 +416,6 @@ window.renderLyricsToContainer = function() {
     }
 
     const currentSong = window.songs.find(s => s.id === window.currentSongId);
-
-    // ดึงรายชื่อนักร้องเดี่ยว (คนที่ร้องคนเดียวในท่อน) เพื่อเอาไว้สลับซ้าย-ขวา
     let uniqueSingers = [];
     if (currentSong && currentSong.singers) {
         currentSong.singers.forEach(s => {
@@ -408,6 +427,46 @@ window.renderLyricsToContainer = function() {
             }
         });
     }
+
+    window.currentLyricsArray.forEach((lyric, index) => {
+        const lineDiv = document.createElement('div');
+        lineDiv.className = 'lyric-line';
+        lineDiv.id = `lyric-line-${index}`;
+
+        let htmlContent = '';
+        let alignClass = 'align-center'; 
+
+        // 🔴 โค้ดส่วนที่เพิ่มมา: แยกบรรทัดด้วย \n และห่อหุ้มด้วย class lang-0, lang-1...
+        const lines = lyric.split('\n');
+        let linesHtml = lines.map((line, i) => `<div class="lang-${i}">${line}</div>`).join('');
+
+        const singerString = (currentSong && currentSong.singers && currentSong.singers[index]) ? currentSong.singers[index] : null;
+
+        if (singerString) {
+            const singersArr = singerString.split(',').map(s => s.trim()).filter(s => s);
+            if (singersArr.length > 0) {
+                const badgesHtml = singersArr.map(s => `<span class="singer-badge">${s}</span>`).join('');
+                
+                if (singersArr.length === 1) {
+                    const singerIdx = uniqueSingers.indexOf(singersArr[0]);
+                    if (singerIdx % 2 === 0) alignClass = 'align-left';
+                    else alignClass = 'align-right';
+                } else {
+                    alignClass = 'align-center';
+                }
+                htmlContent = `<div class="singer-badges">${badgesHtml}</div>${linesHtml}`;
+            } else {
+                htmlContent = linesHtml;
+            }
+        } else {
+            htmlContent = linesHtml;
+        }
+
+        lineDiv.classList.add(alignClass);
+        lineDiv.innerHTML = htmlContent;
+        container.appendChild(lineDiv);
+    });
+}
 
     window.currentLyricsArray.forEach((lyric, index) => {
         const lineDiv = document.createElement('div');
@@ -1028,3 +1087,36 @@ window.shareSong = function() {
         alert("คัดลอกลิงก์ไม่สำเร็จ กรุณาก๊อปปี้ลิงก์นี้: " + shareUrl);
     });
 };
+
+// ==========================================
+// ระบบเปิด/ซ่อนภาษา (Language Toggle)
+// ==========================================
+window.toggleLang = function(langIndex) {
+    const container = document.getElementById('lyricsContainer');
+    if (!container) return;
+    
+    // ดึงค่า checked จาก input ที่ถูกกด
+    const isChecked = event.target.checked;
+    if (isChecked) {
+        container.classList.remove(`hide-lang-${langIndex}`);
+    } else {
+        container.classList.add(`hide-lang-${langIndex}`);
+    }
+    
+    // อัปเดตตำแหน่งเลื่อนอัตโนมัติให้ตรงกึ่งกลางหลังความสูงเนื้อเพลงเปลี่ยน
+    setTimeout(() => { window.updateLyricDisplay(); }, 100);
+};
+
+// ผูกคำสั่งให้ Mini Player ขยายเต็มจอเมื่อถูกคลิก
+setTimeout(() => {
+    const playerView = document.getElementById('view-player');
+    if(playerView) {
+        playerView.addEventListener('click', function(e) {
+            if (this.classList.contains('mini-mode')) {
+                window.showView('view-player');
+            }
+        });
+    }
+}, 1000);
+
+
