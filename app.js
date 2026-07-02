@@ -150,7 +150,7 @@ async function fetchSongs() {
         });
         document.getElementById('loadingOverlay').style.display = 'none';
         
-        // 🔴 เช็ค Deep Link จาก URL parameter '?song=xxxx'
+        // เช็ค Deep Link จาก URL parameter '?song=xxxx'
         const urlParams = new URLSearchParams(window.location.search);
         const songIdFromUrl = urlParams.get('song');
 
@@ -159,9 +159,8 @@ async function fetchSongs() {
             if (foundSong) {
                 window.renderSongList();
                 window.playSong(foundSong.id);
-                // เคลียร์ URL ให้สะอาดหลังจากโหลดเสร็จ (اختياري)
                 window.history.replaceState({}, document.title, window.location.pathname);
-                return; // หยุดทำงาน เพื่อเข้าสู่หน้าเล่นเพลงทันที
+                return; 
             }
         }
         
@@ -189,7 +188,6 @@ window.extractYouTubeID = function(url) {
 // ----------------------------------------------------
 window.showView = function(viewId) {
     document.querySelectorAll('.view').forEach(el => {
-        // 🔴 ป้องกันการซ่อนหน้าเล่นเพลงหากมันกำลังเป็น Mini Player อยู่
         if (el.id === 'view-player' && viewId === 'view-list' && window.currentSongId && window.ytPlayer) {
             return; 
         }
@@ -212,12 +210,10 @@ window.showView = function(viewId) {
         window.currentFilter = 'All'; 
         window.renderSongList();
         
-        // 🔴 ระบบ Mini Player: ถ้าย้อนกลับคลัง โดยที่เพลงยังเล่นอยู่ ให้เปิดโหมดย่อส่วน
         if (window.currentSongId && window.ytPlayer) {
             viewPlayerEl.classList.add('mini-mode');
-            viewPlayerEl.classList.add('active'); // บังคับให้หน้าเล่นเพลงอยู่ต่อในโหมดย่อ
+            viewPlayerEl.classList.add('active'); 
         } else {
-            // ถ้าไม่มีเพลงเล่น ให้เคลียร์ทุกอย่างตามปกติ
             viewPlayerEl.classList.remove('mini-mode');
             clearInterval(window.syncInterval);
             window.currentSongId = null;
@@ -228,7 +224,6 @@ window.showView = function(viewId) {
         headerTitle.innerText = 'กำลังเล่นเพลง';
         document.getElementById('btnAddSong').style.display = 'none';
         
-        // 🔴 ยกเลิกโหมด Mini Player เมื่อผู้ใช้กดขยายกลับมาหน้าเครื่องเล่น
         viewPlayerEl.classList.remove('mini-mode');
         window.setPlayerLayout(savedLayoutMode);
 
@@ -436,7 +431,6 @@ window.renderLyricsToContainer = function() {
         let htmlContent = '';
         let alignClass = 'align-center'; 
 
-        // 🔴 โค้ดส่วนที่เพิ่มมา: แยกบรรทัดด้วย \n และห่อหุ้มด้วย class lang-0, lang-1...
         const lines = lyric.split('\n');
         let linesHtml = lines.map((line, i) => `<div class="lang-${i}">${line}</div>`).join('');
 
@@ -468,49 +462,6 @@ window.renderLyricsToContainer = function() {
     });
 }
 
-    window.currentLyricsArray.forEach((lyric, index) => {
-        const lineDiv = document.createElement('div');
-        lineDiv.className = 'lyric-line';
-        lineDiv.id = `lyric-line-${index}`;
-
-        let htmlContent = lyric;
-        let alignClass = 'align-center'; // ค่าเริ่มต้น: ตรงกลางเสมอ
-
-        const singerString = (currentSong && currentSong.singers && currentSong.singers[index]) ? currentSong.singers[index] : null;
-
-        if (singerString) {
-            const singersArr = singerString.split(',').map(s => s.trim()).filter(s => s);
-            if (singersArr.length > 0) {
-                const badgesHtml = singersArr.map(s => `<span class="singer-badge">${s}</span>`).join('');
-                
-                // ตรวจสอบว่าร้องกี่คน เพื่อจัด ซ้าย ขวา หรือ กลาง
-                if (singersArr.length === 1) {
-                    const singerIdx = uniqueSingers.indexOf(singersArr[0]);
-                    // สลับ ซ้าย-ขวา (เลขคู่ไปซ้าย เลขคี่ไปขวา)
-                    if (singerIdx % 2 === 0) {
-                        alignClass = 'align-left';
-                    } else {
-                        alignClass = 'align-right';
-                    }
-                } else {
-                    // ถ้าร้องพร้อมกันหลายคน ให้อยู่ตรงกลาง
-                    alignClass = 'align-center';
-                }
-
-                htmlContent = `<div class="singer-badges">${badgesHtml}</div><div>${lyric}</div>`;
-            } else {
-                htmlContent = `<div>${lyric}</div>`;
-            }
-        } else {
-            htmlContent = `<div>${lyric}</div>`;
-        }
-
-        lineDiv.classList.add(alignClass); // ใส่คลาสจัดตำแหน่ง
-        lineDiv.innerHTML = htmlContent;
-        container.appendChild(lineDiv);
-    });
-}
-
 window.playSong = function(id) {
     window.currentSongId = id;
     const song = window.songs.find(s => s.id === id);
@@ -526,7 +477,7 @@ window.playSong = function(id) {
     window.updateLyricDisplay();
     window.showView('view-player');
 
-const videoId = window.extractYouTubeID(song.audioPath);
+    const videoId = window.extractYouTubeID(song.audioPath);
     
     if (window.ytPlayer) {
         if (typeof window.ytPlayer.loadVideoById === 'function') window.ytPlayer.loadVideoById(videoId);
@@ -535,7 +486,6 @@ const videoId = window.extractYouTubeID(song.audioPath);
             window.ytPlayer = new YT.Player('youtubePlayer', {
                 height: '100%', width: '100%', videoId: videoId,
                 playerVars: { 'playsinline': 1, 'controls': 1 },
-                // 🔴 เพิ่มการจับ Event เมื่อสถานะวิดีโอเปลี่ยน
                 events: {
                     'onStateChange': window.onPlayerStateChange
                 }
@@ -587,14 +537,12 @@ window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
     const song = window.songs.find(s => s.id === window.currentSongId);
     if (song) {
         try {
-            // ถ้ามีการแก้เนื้อ แทรก หรือ ลบ ให้รวบรวมเนื้อเพลงใหม่ทั้งหมด
             if (updateLyricsText) {
                 song.lyrics = window.currentLyricsArray.join('\n\n');
             }
 
             const lyricCount = window.currentLyricsArray.length;
             
-            // กรอง Array เวลาและนักร้องให้ความยาวเท่ากับจำนวนบรรทัดเนื้อเพลงเป๊ะๆ
             const safeTimestamps = Array.from({length: lyricCount}, (_, i) => 
                 (song.timestamps && song.timestamps[i] != null) ? song.timestamps[i] : null
             );
@@ -607,7 +555,7 @@ window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
                 singers: safeSingers
             };
             if (updateLyricsText) {
-                updatePayload.lyrics = song.lyrics; // เซฟข้อความเนื้อเพลงกลับขึ้น Database
+                updatePayload.lyrics = song.lyrics; 
             }
 
             await updateDoc(doc(db, "songs", window.currentSongId), updatePayload);
@@ -615,7 +563,6 @@ window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
             song.timestamps = safeTimestamps;
             song.singers = safeSingers;
             
-            // สั่งอัปเดตหน้าจอเครื่องเล่นเพลงแบบเรียลไทม์
             if (updateLyricsText) {
                 window.renderLyricsToContainer();
                 window.updateLyricDisplay();
@@ -640,14 +587,13 @@ window.renderTimestampEditor = function() {
         row.className = 'ts-row';
         row.id = `ts-row-${index}`;
         row.style.display = 'flex';
-        row.style.flexDirection = 'column'; // จัดเรียงแนวตั้งเพื่อให้กล่องข้อความกว้างขึ้น
+        row.style.flexDirection = 'column'; 
         row.style.padding = '12px 10px';
         row.style.borderRadius = '8px';
         row.style.marginBottom = '12px';
         row.style.background = 'rgba(255, 255, 255, 0.05)';
         row.style.border = '1px solid rgba(255, 255, 255, 0.1)';
 
-        // --- ส่วนที่ 1: กล่องแก้ไขข้อความเนื้อเพลง ---
         const lyricEditor = document.createElement('textarea');
         lyricEditor.value = lyric;
         lyricEditor.style.width = '100%';
@@ -668,14 +614,12 @@ window.renderTimestampEditor = function() {
             lyricEditor.style.background = 'transparent';
             lyricEditor.style.marginBottom = '0';
         } else {
-            // เมื่อพิมพ์แก้เนื้อเพลงแล้วคลิกออก จะบันทึกทันที
             lyricEditor.onchange = (e) => {
                 window.currentLyricsArray[index] = e.target.value.trim();
                 window.saveTimestampsToFirebase(true); 
             };
         }
 
-        // --- ส่วนที่ 2: แผงควบคุม (นักร้อง, เวลา, แทรก/ลบ) ---
         const controlsDiv = document.createElement('div');
         controlsDiv.style.display = 'flex';
         controlsDiv.style.justifyContent = 'space-between';
@@ -683,7 +627,6 @@ window.renderTimestampEditor = function() {
         controlsDiv.style.flexWrap = 'wrap';
         controlsDiv.style.gap = '8px';
 
-        // ฝั่งซ้าย (เวลา และ นักร้อง)
         const leftControls = document.createElement('div');
         leftControls.style.display = 'flex';
         leftControls.style.gap = '8px';
@@ -725,7 +668,7 @@ window.renderTimestampEditor = function() {
                     if (songIdx !== -1) {
                         if (!window.songs[songIdx].singers) window.songs[songIdx].singers = [];
                         window.songs[songIdx].singers[index] = selected.length > 0 ? selected.join(', ') : "";
-                        window.saveTimestampsToFirebase(true); // อัปเดตหน้าจอทันที
+                        window.saveTimestampsToFirebase(true); 
                     }
                 };
                 itemLabel.appendChild(checkbox);
@@ -774,7 +717,6 @@ window.renderTimestampEditor = function() {
         }
         leftControls.appendChild(timeInput);
 
-        // ฝั่งขวา (แทรก, ลบ)
         const rightControls = document.createElement('div');
         rightControls.style.display = 'flex';
         rightControls.style.gap = '8px';
@@ -789,7 +731,7 @@ window.renderTimestampEditor = function() {
             btnAdd.style.fontSize = '0.8em';
             btnAdd.style.margin = '0';
             btnAdd.style.width = 'auto';
-            btnAdd.onclick = () => window.addLyricLine(index); // เรียกฟังก์ชันแทรก
+            btnAdd.onclick = () => window.addLyricLine(index);
 
             const btnDel = document.createElement('button');
             btnDel.innerText = '🗑️ ลบ';
@@ -800,7 +742,7 @@ window.renderTimestampEditor = function() {
             btnDel.style.fontSize = '0.8em';
             btnDel.style.margin = '0';
             btnDel.style.width = 'auto';
-            btnDel.onclick = () => window.deleteLyricLine(index); // เรียกฟังก์ชันลบ
+            btnDel.onclick = () => window.deleteLyricLine(index);
 
             rightControls.appendChild(btnAdd);
             rightControls.appendChild(btnDel);
@@ -814,7 +756,6 @@ window.renderTimestampEditor = function() {
         container.appendChild(row);
     });
     
-    // ปุ่มเพิ่มท่อนใหม่ต่อท้ายสุด (ล่างสุดของ List)
     if (window.isAdmin) {
         const btnAddEnd = document.createElement('button');
         btnAddEnd.innerText = '➕ เพิ่มท่อนใหม่ต่อท้ายสุด';
@@ -858,7 +799,6 @@ window.addLyricLine = function(index) {
     const song = window.songs.find(s => s.id === window.currentSongId);
     if(!song) return;
 
-    // แทรกข้อความเปล่า และเว้นที่ว่างให้เวลาและคนร้อง ใน Array โดยไม่กระทบท่อนอื่น
     const insertAt = index + 1;
     window.currentLyricsArray.splice(insertAt, 0, "ท่อนใหม่...");
     if(!song.timestamps) song.timestamps = [];
@@ -866,7 +806,6 @@ window.addLyricLine = function(index) {
     if(!song.singers) song.singers = [];
     song.singers.splice(insertAt, 0, "");
 
-    // เซฟลง Database และโหลด Editor ใหม่
     window.saveTimestampsToFirebase(true).then(() => {
         window.renderTimestampEditor(); 
     });
@@ -877,7 +816,6 @@ window.deleteLyricLine = function(index) {
     const song = window.songs.find(s => s.id === window.currentSongId);
     if(!song) return;
 
-    // ลบข้อมูล ณ จุด Index นั้นๆ ออกจากทั้ง 3 Array อย่างสมดุล
     window.currentLyricsArray.splice(index, 1);
     if(song.timestamps) song.timestamps.splice(index, 1);
     if(song.singers) song.singers.splice(index, 1);
@@ -973,21 +911,16 @@ window.setPlayerLayout = function(layoutMode) {
     const mainContainer = document.querySelector('.container');
     const toggleBtn = document.getElementById('btnToggleLayout');
     
-    // 1. อัปเดตสถานะปุ่มไฮไลต์ในหน้าตั้งค่า
-    const btnOptVertical = document.getElementById('btnOptVertical');
-    const btnOptHorizontal = document.getElementById('btnOptHorizontal');
-    
-    if (btnOptVertical && btnOptHorizontal) {
+    if (document.getElementById('btnOptVertical') && document.getElementById('btnOptHorizontal')) {
         if (layoutMode === 'horizontal') {
-            btnOptHorizontal.style.borderColor = '#0a84ff';
-            btnOptVertical.style.borderColor = 'rgba(255,255,255,0.1)';
+            document.getElementById('btnOptHorizontal').style.borderColor = '#0a84ff';
+            document.getElementById('btnOptVertical').style.borderColor = 'rgba(255,255,255,0.1)';
         } else {
-            btnOptVertical.style.borderColor = '#0a84ff';
-            btnOptHorizontal.style.borderColor = 'rgba(255,255,255,0.1)';
+            document.getElementById('btnOptVertical').style.borderColor = '#0a84ff';
+            document.getElementById('btnOptHorizontal').style.borderColor = 'rgba(255,255,255,0.1)';
         }
     }
 
-    // 2. จัดการ Layout หน้าเครื่องเล่นเพลง
     if (layoutMode === 'horizontal') {
         if (layoutContainer) {
             layoutContainer.classList.remove('layout-vertical');
@@ -1002,20 +935,17 @@ window.setPlayerLayout = function(layoutMode) {
         if (toggleBtn) toggleBtn.innerText = '🖥️ แนวนอน';
     }
     
-    // 3. ระบบขยายจออัจฉริยะ (ขยายเฉพาะตอนอยู่ "หน้าแรก" และ "หน้าเล่นเพลง")
     if (mainContainer) {
         const isPlayerActive = document.getElementById('view-player').classList.contains('active');
         const isListActive = document.getElementById('view-list').classList.contains('active');
         
-        // ถ้าเลือกแนวนอน และกำลังดูหน้าคลังเพลงหรือเล่นเพลง ให้ขยายหน้าจอออก
         if (layoutMode === 'horizontal' && (isPlayerActive || isListActive)) {
             mainContainer.classList.add('wide-mode');
         } else {
-            mainContainer.classList.remove('wide-mode'); // หดจอกลับเมื่อเป็นแนวตั้ง หรือเข้าหน้าตั้งค่า
+            mainContainer.classList.remove('wide-mode'); 
         }
     }
     
-    // 4. สั่งขยับเนื้อเพลงให้ตรงจุดกึ่งกลาง
     if (typeof window.updateLyricDisplay === 'function') {
         setTimeout(() => { window.updateLyricDisplay(); }, 100);
     }
@@ -1027,7 +957,6 @@ window.togglePlayerLayout = function() {
     window.setPlayerLayout(nextLayout);
 };
 
-// โหลดค่า Layout เริ่มต้นตอนเปิดเว็บ
 const savedLayout = localStorage.getItem('selectedLayout') || 'vertical';
 window.setPlayerLayout(savedLayout);
 
@@ -1035,7 +964,6 @@ window.setPlayerLayout(savedLayout);
 // ระบบเล่นต่อเนื่อง (Autoplay Next)
 // ==========================================
 window.onPlayerStateChange = function(event) {
-    // โค้ด 0 คือ YT.PlayerState.ENDED (เมื่อวิดีโอเล่นจบ)
     if (event.data === 0) {
         window.playNextSongInList();
     }
@@ -1044,11 +972,9 @@ window.onPlayerStateChange = function(event) {
 window.playNextSongInList = function() {
     if (!window.songs || window.songs.length === 0) return;
     
-    // หาตำแหน่งเพลงปัจจุบันในรายการ
     const currentIndex = window.songs.findIndex(s => s.id === window.currentSongId);
     let nextIndex = currentIndex + 1;
     
-    // ถ้าถึงเพลงสุดท้ายในคลังแล้ว ให้วนกลับไปเล่นเพลงแรกสุดใหม่
     if (nextIndex >= window.songs.length) {
         nextIndex = 0;
     }
@@ -1065,27 +991,43 @@ window.playNextSongInList = function() {
 window.shareSong = function() {
     if (!window.currentSongId) return;
     
-    // สร้าง URL พร้อมพ่วง ID เพลง
-    const shareUrl = window.location.origin + window.location.pathname + '?song=' + window.currentSongId;
+    const baseUrl = window.location.href.split('?')[0];
+    const shareUrl = baseUrl + '?song=' + window.currentSongId;
     
-    // คัดลอกลง Clipboard แบบเงียบๆ
-    navigator.clipboard.writeText(shareUrl).then(() => {
+    const handleSuccess = () => {
         const btn = document.getElementById('btnShareSong');
-        const originalText = btn.innerText;
-        btn.innerText = '✅ คัดลอกแล้ว';
-        btn.style.background = 'rgba(52, 199, 89, 0.2)';
-        btn.style.color = '#34c759';
-        
-        // คืนค่าปุ่มกลับเป็นเหมือนเดิมหลังผ่านไป 2 วินาที
-        setTimeout(() => {
-            btn.innerText = originalText;
-            btn.style.background = '#2c2c2e';
-            btn.style.color = '#f5f5f7';
-        }, 2000);
-    }).catch(err => {
-        console.error('Could not copy text: ', err);
-        alert("คัดลอกลิงก์ไม่สำเร็จ กรุณาก๊อปปี้ลิงก์นี้: " + shareUrl);
-    });
+        if (btn) {
+            btn.innerText = '✅ คัดลอกแล้ว';
+            btn.style.background = 'rgba(52, 199, 89, 0.2)';
+            btn.style.color = '#34c759';
+            setTimeout(() => {
+                btn.innerText = '🔗 แชร์';
+                btn.style.background = '#2c2c2e';
+                btn.style.color = '#f5f5f7';
+            }, 2000);
+        }
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(shareUrl).then(handleSuccess).catch(() => {
+            prompt("เบราว์เซอร์บล็อกการก๊อปปี้อัตโนมัติ กรุณาก๊อปปี้ลิงก์นี้ไปแชร์:", shareUrl);
+        });
+    } else {
+        let textArea = document.createElement("textarea");
+        textArea.value = shareUrl;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            handleSuccess();
+        } catch (err) {
+            prompt("เบราว์เซอร์บล็อกการก๊อปปี้อัตโนมัติ กรุณาก๊อปปี้ลิงก์นี้ไปแชร์:", shareUrl);
+        }
+        textArea.remove();
+    }
 };
 
 // ==========================================
@@ -1095,7 +1037,6 @@ window.toggleLang = function(langIndex) {
     const container = document.getElementById('lyricsContainer');
     if (!container) return;
     
-    // ดึงค่า checked จาก input ที่ถูกกด
     const isChecked = event.target.checked;
     if (isChecked) {
         container.classList.remove(`hide-lang-${langIndex}`);
@@ -1103,7 +1044,6 @@ window.toggleLang = function(langIndex) {
         container.classList.add(`hide-lang-${langIndex}`);
     }
     
-    // อัปเดตตำแหน่งเลื่อนอัตโนมัติให้ตรงกึ่งกลางหลังความสูงเนื้อเพลงเปลี่ยน
     setTimeout(() => { window.updateLyricDisplay(); }, 100);
 };
 
@@ -1118,5 +1058,3 @@ setTimeout(() => {
         });
     }
 }, 1000);
-
-
