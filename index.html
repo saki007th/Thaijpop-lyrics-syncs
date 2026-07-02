@@ -94,6 +94,13 @@
                 </div>
             </div>
 
+            <!-- 🔴 ระบบเปิด/ซ่อนภาษาของเนื้อเพลง (Language Toggle) -->
+            <div id="lyricLangToggles" style="display: flex; gap: 15px; justify-content: center; margin-bottom: 12px; background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 12px;">
+                <label class="lang-toggle"><input type="checkbox" checked onchange="toggleLang(0)"> 🇯🇵 ญี่ปุ่น</label>
+                <label class="lang-toggle"><input type="checkbox" checked onchange="toggleLang(1)"> 🔤 โรมาจิ</label>
+                <label class="lang-toggle"><input type="checkbox" checked onchange="toggleLang(2)"> 🇹🇭 ไทย</label>
+            </div>
+
             <div id="playerContentLayout" class="layout-vertical">
                 <div class="youtube-container">
                     <div id="youtubePlayer"></div>
