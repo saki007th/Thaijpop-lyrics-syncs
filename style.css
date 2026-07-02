@@ -304,3 +304,88 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
         aspect-ratio: auto;
     }
 }
+/* =========================================
+   ระบบซ่อนภาษาเนื้อเพลง (Language Toggle)
+   ========================================= */
+.hide-lang-0 .lang-0 { display: none !important; }
+.hide-lang-1 .lang-1 { display: none !important; }
+.hide-lang-2 .lang-2 { display: none !important; }
+.hide-lang-3 .lang-3 { display: none !important; }
+
+.lang-toggle { font-size: 0.85em; color: #b0bec5; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 500; transition: color 0.2s; }
+.lang-toggle:hover { color: #ffffff; }
+.lang-toggle input { width: 14px; height: 14px; cursor: pointer; margin: 0; }
+
+/* =========================================
+   ระบบ Mini Player (เมื่อย่อกลับคลังเพลง)
+   ========================================= */
+#view-player.mini-mode {
+    display: flex !important;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: calc(100% - 40px);
+    max-width: 320px;
+    background: rgba(28, 28, 30, 0.95);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-radius: 20px;
+    padding: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    z-index: 1000;
+    flex-direction: row;
+    align-items: center;
+    border: 1px solid rgba(255,255,255,0.15);
+    animation: slideUp 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+}
+#view-player.mini-mode:hover {
+    transform: scale(1.03);
+    border-color: #0a84ff;
+}
+@keyframes slideUp {
+    from { transform: translateY(100px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* ซ่อนทุกอย่างที่ไม่ได้ใช้ในโหมด Mini Player */
+#view-player.mini-mode > *:not(#playerContentLayout):not(div:first-child) {
+    display: none !important;
+}
+#view-player.mini-mode #lyricLangToggles { display: none !important; }
+#view-player.mini-mode #playerContentLayout { margin: 0; flex-shrink: 0; gap: 0; width: auto; }
+#view-player.mini-mode .lyrics-wrapper { display: none !important; }
+
+/* จัดการหน้าตาวิดีโอให้เป็นรูปย่อ */
+#view-player.mini-mode .youtube-container {
+    width: 100px;
+    aspect-ratio: 16/9;
+    margin: 0;
+    border-radius: 10px;
+    pointer-events: none; /* ป้องกันการเผลอกดคลิกวิดีโอ */
+}
+#view-player.mini-mode .layout-vertical,
+#view-player.mini-mode .layout-horizontal {
+    flex-direction: row !important;
+    align-items: center;
+    gap: 12px;
+}
+
+/* จัดระเบียบข้อความชื่อเพลงไม่ให้ล้นใน Mini Player */
+#view-player.mini-mode > div:first-child {
+    margin-bottom: 0 !important;
+    flex-grow: 1;
+    min-width: 0; 
+}
+#view-player.mini-mode #playerSongInfo { width: 100%; }
+#view-player.mini-mode #playerTitle {
+    font-size: 0.95em !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#view-player.mini-mode #btnToggleLayout,
+#view-player.mini-mode #btnShareSong {
+    display: none !important;
+}
