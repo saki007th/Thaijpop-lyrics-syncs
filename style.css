@@ -51,6 +51,11 @@ body {
 .wb-body { background: transparent !important; }
 .wb-full { display: none !important; }
 .wb-content-padding { padding: 20px; box-sizing: border-box; height: 100%; overflow-y: auto; }
+/* เสริมปุ่มปิด ย่อ ขยาย หน้าต่างให้เป็นสไตล์ Mac OS และเห็นชัดเจน */
+.wb-control { filter: invert(1); }
+.wb-close { background-color: #ff3b30 !important; border-radius: 50%; margin: 4px; }
+.wb-max { background-color: #34c759 !important; border-radius: 50%; margin: 4px; }
+.wb-min { background-color: #ffcc00 !important; border-radius: 50%; margin: 4px; }
 
 /* ปรับแต่งส่วนย่อย */
 button { font-family: inherit; }
