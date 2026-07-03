@@ -8,6 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/winbox@0.2.82/dist/winbox.bundle.min.js"></script>
 </head>
 <body>
+    <!-- 🔴 เพิ่มเลเยอร์นี้สำหรับทำวอลเปเปอร์แบบภาพคมชัด -->
+    <div id="desktop-wallpaper"></div>
     <div id="dynamic-bg"></div>
 
     <div id="loadingOverlay">
@@ -63,6 +65,15 @@
 
         <!-- 5. ตั้งค่า -->
         <div id="content-settings" class="wb-content-padding">
+            <h3 style="margin-top:0;">🖼️ ภาพพื้นหลัง (Wallpaper)</h3>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                <button class="btn-secondary" style="flex: 1; font-size: 0.85em;" onclick="setWallpaper('default')">🌌 สีพื้นฐาน</button>
+                <button class="btn-secondary" style="flex: 1; font-size: 0.85em;" onclick="setWallpaper('https://images.unsplash.com/photo-1538370965046-79c0d6907d47?q=80&w=2000')">🌆 ไซเบอร์พังก์</button>
+                <button class="btn-secondary" style="flex: 1; font-size: 0.85em;" onclick="setWallpaper('https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=2000')">⛰️ ภูเขาดวงดาว</button>
+                <button class="btn-secondary" style="flex: 1; font-size: 0.85em;" onclick="setWallpaper('https://images.unsplash.com/photo-1506744626753-1fa28f673b0c?q=80&w=2000')">🏞️ ธรรมชาติ</button>
+            </div>
+            <input type="text" id="inputCustomWallpaper" placeholder="หรือวางลิงก์รูปภาพ (URL) ของคุณที่นี่..." onchange="setWallpaper(this.value)" style="margin-bottom: 30px;">
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin-bottom: 25px;">
             <h3 style="margin-top:0;">✨ เลือกสีออร่า</h3>
             <div class="theme-list">
                 <button onclick="setTheme('default')" class="theme-btn" style="background: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85); color:white;">🌈 Apple Glow</button>
