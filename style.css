@@ -309,3 +309,24 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 
 .lang-toggle { cursor: pointer; }
 .lang-toggle input { width: 16px; height: 16px; cursor: pointer; margin: 0; }
+
+/* =========================================
+   ระบบ Dynamic Background (ดูดสีปกเพลง)
+   ========================================= */
+#dynamic-bg {
+    position: fixed;
+    /* ขยายกรอบให้ใหญ่กว่าจอเล็กน้อยเพื่อซ่อนขอบที่เบลอ */
+    top: -10%; left: -10%; width: 120vw; height: 120vh;
+    background-size: cover;
+    background-position: center;
+    /* เบลอภาพและลดความสว่างลงเพื่อให้ตัวหนังสืออ่านง่าย */
+    filter: blur(40px) brightness(0.4);
+    -webkit-filter: blur(40px) brightness(0.4);
+    z-index: -10; 
+    opacity: 0;
+    transition: opacity 1s ease-in-out, background-image 1s ease-in-out;
+    pointer-events: none;
+}
+#dynamic-bg.active {
+    opacity: 1;
+}
