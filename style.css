@@ -52,11 +52,44 @@ body {
 .wb-full { display: none !important; }
 .wb-content-padding { padding: 20px; box-sizing: border-box; height: 100%; overflow-y: auto; }
 /* เสริมปุ่มปิด ย่อ ขยาย หน้าต่างให้เป็นสไตล์ Mac OS และเห็นชัดเจน */
-.wb-control { filter: invert(1); }
-.wb-close { background-color: #ff3b30 !important; border-radius: 50%; margin: 4px; }
-.wb-max { background-color: #34c759 !important; border-radius: 50%; margin: 4px; }
-.wb-min { background-color: #ffcc00 !important; border-radius: 50%; margin: 4px; }
+/* =========================================
+   แก้ไขปุ่มหน้าต่าง (สไตล์ Mac OS)
+   ========================================= */
+.wb-header .wb-control { 
+    filter: none !important; /* 🔴 ล้างคำสั่งทำสีเพี้ยนทิ้งไป */
+    display: flex;
+    align-items: center;
+    padding-right: 10px; /* ขยับออกจากขอบขวาให้ดูพอดี */
+    gap: 8px; /* ระยะห่างระหว่างปุ่ม */
+}
 
+/* ปรับทรงให้เป็นวงกลมสมบูรณ์ และย่อขนาดไอคอนข้างใน */
+.wb-header .wb-min, 
+.wb-header .wb-max, 
+.wb-header .wb-close {
+    width: 14px !important;
+    height: 14px !important;
+    border-radius: 50% !important;
+    margin: 0 !important; 
+    background-size: 8px !important; /* ขนาดของไอคอนกากบาท/สี่เหลี่ยม */
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    transition: transform 0.2s ease, filter 0.2s;
+    cursor: pointer;
+}
+
+/* ใส่สีแดง เหลือง เขียว สไตล์ Apple */
+.wb-header .wb-min { background-color: #ffcc00 !important; }
+.wb-header .wb-max { background-color: #34c759 !important; }
+.wb-header .wb-close { background-color: #ff3b30 !important; }
+
+/* ลูกเล่นเวลาเอาเมาส์ชี้ ให้ปุ่มขยายขึ้นนิดนึงและสว่างขึ้น */
+.wb-header .wb-min:hover, 
+.wb-header .wb-max:hover, 
+.wb-header .wb-close:hover {
+    transform: scale(1.2);
+    filter: brightness(1.2);
+}
 /* ปรับแต่งส่วนย่อย */
 button { font-family: inherit; }
 .btn-primary { background: #0a84ff; color: white; border: none; padding: 12px 18px; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.2s; }
