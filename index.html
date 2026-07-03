@@ -136,6 +136,24 @@
         </div>
     </div>
     <script src="pip.js"></script>
+    <!-- ระบบซ่อน Header อัตโนมัติ -->
+    <script>
+        let lastScrollTop = 0;
+        const header = document.querySelector('header');
+
+        window.addEventListener('scroll', function() {
+            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            // ถ้าเลื่อนหน้าจอลง (และเลื่อนเลยช่วงบนสุดมาแล้ว 60px) ให้ซ่อน Header
+            if (scrollTop > lastScrollTop && scrollTop > 60) {
+                header.classList.add('header-hidden');
+            } else {
+                // ถ้าเลื่อนหน้าจอขึ้น ให้โชว์ Header กลับมา
+                header.classList.remove('header-hidden');
+            }
+            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; // ป้องกันการเลื่อนติดลบในมือถือ
+        }, { passive: true });
+    </script>
     <script type="module" src="app.js"></script>
 </body>
 </html>
