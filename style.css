@@ -393,30 +393,39 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 }
 
 /* =========================================
-   แก้ไขโหมดแนวตั้งบน Desktop (ปรับสมดุลใหม่ สวยงามเต็มตา)
+   แก้ไขโหมดแนวตั้งบน Desktop (โครงสร้างเสถียร 100%)
    ========================================= */
 @media (min-width: 1024px) {
-    /* 1. วิดีโอขนาดกำลังดี (ไซส์ประมาณจอ iPad) ไม่เล็กจิ๋ว และมีเงาให้ดูลอยเด่น */
+    /* 1. จัดระเบียบแกนหลักให้อยู่กึ่งกลางเสมอ */
+    .layout-vertical {
+        align-items: center !important; 
+    }
+
+    /* 2. ล็อกขนาดวิดีโอให้พอดีสายตา ไม่บวมคับจอ (ประมาณ 640x360px) */
     .layout-vertical .youtube-container {
-        max-width: 768px !important; 
-        margin: 0 auto 24px auto !important;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.5); 
+        width: 100% !important;
+        max-width: 640px !important; 
+        margin: 0 auto 20px auto !important;
+        flex-shrink: 0; /* ป้องกันวิดีโอโดนเบียดจนเสียสัดส่วน */
+        border-radius: 20px;
+        box-shadow: 0 10px 35px rgba(0,0,0,0.5);
     }
     
-    /* 2. กล่องเนื้อเพลงกว้างขึ้นเพื่อฐานที่มั่นคง และมีความสูงพอดีจอ */
+    /* 3. กล่องเนื้อเพลง ขยายให้กว้างกว่าวิดีโอนิดหน่อยเพื่อเป็นฐานที่มั่นคง */
     .layout-vertical .lyrics-wrapper {
-        max-width: 850px !important; 
+        width: 100% !important;
+        max-width: 800px !important; 
         margin: 0 auto !important;
-        height: 46vh !important; 
+        height: 50vh !important; /* ให้สูงครึ่งนึงของหน้าจอเสมอ */
+        min-height: 350px !important; /* แต่ห้ามเตี้ยกว่า 350px */
     }
     
-    /* 3. ขยายขนาดอักษรเนื้อเพลงให้ใหญ่ขึ้นสมกับจอ Desktop (อ่านง่ายขึ้น) */
+    /* 4. ปรับขนาดอักษรเนื้อเพลงให้พอดี ไม่ใหญ่จนล้นกรอบ */
     .layout-vertical .lyric-line {
-        font-size: 1.25em;
-        padding: 8px 20px;
+        font-size: 1.15em !important;
     }
     .layout-vertical .lyric-line.active {
-        font-size: 1.8em !important;
-        margin: 35px 0;
+        font-size: 1.45em !important; /* ลดขนาดลงมาจาก 1.8em เพื่อให้ภาษาไทยและโรมาจิอยู่ครบไม่ตกบรรทัด */
+        margin: 25px 0 !important;
     }
 }
