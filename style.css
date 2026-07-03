@@ -32,18 +32,7 @@ header {
 .btn-logout { color: #ff453a; }
 .btn-auth:hover { opacity: 0.7; }
 
-.container { 
-    padding: 12px 20px; 
-    max-width: 650px; 
-    margin: auto; 
-    flex-grow: 1; 
-    width: 100%; 
-    box-sizing: border-box; 
-    
-    /* 🔴 โค้ดที่เพิ่มมาเพื่อแก้บั๊กจอดำบน iPad/iOS */
-    position: relative; 
-    z-index: 1; 
-}
+.container { padding: 12px 20px; max-width: 650px; margin: auto; flex-grow: 1; width: 100%; box-sizing: border-box; }
 
 button { 
     background: #0a84ff; color: white; border: none; 
@@ -310,46 +299,3 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 
 .lang-toggle { cursor: pointer; }
 .lang-toggle input { width: 16px; height: 16px; cursor: pointer; margin: 0; }
-
-/* =========================================
-   ระบบ Dynamic Background (ดูดสีปกเพลง)
-   ========================================= */
-#dynamic-bg {
-    position: fixed;
-    /* ขยายให้ใหญ่กว่าจอเล็กน้อยเพื่อซ่อนขอบที่เบลอ */
-    top: -5%; left: -5%; width: 110vw; height: 110vh;
-    background-size: cover;
-    background-position: center;
-    /* เบลอภาพและลดความสว่างลงเพื่อให้ตัวหนังสือยังอ่านง่าย */
-    filter: blur(60px) brightness(0.3);
-    -webkit-filter: blur(60px) brightness(0.3);
-    z-index: -10; /* ให้อยู่ลึกสุดของหน้าจอ */
-    opacity: 0;
-    transition: opacity 1.2s ease-in-out, background-image 1s ease-in-out;
-    pointer-events: none;
-}
-#dynamic-bg.active {
-    opacity: 1;
-}
-
-/* =========================================
-   ระบบสถิติ (Your Music Stats)
-   ========================================= */
-.stat-item {
-    display: flex; 
-    justify-content: space-between; 
-    background: rgba(255,255,255,0.05); 
-    padding: 12px 16px; 
-    border-radius: 12px; 
-    align-items: center;
-    border: 1px solid rgba(255,255,255,0.05);
-    transition: transform 0.2s, background 0.2s;
-}
-.stat-item:hover {
-    transform: translateX(5px);
-    background: rgba(255,255,255,0.1);
-}
-.stat-rank { font-size: 1.2em; font-weight: 800; min-width: 35px; }
-.stat-title { font-size: 0.95em; color: #fff; font-weight: 500; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
-.stat-artist { font-size: 0.75em; color: #8e8e93; display: block; }
-.stat-count-badge { font-size: 0.85em; color: #0a84ff; background: rgba(10,132,255,0.1); padding: 4px 10px; border-radius: 20px; font-weight: bold; white-space: nowrap; }

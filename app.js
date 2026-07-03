@@ -150,7 +150,7 @@ async function fetchSongs() {
         });
         document.getElementById('loadingOverlay').style.display = 'none';
         
-        // เช็ค Deep Link จาก URL
+        // เช็ค Deep Link จาก URL parameter '?song=xxxx'
         const urlParams = new URLSearchParams(window.location.search);
         const songIdFromUrl = urlParams.get('song');
 
@@ -159,6 +159,7 @@ async function fetchSongs() {
             if (foundSong) {
                 window.renderSongList();
                 window.playSong(foundSong.id);
+                // ล้าง URL ให้สะอาด (รองรับ file:// และ https://)
                 try {
                     window.history.replaceState({}, document.title, window.location.href.split('?')[0]);
                 } catch(e) {}
@@ -205,10 +206,7 @@ window.showView = function(viewId) {
         window.currentFilter = 'All'; 
         window.renderSongList();
         
-        // ปิด Dynamic Background เมื่อย้อนกลับหน้าแรก 
-        const bgEl = document.getElementById('dynamic-bg');
-        if (bgEl) bgEl.classList.remove('active');
-        
+        // เมื่อย้อนกลับคลังเพลง ให้หยุดการเล่นเพลง (พฤติกรรมเดิมก่อนมี Mini Player)
         clearInterval(window.syncInterval);
         window.currentSongId = null;
         if (window.ytPlayer && typeof window.ytPlayer.stopVideo === 'function') window.ytPlayer.stopVideo();
@@ -237,17 +235,6 @@ window.showView = function(viewId) {
         headerTitle.innerText = 'การตั้งค่า';
         document.getElementById('btnAddSong').style.display = 'none';
         if(mainContainer) mainContainer.classList.remove('wide-mode');
-
-        // อัปเดตสถิติการฟังเพลง
-        if (typeof window.renderMusicStats === 'function') {
-            window.renderMusicStats();
-        }
-        
-        // อัปเดต Checkbox ของ Dynamic Bg
-        const toggleBgCheckbox = document.getElementById('toggleDynamicBg');
-        if (toggleBgCheckbox) {
-            toggleBgCheckbox.checked = localStorage.getItem('useDynamicBg') === 'true';
-        }
 
         const btnReturn = document.getElementById('btnReturnToPlayer');
         if (btnReturn) {
@@ -471,11 +458,6 @@ window.playSong = function(id) {
     const song = window.songs.find(s => s.id === id);
     if (!song) return;
 
-    // บันทึกสถิติ Play Count
-    if (typeof window.recordPlayStat === 'function') {
-        window.recordPlayStat(id);
-    }
-
     document.getElementById('playerTitle').innerText = song.title;
     document.getElementById('playerArtist').innerText = `ศิลปิน: ${song.artist || 'ไม่ระบุศิลปิน'}`;
 
@@ -488,13 +470,6 @@ window.playSong = function(id) {
 
     const videoId = window.extractYouTubeID(song.audioPath);
     
-    // ดึงรูปปกมาแปะพื้นหลัง Dynamic Background
-    const bgEl = document.getElementById('dynamic-bg');
-    if (bgEl && localStorage.getItem('useDynamicBg') === 'true') {
-        bgEl.style.backgroundImage = `url('https://img.youtube.com/vi/${videoId}/hqdefault.jpg')`;
-        bgEl.classList.add('active');
-    }
-
     if (window.ytPlayer) {
         if (typeof window.ytPlayer.loadVideoById === 'function') window.ytPlayer.loadVideoById(videoId);
     } else {
@@ -546,7 +521,7 @@ window.playSong = function(id) {
 }
 
 // ========================================================
-// ระบบเซฟข้อมูล
+// ระบบเซฟข้อมูล (อัปเกรดให้รองรับการบันทึกเนื้อเพลงที่ถูกแก้)
 // ========================================================
 window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
     if (!window.isAdmin) return;
@@ -590,7 +565,7 @@ window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
 }
 
 // ========================================================
-// หน้าต่าง Advanced Editor
+// หน้าต่าง Advanced Editor (แก้เนื้อ แทรก ลบ ตั้งเวลา คนร้อง)
 // ========================================================
 window.renderTimestampEditor = function() {
     const container = document.getElementById('timestampList');
@@ -807,6 +782,9 @@ window.syncTimestampEditorUI = function() {
     });
 }
 
+// ========================================================
+// ฟังก์ชันแทรกท่อน และ ลบท่อน
+// ========================================================
 window.addLyricLine = function(index) {
     if (!confirm('ต้องการแทรกเนื้อเพลง 1 ท่อน ลงด้านล่างนี้ใช่หรือไม่?')) return;
     const song = window.songs.find(s => s.id === window.currentSongId);
@@ -913,8 +891,9 @@ window.resetSync = function() {
 }
 
 // ==========================================
-// ระบบจัดการ Layout 
+// ระบบจัดการ Layout (แนวตั้ง / แนวนอน) 
 // ==========================================
+
 window.setPlayerLayout = function(layoutMode) {
     localStorage.setItem('selectedLayout', layoutMode);
     window.isLandscapeLayout = (layoutMode === 'horizontal');
@@ -973,7 +952,7 @@ const savedLayout = localStorage.getItem('selectedLayout') || 'vertical';
 window.setPlayerLayout(savedLayout);
 
 // ==========================================
-// ระบบเล่นต่อเนื่อง 
+// ระบบเล่นต่อเนื่อง (Autoplay Next)
 // ==========================================
 window.onPlayerStateChange = function(event) {
     if (event.data === 0) {
@@ -998,7 +977,7 @@ window.playNextSongInList = function() {
 };
 
 // ==========================================
-// ระบบแชร์ลิงก์ตรง 
+// ระบบแชร์ลิงก์ตรง (Deep Linking Share)
 // ==========================================
 window.shareSong = function() {
     if (!window.currentSongId) return;
@@ -1043,7 +1022,7 @@ window.shareSong = function() {
 };
 
 // ==========================================
-// ระบบเปิด/ซ่อนภาษา
+// ระบบเปิด/ซ่อนภาษา (Language Toggle)
 // ==========================================
 window.toggleLang = function(langIndex) {
     const container = document.getElementById('lyricsContainer');
@@ -1057,68 +1036,4 @@ window.toggleLang = function(langIndex) {
     }
     
     setTimeout(() => { window.updateLyricDisplay(); }, 100);
-};
-
-// ==========================================
-// ระบบสถิติการฟังเพลง (Your Music Stats)
-// ==========================================
-window.recordPlayStat = function(songId) {
-    let stats = JSON.parse(localStorage.getItem('myMusicStats')) || {};
-    stats[songId] = (stats[songId] || 0) + 1; 
-    localStorage.setItem('myMusicStats', JSON.stringify(stats));
-};
-
-window.renderMusicStats = function() {
-    const statsContainer = document.getElementById('myStatsContainer');
-    if (!statsContainer) return;
-    
-    let stats = JSON.parse(localStorage.getItem('myMusicStats')) || {};
-    
-    const sortedStats = Object.keys(stats).map(id => {
-        const song = window.songs.find(s => s.id === id);
-        return { id, title: song ? song.title : 'เพลงที่ถูกลบไปแล้ว', artist: song ? song.artist : '', count: stats[id], song: song };
-    }).filter(s => s.song).sort((a, b) => b.count - a.count).slice(0, 5);
-
-    if (sortedStats.length === 0) {
-        statsContainer.innerHTML = '<p style="color:#8e8e93; font-size: 0.9em; text-align:center; margin-top:20px;">🎧 ยังไม่มีสถิติการฟังเพลงของคุณ ลองฟังเพลงสักเพลงดูสิ!</p>';
-        return;
-    }
-
-    let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
-    const rankColors = ['#ffd700', '#c0c0c0', '#cd7f32', '#8e8e93', '#8e8e93']; 
-    
-    sortedStats.forEach((stat, index) => {
-        html += `
-            <div class="stat-item">
-                <div style="display:flex; gap: 12px; align-items:center; flex-grow: 1; min-width: 0;">
-                    <span class="stat-rank" style="color: ${rankColors[index]}">#${index+1}</span>
-                    <div style="min-width: 0; overflow: hidden;">
-                        <span class="stat-title">${stat.title}</span>
-                        <span class="stat-artist">🎤 ${stat.artist || 'ไม่ระบุ'}</span>
-                    </div>
-                </div>
-                <span class="stat-count-badge">▶ ${stat.count} ครั้ง</span>
-            </div>
-        `;
-    });
-    html += '</div>';
-    statsContainer.innerHTML = html;
-};
-
-// ==========================================
-// ระบบ Dynamic Background
-// ==========================================
-window.toggleDynamicBackground = function(isEnabled) {
-    localStorage.setItem('useDynamicBg', isEnabled);
-    const bgEl = document.getElementById('dynamic-bg');
-    if (!isEnabled && bgEl) {
-        bgEl.classList.remove('active');
-    } else if (isEnabled && window.currentSongId && bgEl) {
-        const song = window.songs.find(s => s.id === window.currentSongId);
-        if(song) {
-            const videoId = window.extractYouTubeID(song.audioPath);
-            bgEl.style.backgroundImage = `url('https://img.youtube.com/vi/${videoId}/hqdefault.jpg')`;
-            bgEl.classList.add('active');
-        }
-    }
 };
