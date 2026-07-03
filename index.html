@@ -7,7 +7,9 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
+<!-- 🔴 เลเยอร์สำหรับทำ Dynamic Background -->
+    <div id="dynamic-bg"></div>
+    
     <div id="loadingOverlay">
         <div>กำลังโหลดข้อมูลคลังเพลง...</div>
     </div>
@@ -65,8 +67,20 @@
                 <label class="bg-btn lang-toggle" style="display: flex; justify-content: center; align-items: center; gap: 8px;"><input type="checkbox" checked onchange="toggleLang(0)"> 🇯🇵 ญี่ปุ่น</label>
                 <label class="bg-btn lang-toggle" style="display: flex; justify-content: center; align-items: center; gap: 8px;"><input type="checkbox" checked onchange="toggleLang(1)"> 🔤 โรมาจิ</label>
                 <label class="bg-btn lang-toggle" style="display: flex; justify-content: center; align-items: center; gap: 8px;"><input type="checkbox" checked onchange="toggleLang(2)"> 🇹🇭 ไทย</label>
-            </div>
 
+                <!-- 🔴 ฟีเจอร์ใหม่: เปิด/ปิด พื้นหลังตามปกเพลง -->
+            <h3 style="font-weight: normal; color: #b0bec5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 30px;">🌟 ลูกเล่นพื้นหลังอัจฉริยะ</h3>
+            <label class="bg-btn" style="display: flex; justify-content: flex-start; align-items: center; gap: 12px; cursor:pointer;">
+                <input type="checkbox" id="toggleDynamicBg" onchange="toggleDynamicBackground(this.checked)" style="width:20px; height:20px; margin:0;"> 
+                เปิดใช้พื้นหลังเปลี่ยนสีตามปกเพลง (Dynamic Background)
+            </label>
+
+            <!-- 🔴 ฟีเจอร์ใหม่: สถิติการฟังเพลง -->
+            <h3 style="font-weight: normal; color: #b0bec5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 30px;">🏆 5 อันดับเพลงโปรดของคุณ</h3>
+            <div id="myStatsContainer" style="margin-top: 15px;">
+                <!-- สถิติจะถูกสร้างขึ้นมาอัตโนมัติด้วย JavaScript ตรงนี้ -->
+            </div>
+                
             <div style="display: flex; gap: 12px; margin-top: 40px; width: 100%;">
                 <button class="btn-secondary" onclick="showView('view-list')" style="margin-top: 0; flex: 1;">🏠 กลับคลังเพลง</button>
                 <button id="btnReturnToPlayer" class="btn-action" onclick="showView('view-player')" style="margin-top: 0; flex: 1; display: none; background: #0a84ff; color: white; font-weight: 600; border-radius: 14px;">🎵 กลับไปหน้าเล่นเพลง</button>
