@@ -372,11 +372,11 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 }
 #dynamic-bg.active {
     opacity: 1;
+} /* 🔴 ใส่ปีกกาปิดตรงนี้ให้ถูกต้อง เพื่อไม่ให้ CSS พัง */
 
-    /* =========================================
-   ตกแต่งเฉพาะหน้าต่าง PiP
+/* =========================================
+   ตกแต่งเฉพาะแถบ Scrollbar
    ========================================= */
-/* ซ่อนแถบ Scrollbar แต่ยังเลื่อนเนื้อเพลงได้ปกติ (เพื่อความสวยงามในหน้าต่างเล็ก) */
 ::-webkit-scrollbar {
     width: 6px;
 }
@@ -392,39 +392,38 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 }
 
 /* =========================================
-   แก้ไขโหมดแนวตั้งบน Desktop (โครงสร้างเสถียร 100%)
+   แก้ไขโหมดแนวตั้งบน Desktop (ทำงานได้จริงแล้ว!)
    ========================================= */
 @media (min-width: 1024px) {
-    /* 1. จัดระเบียบแกนหลักให้อยู่กึ่งกลางเสมอ */
+    /* 1. จัดกึ่งกลางให้เป๊ะ */
     .layout-vertical {
         align-items: center !important; 
     }
 
-    /* 2. ล็อกขนาดวิดีโอให้พอดีสายตา ไม่บวมคับจอ (ประมาณ 640x360px) */
+    /* 2. บีบวิดีโอให้ไซส์เท่า iPad (ไม่ล้นจอ) */
     .layout-vertical .youtube-container {
         width: 100% !important;
-        max-width: 640px !important; 
+        max-width: 600px !important; 
         margin: 0 auto 20px auto !important;
-        flex-shrink: 0; /* ป้องกันวิดีโอโดนเบียดจนเสียสัดส่วน */
-        border-radius: 20px;
         box-shadow: 0 10px 35px rgba(0,0,0,0.5);
     }
     
-    /* 3. กล่องเนื้อเพลง ขยายให้กว้างกว่าวิดีโอนิดหน่อยเพื่อเป็นฐานที่มั่นคง */
+    /* 3. กล่องเนื้อเพลงกว้างกว่าวิดีโอเพื่อเป็นฐาน และสูงพอดีจอ */
     .layout-vertical .lyrics-wrapper {
         width: 100% !important;
         max-width: 800px !important; 
         margin: 0 auto !important;
-        height: 50vh !important; /* ให้สูงครึ่งนึงของหน้าจอเสมอ */
-        min-height: 350px !important; /* แต่ห้ามเตี้ยกว่า 350px */
+        height: 45vh !important; 
+        min-height: 350px !important; 
     }
     
-    /* 4. ปรับขนาดอักษรเนื้อเพลงให้พอดี ไม่ใหญ่จนล้นกรอบ */
+    /* 4. ขนาดอักษรพอดีคำ ไม่ล้นกรอบ */
     .layout-vertical .lyric-line {
         font-size: 1.15em !important;
     }
     .layout-vertical .lyric-line.active {
-        font-size: 1.45em !important; /* ลดขนาดลงมาจาก 1.8em เพื่อให้ภาษาไทยและโรมาจิอยู่ครบไม่ตกบรรทัด */
+        font-size: 1.45em !important; 
         margin: 25px 0 !important;
     }
 }
+   
