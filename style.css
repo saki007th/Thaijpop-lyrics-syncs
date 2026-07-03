@@ -390,7 +390,6 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.4); 
 }
-}
 
 /* =========================================
    แก้ไขโหมดแนวตั้งบน Desktop (โครงสร้างเสถียร 100%)
