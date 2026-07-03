@@ -391,41 +391,6 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
     background: rgba(255, 255, 255, 0.4); 
 }
 
-/* =========================================
-   แก้ไขโหมดแนวตั้งบน Desktop (ทำงานได้จริงแล้ว!)
-   ========================================= */
-@media (min-width: 1024px) {
-    /* 1. จัดกึ่งกลางให้เป๊ะ */
-    .layout-vertical {
-        align-items: center !important; 
-    }
-
-    /* 2. บีบวิดีโอให้ไซส์เท่า iPad (ไม่ล้นจอ) */
-    .layout-vertical .youtube-container {
-        width: 100% !important;
-        max-width: 600px !important; 
-        margin: 0 auto 20px auto !important;
-        box-shadow: 0 10px 35px rgba(0,0,0,0.5);
-    }
-    
-    /* 3. กล่องเนื้อเพลงกว้างกว่าวิดีโอเพื่อเป็นฐาน และสูงพอดีจอ */
-    .layout-vertical .lyrics-wrapper {
-        width: 100% !important;
-        max-width: 800px !important; 
-        margin: 0 auto !important;
-        height: 45vh !important; 
-        min-height: 350px !important; 
-    }
-    
-    /* 4. ขนาดอักษรพอดีคำ ไม่ล้นกรอบ */
-    .layout-vertical .lyric-line {
-        font-size: 1.15em !important;
-    }
-    .layout-vertical .lyric-line.active {
-        font-size: 1.45em !important; 
-        margin: 25px 0 !important;
-    }
-}
    /* =========================================
    ระบบซ่อนแถบ Header อัตโนมัติเวลาเลื่อนหน้าจอ
    ========================================= */
@@ -438,4 +403,44 @@ header {
 .header-hidden {
     transform: translateY(-100%);
     box-shadow: none !important;
+}
+/* =========================================
+   แก้ไขโหมดแนวตั้งบน Desktop (กล่องเท่ากันเป๊ะ & Fit พอดีจอ)
+   ========================================= */
+@media (min-width: 1024px) {
+    /* จัดเลย์เอาต์ให้อยู่ตรงกลางจอ */
+    .layout-vertical {
+        align-items: center !important; 
+    }
+
+    /* 1. บังคับให้ทั้งวิดีโอและกล่องเนื้อเพลง "กว้างเท่ากันเป๊ะ" */
+    .layout-vertical .youtube-container,
+    .layout-vertical .lyrics-wrapper {
+        width: 100% !important;
+        max-width: 768px !important; /* ล็อกความกว้างไว้ที่ไซส์หน้าจอ iPad */
+        margin: 0 auto !important;
+    }
+
+    /* 2. จัดการวิดีโอ และเว้นระยะห่างด้านล่าง */
+    .layout-vertical .youtube-container {
+        margin-bottom: 24px !important; /* ช่องว่างระหว่างกล่องบน-ล่าง */
+        box-shadow: 0 10px 35px rgba(0,0,0,0.5);
+        flex-shrink: 0;
+    }
+    
+    /* 3. ล็อกความสูงเนื้อเพลงให้ "พอดีหน้าจอ" ไม่ดันจนล้นขอบล่าง */
+    .layout-vertical .lyrics-wrapper {
+        height: 38vh !important; /* ให้กล่องเนื้อเพลงสูงประมาณ 38% ของหน้าจอคอม */
+        min-height: 250px !important; /* ห้ามเตี้ยเกินไปจนอ่านไม่รู้เรื่อง */
+        max-height: 380px !important; /* ห้ามสูงเกินไปจนดันวิดีโอตกจอ */
+    }
+    
+    /* 4. ปรับขนาดอักษรให้อ่านง่ายและพอดีกับกล่องใหม่ */
+    .layout-vertical .lyric-line {
+        font-size: 1.15em !important;
+    }
+    .layout-vertical .lyric-line.active {
+        font-size: 1.4em !important; 
+        margin: 20px 0 !important;
+    }
 }
