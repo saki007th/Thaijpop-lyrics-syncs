@@ -10,10 +10,25 @@ body {
     height: 100vh; overflow: hidden; /* ห้ามเลื่อนหน้าจอหลัก */
 }
 
+/* =========================================
+   ระบบพื้นหลังแบบ Desktop OS
+   ========================================= */
+/* 1. วอลเปเปอร์หลัก (คมชัด) */
+#desktop-wallpaper {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background-color: var(--bg-color); 
+    background-size: cover; background-position: center;
+    z-index: -20; /* อยู่หลังสุด */
+    transition: background 0.5s ease;
+}
+
+/* 2. พื้นหลังไดนามิกเบลอปกเพลง (ซ้อนทับวอลเปเปอร์อีกทีเวลาเล่นเพลง) */
 #dynamic-bg {
     position: fixed; top: -5%; left: -5%; width: 110vw; height: 110vh;
     background-size: cover; background-position: center;
-    filter: blur(40px) brightness(0.4); z-index: -10;
+    /* ลดความมืดลงหน่อย เพื่อให้เห็นวอลเปเปอร์รำไรเวลาเพลงเล่น */
+    filter: blur(45px) brightness(0.35); 
+    z-index: -10;
     transition: all 1s ease; opacity: 0;
 }
 #dynamic-bg.active { opacity: 1; }
