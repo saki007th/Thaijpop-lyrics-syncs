@@ -26,29 +26,65 @@ window.syncInterval = null; window.isLoggedIn = false; window.isAdmin = false;
 window.isYTApiReady = false; window.currentFilter = 'All'; 
 
 // ==========================================
-// 🪟 Window Manager (แยกหน้าต่าง Admin อิสระ & แก้บั๊ก YouTube)
+// 🪟 Window Manager (เพิ่มระบบบันทึกตำแหน่งและขนาด)
 // ==========================================
 window.wm = {
     libWin: null, playerWin: null, lyricsWin: null, settingsWin: null, addWin: null, adminSyncWin: null,
 
+    // 🧠 ระบบจำค่าและป้องกันหน้าต่างหาย
+    applyMemory: function(winId, options) {
+        try {
+            const saved = JSON.parse(localStorage.getItem('winbox_memory_' + winId));
+            if (saved && saved.x < window.innerWidth - 50 && saved.y < window.innerHeight - 50) {
+                options.x = saved.x;
+                options.y = saved.y;
+                options.width = saved.width;
+                options.height = saved.height;
+            }
+        } catch(e) {}
+
+        const originalOnMove = options.onmove;
+        options.onmove = function(x, y) {
+            if (originalOnMove) originalOnMove.call(this, x, y);
+            window.wm.saveMemory(winId, this);
+        };
+
+        const originalOnResize = options.onresize;
+        options.onresize = function(w, h) {
+            if (originalOnResize) originalOnResize.call(this, w, h);
+            window.wm.saveMemory(winId, this);
+        };
+
+        return options;
+    },
+
+    // 💾 เซฟค่าพิกัด
+    saveMemory: function(winId, wbInstance) {
+        const state = {
+            x: wbInstance.x, y: wbInstance.y,
+            width: wbInstance.width, height: wbInstance.height
+        };
+        localStorage.setItem('winbox_memory_' + winId, JSON.stringify(state));
+    },
+
     openLibrary: function() {
         if (this.libWin) { this.libWin.focus(); return; }
-        this.libWin = new WinBox("🏠 คลังเพลงของฉัน", {
+        this.libWin = new WinBox("🏠 คลังเพลงของฉัน", this.applyMemory('library', {
             mount: document.getElementById("content-library"), width: "80%", height: "80%", x: "center", y: "center", top: 70, class: ["wb-dark"],
             onclose: () => { this.libWin = null; }
-        });
+        }));
         window.renderSongList();
     },
     openSettings: function() {
         if (this.settingsWin) { this.settingsWin.focus(); return; }
-        this.settingsWin = new WinBox("⚙️ การตั้งค่า", {
+        this.settingsWin = new WinBox("⚙️ การตั้งค่า", this.applyMemory('settings', {
             mount: document.getElementById("content-settings"), width: "350px", height: "450px", x: "center", y: "center", top: 70, class: ["wb-dark"],
             onclose: () => { this.settingsWin = null; }
-        });
+        }));
     },
     openPlayer: function(title) {
         if (this.playerWin) { this.playerWin.setTitle("🎥 " + title); this.playerWin.focus(); return; }
-        this.playerWin = new WinBox("🎥 " + title, {
+        this.playerWin = new WinBox("🎥 " + title, this.applyMemory('player', {
             mount: document.getElementById("content-player"), width: "500px", height: "320px", x: "20px", y: "80px", top: 70, class: ["wb-dark", "no-min"],
             onclose: () => { 
                 this.playerWin = null;
@@ -60,31 +96,31 @@ window.wm = {
                 // สร้างกล่องเปล่าๆ มารอไว้ สำหรับให้เพลงถัดไปสร้างเครื่องเล่นใหม่
                 document.getElementById("content-player").innerHTML = '<div id="youtubePlayer" style="width: 100%; height: 100%;"></div>';
             }
-        });
+        }));
     },
     openLyrics: function(title) {
         if (this.lyricsWin) { this.lyricsWin.setTitle("📝 " + title); this.lyricsWin.focus(); return; }
-        this.lyricsWin = new WinBox("📝 " + title, {
+        this.lyricsWin = new WinBox("📝 " + title, this.applyMemory('lyrics', {
             mount: document.getElementById("content-lyrics"), width: "500px", height: "80%", x: "right", y: "center", top: 70, class: ["wb-dark"],
             onclose: () => { this.lyricsWin = null; }
-        });
+        }));
     },
     openAdd: function(title) {
         if (this.addWin) { this.addWin.setTitle(title); this.addWin.focus(); return; }
-        this.addWin = new WinBox(title, {
+        this.addWin = new WinBox(title, this.applyMemory('addedit', {
             mount: document.getElementById("content-add"), width: "450px", height: "80%", x: "center", y: "center", top: 70, class: ["wb-dark"],
             onclose: () => { this.addWin = null; }
-        });
+        }));
     },
     openAdminSync: function() {
         if (!window.isAdmin || !window.currentSongId) return;
         const song = window.songs.find(s => s.id === window.currentSongId);
         if (this.adminSyncWin) { this.adminSyncWin.setTitle("⏱ ซิงค์: " + song.title); this.adminSyncWin.focus(); return; }
         
-        this.adminSyncWin = new WinBox("⏱ ซิงค์: " + song.title, {
+        this.adminSyncWin = new WinBox("⏱ ซิงค์: " + song.title, this.applyMemory('adminsync', {
             mount: document.getElementById("content-admin-sync"), width: "450px", height: "80%", x: "center", y: "center", top: 70, class: ["wb-dark"],
             onclose: () => { this.adminSyncWin = null; }
-        });
+        }));
         window.renderTimestampEditor(); 
     }
 };
