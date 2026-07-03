@@ -143,12 +143,27 @@ window.getSingersList = function(artistStr) {
     return parts.map(p => p.trim()).filter(p => p);
 };
 
-window.setTheme = function(themeName) {
-    const themes = { 'default': 'linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff)', 'ocean': 'linear-gradient(120deg, #2193b0, #6dd5ed, #2193b0, #6dd5ed)' };
-    document.documentElement.style.setProperty('--theme-glow', themes[themeName] || themes['default']);
-    localStorage.setItem('selectedTheme', themeName);
+// ==========================================
+// 🖼️ ระบบ Wallpaper
+// ==========================================
+window.setWallpaper = function(url) {
+    const wp = document.getElementById('desktop-wallpaper');
+    const input = document.getElementById('inputCustomWallpaper');
+    if (!wp) return;
+
+    if (url === 'default' || !url) {
+        wp.style.backgroundImage = 'none';
+        localStorage.removeItem('customWallpaper');
+        if (input) input.value = '';
+    } else {
+        wp.style.backgroundImage = `url('${url}')`;
+        localStorage.setItem('customWallpaper', url);
+        if (input && input.value !== url) input.value = url;
+    }
 }
-window.setTheme(localStorage.getItem('selectedTheme') || 'default');
+// โหลด Wallpaper ตอนเปิดเว็บ
+const savedWp = localStorage.getItem('customWallpaper');
+if (savedWp) window.setWallpaper(savedWp);
 
 window.onYouTubeIframeAPIReady = function() { window.isYTApiReady = true; };
 const tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(tag);
