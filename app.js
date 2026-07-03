@@ -3,6 +3,7 @@ import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } 
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const ALLOWED_EMAILS = ["sashikiwa@gmail.com", "panupong.bb27115@gmail.com"]; 
+
 const firebaseConfig = {
     apiKey: "AIzaSyDV-gefPFqCmAvYmrSXeb5W1JUKf4Ev50Q",
     authDomain: "musix-syn.firebaseapp.com",
@@ -158,7 +159,10 @@ async function fetchSongs() {
             if (foundSong) {
                 window.renderSongList();
                 window.playSong(foundSong.id);
-                window.history.replaceState({}, document.title, window.location.pathname);
+                // ล้าง URL ให้สะอาด (รองรับ file:// และ https://)
+                try {
+                    window.history.replaceState({}, document.title, window.location.href.split('?')[0]);
+                } catch(e) {}
                 return; 
             }
         }
@@ -186,19 +190,12 @@ window.extractYouTubeID = function(url) {
 // ระบบนำทาง (Navigation) และจัดการแสดงผล View
 // ----------------------------------------------------
 window.showView = function(viewId) {
-    document.querySelectorAll('.view').forEach(el => {
-        if (el.id === 'view-player' && viewId === 'view-list' && window.currentSongId && window.ytPlayer) {
-            return; 
-        }
-        el.classList.remove('active');
-    });
-    
+    document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
     document.getElementById(viewId).classList.add('active');
     
     const headerTitle = document.getElementById('headerTitle');
     const mainContainer = document.querySelector('.container');
     const savedLayoutMode = localStorage.getItem('selectedLayout') || 'vertical';
-    const viewPlayerEl = document.getElementById('view-player');
     
     if (viewId === 'view-list') {
         headerTitle.innerText = 'คลังเพลงของฉัน';
@@ -209,21 +206,15 @@ window.showView = function(viewId) {
         window.currentFilter = 'All'; 
         window.renderSongList();
         
-        if (window.currentSongId && window.ytPlayer) {
-            viewPlayerEl.classList.add('mini-mode');
-            viewPlayerEl.classList.add('active'); 
-        } else {
-            viewPlayerEl.classList.remove('mini-mode');
-            clearInterval(window.syncInterval);
-            window.currentSongId = null;
-            if (window.ytPlayer && typeof window.ytPlayer.stopVideo === 'function') window.ytPlayer.stopVideo();
-        }
+        // เมื่อย้อนกลับคลังเพลง ให้หยุดการเล่นเพลง (พฤติกรรมเดิมก่อนมี Mini Player)
+        clearInterval(window.syncInterval);
+        window.currentSongId = null;
+        if (window.ytPlayer && typeof window.ytPlayer.stopVideo === 'function') window.ytPlayer.stopVideo();
         
     } else if (viewId === 'view-player') {
         headerTitle.innerText = 'กำลังเล่นเพลง';
         document.getElementById('btnAddSong').style.display = 'none';
         
-        viewPlayerEl.classList.remove('mini-mode');
         window.setPlayerLayout(savedLayoutMode);
 
         const lyricControlBtnGroup = document.getElementById('lyricControlBtnGroup');
@@ -430,6 +421,7 @@ window.renderLyricsToContainer = function() {
         let htmlContent = '';
         let alignClass = 'align-center'; 
 
+        // แยกบรรทัดด้วย \n และห่อหุ้มด้วย class lang-0, lang-1...
         const lines = lyric.split('\n');
         let linesHtml = lines.map((line, i) => `<div class="lang-${i}">${line}</div>`).join('');
 
@@ -1045,15 +1037,3 @@ window.toggleLang = function(langIndex) {
     
     setTimeout(() => { window.updateLyricDisplay(); }, 100);
 };
-
-// ผูกคำสั่งให้ Mini Player ขยายเต็มจอเมื่อถูกคลิก
-setTimeout(() => {
-    const playerView = document.getElementById('view-player');
-    if(playerView) {
-        playerView.addEventListener('click', function(e) {
-            if (this.classList.contains('mini-mode')) {
-                window.showView('view-player');
-            }
-        });
-    }
-}, 1000);
