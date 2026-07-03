@@ -15,33 +15,76 @@ body {
     transition: background-color 0.5s ease;
 }
 
-header { 
-    background: rgba(28, 28, 30, 0.7); 
-    backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); 
-    color: #f5f5f7; 
-    padding: 6px 16px; 
-    display: flex; justify-content: space-between; align-items: center; 
-    position: sticky; top: 0; z-index: 10; 
-    border-bottom: 0.5px solid rgba(255, 255, 255, 0.1); 
+/* =========================================
+   แถบด้านบน (Header) แบบยืดหยุ่น
+   ========================================= */
+header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    background: rgba(20, 20, 25, 0.85); /* สีเข้มโปร่งแสงนิดๆ */
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    width: 100%;
+    box-sizing: border-box;
 }
-.header-title { font-size: 1.05em; font-weight: 600; flex-grow: 1; text-align: center; letter-spacing: -0.5px; }
-.header-btn-group { display: flex; justify-content: flex-end; align-items: center; }
 
-.btn-auth { background: transparent; border: none; padding: 4px 8px; font-size: 0.85em; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
-.btn-login { color: #0a84ff; }
-.btn-logout { color: #ff453a; }
-.btn-auth:hover { opacity: 0.7; }
+/* แบ่งพื้นที่ 3 ส่วนซ้าย-กลาง-ขวา ให้เท่าๆ กันอัตโนมัติ */
+.header-left, .header-right {
+    flex: 1; /* ใช้พื้นที่ฝั่งซ้ายและขวาเท่ากัน */
+}
+.header-right {
+    display: flex;
+    justify-content: flex-end; /* ดันปุ่มไปชิดขวา */
+    gap: 10px;
+}
+.header-title {
+    flex: 2; /* ให้ข้อความตรงกลางมีพื้นที่เยอะสุด จะได้ไม่ตกบรรทัด */
+    text-align: center;
+    font-size: 1.15em;
+    font-weight: bold;
+    color: #f5f5f7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
+/* =========================================
+   กล่องเนื้อหาด้านล่าง (Container)
+   ========================================= */
 .container { 
-    padding: 12px 20px; 
-    max-width: 650px; 
-    margin: auto; 
+    padding: 20px; 
+    margin: 0 auto; 
     flex-grow: 1; 
     width: 100%; 
     box-sizing: border-box; 
-    /* เพิ่ม 2 บรรทัดนี้เพื่อแก้บั๊กจอดำบน iPad/iOS */
     position: relative; 
     z-index: 1; 
+    
+    /* ขนาดตั้งต้นสำหรับมือถือ/หน้าจอเล็ก */
+    max-width: 650px; 
+}
+
+/* หากหน้าจอใหญ่เท่า iPad (กว้าง 768px ขึ้นไป) ให้ขยายกล่อง */
+@media (min-width: 768px) {
+    .container {
+        max-width: 850px; /* เพิ่มพื้นที่ให้ iPad */
+        padding: 30px; 
+    }
+}
+
+/* หากหน้าจอใหญ่เท่า Desktop คอมพิวเตอร์ (กว้าง 1024px ขึ้นไป) ให้ขยายกล่องเพิ่มอีก */
+@media (min-width: 1024px) {
+    .container {
+        max-width: 1000px; /* เพิ่มพื้นที่ให้ Desktop ใช้จอได้คุ้มค่าขึ้น */
+    }
+    header {
+        padding: 15px 40px; /* ถ่างขอบแถบด้านบนให้กว้างขึ้นตามจอคอม */
+    }
 }
 
 button { 
