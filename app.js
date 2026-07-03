@@ -26,7 +26,7 @@ window.syncInterval = null; window.isLoggedIn = false; window.isAdmin = false;
 window.isYTApiReady = false; window.currentFilter = 'All'; 
 
 // ==========================================
-// 🪟 Window Manager (แยกหน้าต่าง Admin อิสระ)
+// 🪟 Window Manager (แยกหน้าต่าง Admin อิสระ & แก้บั๊ก YouTube)
 // ==========================================
 window.wm = {
     libWin: null, playerWin: null, lyricsWin: null, settingsWin: null, addWin: null, adminSyncWin: null,
@@ -34,7 +34,7 @@ window.wm = {
     openLibrary: function() {
         if (this.libWin) { this.libWin.focus(); return; }
         this.libWin = new WinBox("🏠 คลังเพลงของฉัน", {
-            mount: document.getElementById("content-library"), width: "80%", height: "80%", x: "center", y: "center", class: ["wb-dark"],
+            mount: document.getElementById("content-library"), width: "80%", height: "80%", x: "center", y: "center", top: 70, class: ["wb-dark"],
             onclose: () => { this.libWin = null; }
         });
         window.renderSongList();
@@ -42,42 +42,47 @@ window.wm = {
     openSettings: function() {
         if (this.settingsWin) { this.settingsWin.focus(); return; }
         this.settingsWin = new WinBox("⚙️ การตั้งค่า", {
-            mount: document.getElementById("content-settings"), width: "350px", height: "450px", x: "center", y: "center", class: ["wb-dark"],
+            mount: document.getElementById("content-settings"), width: "350px", height: "450px", x: "center", y: "center", top: 70, class: ["wb-dark"],
             onclose: () => { this.settingsWin = null; }
         });
     },
     openPlayer: function(title) {
         if (this.playerWin) { this.playerWin.setTitle("🎥 " + title); this.playerWin.focus(); return; }
         this.playerWin = new WinBox("🎥 " + title, {
-            mount: document.getElementById("content-player"), width: "500px", height: "320px", x: "20px", y: "80px", class: ["wb-dark", "no-min"],
+            mount: document.getElementById("content-player"), width: "500px", height: "320px", x: "20px", y: "80px", top: 70, class: ["wb-dark", "no-min"],
             onclose: () => { 
                 this.playerWin = null;
-                if (window.ytPlayer && typeof window.ytPlayer.pauseVideo === 'function') window.ytPlayer.pauseVideo();
+                // เมื่อปิดหน้าต่าง ให้ทำลายเครื่องเล่น YouTube ทิ้งไปเลย เพื่อป้องกันเพลงค้าง
+                if (window.ytPlayer && typeof window.ytPlayer.destroy === 'function') {
+                    window.ytPlayer.destroy();
+                    window.ytPlayer = null;
+                }
+                // สร้างกล่องเปล่าๆ มารอไว้ สำหรับให้เพลงถัดไปสร้างเครื่องเล่นใหม่
+                document.getElementById("content-player").innerHTML = '<div id="youtubePlayer" style="width: 100%; height: 100%;"></div>';
             }
         });
     },
     openLyrics: function(title) {
         if (this.lyricsWin) { this.lyricsWin.setTitle("📝 " + title); this.lyricsWin.focus(); return; }
         this.lyricsWin = new WinBox("📝 " + title, {
-            mount: document.getElementById("content-lyrics"), width: "500px", height: "80%", x: "right", y: "center", class: ["wb-dark"],
+            mount: document.getElementById("content-lyrics"), width: "500px", height: "80%", x: "right", y: "center", top: 70, class: ["wb-dark"],
             onclose: () => { this.lyricsWin = null; }
         });
     },
     openAdd: function(title) {
         if (this.addWin) { this.addWin.setTitle(title); this.addWin.focus(); return; }
         this.addWin = new WinBox(title, {
-            mount: document.getElementById("content-add"), width: "450px", height: "650px", x: "center", y: "center", class: ["wb-dark"],
+            mount: document.getElementById("content-add"), width: "450px", height: "80%", x: "center", y: "center", top: 70, class: ["wb-dark"],
             onclose: () => { this.addWin = null; }
         });
     },
-    // 🔴 หน้าต่าง Admin อิสระสำหรับจัดการและซิงค์เนื้อเพลง
     openAdminSync: function() {
         if (!window.isAdmin || !window.currentSongId) return;
         const song = window.songs.find(s => s.id === window.currentSongId);
         if (this.adminSyncWin) { this.adminSyncWin.setTitle("⏱ ซิงค์: " + song.title); this.adminSyncWin.focus(); return; }
         
         this.adminSyncWin = new WinBox("⏱ ซิงค์: " + song.title, {
-            mount: document.getElementById("content-admin-sync"), width: "450px", height: "650px", x: "center", y: "center", class: ["wb-dark"],
+            mount: document.getElementById("content-admin-sync"), width: "450px", height: "80%", x: "center", y: "center", top: 70, class: ["wb-dark"],
             onclose: () => { this.adminSyncWin = null; }
         });
         window.renderTimestampEditor(); 
@@ -255,7 +260,7 @@ window.playSong = function(id) {
     window.currentLyricsArray = song.lyrics.split(/\n\s*\n/); window.currentLyricIndex = -1;
     
     window.wm.openPlayer(song.title); window.wm.openLyrics(song.title);
-    if (window.wm.adminSyncWin) window.wm.adminSyncWin.setTitle("⏱ ซิงค์: " + song.title); // อัปเดตชื่อหน้าต่างซิงค์ถ้าเปิดอยู่
+    if (window.wm.adminSyncWin) window.wm.adminSyncWin.setTitle("⏱ ซิงค์: " + song.title); 
 
     window.renderTimestampEditor(); window.renderLyricsToContainer(); window.updateLyricDisplay();
 
@@ -263,10 +268,21 @@ window.playSong = function(id) {
     const bgEl = document.getElementById('dynamic-bg');
     if (bgEl && videoId) { bgEl.style.backgroundImage = `url('https://img.youtube.com/vi/${videoId}/hqdefault.jpg')`; bgEl.classList.add('active'); }
     
-    if (window.ytPlayer) { if (typeof window.ytPlayer.loadVideoById === 'function') window.ytPlayer.loadVideoById(videoId); } 
-    else {
+    // เช็คและสร้างกล่อง YouTube ใหม่ (ในกรณีที่หน้าต่างถูกปิดไปแล้ว)
+    let playerDiv = document.getElementById('youtubePlayer');
+    if (!playerDiv) {
+        document.getElementById('content-player').innerHTML = '<div id="youtubePlayer" style="width: 100%; height: 100%;"></div>';
+    }
+
+    if (window.ytPlayer && typeof window.ytPlayer.loadVideoById === 'function') { 
+        window.ytPlayer.loadVideoById(videoId); 
+    } else {
         if (window.isYTApiReady || (window.YT && window.YT.Player)) {
-            window.ytPlayer = new YT.Player('youtubePlayer', { height: '100%', width: '100%', videoId: videoId, playerVars: { 'playsinline': 1, 'controls': 1 }, events: { 'onStateChange': window.onPlayerStateChange } });
+            window.ytPlayer = new YT.Player('youtubePlayer', { 
+                height: '100%', width: '100%', videoId: videoId, 
+                playerVars: { 'playsinline': 1, 'controls': 1 }, 
+                events: { 'onStateChange': window.onPlayerStateChange } 
+            });
         }
     }
 
