@@ -125,10 +125,19 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 .song-item:hover { transform: translateY(-5px); }
 .song-item img { width: 100%; aspect-ratio: 16/9; border-radius: 8px; object-fit: cover; }
 .song-title { font-weight: bold; font-size: 1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color:#fff;}
-song-artist { 
+.song-artist { 
     color: #8e8e93; 
     font-size: 0.8em; 
-    margin-bottom: 10px;
+    margin-bottom: 10px; 
+    
+    /* 🔴 บังคับตัดข้อความที่ยาวเกินไป */
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* ล็อคให้แสดงสูงสุดแค่ 2 บรรทัด (เปลี่ยนเป็น 1 ได้ถ้าอยากให้สั้นลงอีก) */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+}
 .song-actions { display: flex; gap: 8px; }
 .song-actions button { flex: 1; padding: 8px; font-size: 0.85em; }
 
@@ -203,11 +212,4 @@ song-artist {
 .wb-header .wb-close:hover {
     transform: scale(1.2);
     filter: brightness(1.2);
-}
-display: -webkit-box;
-    -webkit-line-clamp: 2; /* ล็อคให้แสดงสูงสุดแค่ 2 บรรทัด (เปลี่ยนเป็น 1 ได้ถ้าอยากให้สั้นลงอีก) */
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: normal;
 }
