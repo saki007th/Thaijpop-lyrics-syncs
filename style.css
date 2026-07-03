@@ -1,446 +1,113 @@
-/* --- กำหนดตัวแปรสีธีมและพื้นหลัง - --*/
 :root {
     --theme-glow: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff);
-    --bg-color: #000000; 
+    --bg-color: #000000;
 }
 
-body { 
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-    margin: 0; padding: 0; 
-    background-color: var(--bg-color); 
-    color: #f5f5f7; 
-    min-height: 100vh; 
-    display: flex; flex-direction: column; 
-    -webkit-font-smoothing: antialiased;
-    transition: background-color 0.5s ease;
+body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg-color); color: #f5f5f7;
+    height: 100vh; overflow: hidden; /* ห้ามเลื่อนหน้าจอหลัก */
 }
 
-/* =========================================
-   แถบด้านบน (Header) แบบยืดหยุ่น
-   ========================================= */
-header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    padding: 12px 20px;
-    background: rgba(20, 20, 25, 0.85); /* สีเข้มโปร่งแสงนิดๆ */
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* แบ่งพื้นที่ 3 ส่วนซ้าย-กลาง-ขวา ให้เท่าๆ กันอัตโนมัติ */
-.header-left, .header-right {
-    flex: 1; /* ใช้พื้นที่ฝั่งซ้ายและขวาเท่ากัน */
-}
-.header-right {
-    display: flex;
-    justify-content: flex-end; /* ดันปุ่มไปชิดขวา */
-    gap: 10px;
-}
-.header-title {
-    flex: 2; /* ให้ข้อความตรงกลางมีพื้นที่เยอะสุด จะได้ไม่ตกบรรทัด */
-    text-align: center;
-    font-size: 1.15em;
-    font-weight: bold;
-    color: #f5f5f7;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* =========================================
-   กล่องเนื้อหาด้านล่าง (Container)
-   ========================================= */
-.container { 
-    padding: 20px; 
-    margin: 0 auto; 
-    flex-grow: 1; 
-    width: 100%; 
-    box-sizing: border-box; 
-    position: relative; 
-    z-index: 1; 
-    
-    /* ขนาดตั้งต้นสำหรับมือถือ/หน้าจอเล็ก */
-    max-width: 650px; 
-}
-
-/* หากหน้าจอใหญ่เท่า iPad (กว้าง 768px ขึ้นไป) ให้ขยายกล่อง */
-@media (min-width: 768px) {
-    .container {
-        max-width: 850px; /* เพิ่มพื้นที่ให้ iPad */
-        padding: 30px; 
-    }
-}
-
-/* หากหน้าจอใหญ่เท่า Desktop คอมพิวเตอร์ (กว้าง 1024px ขึ้นไป) ให้ขยายกล่องเพิ่มอีก */
-@media (min-width: 1024px) {
-    .container {
-        max-width: 1000px; /* เพิ่มพื้นที่ให้ Desktop ใช้จอได้คุ้มค่าขึ้น */
-    }
-    header {
-        padding: 15px 40px; /* ถ่างขอบแถบด้านบนให้กว้างขึ้นตามจอคอม */
-    }
-}
-
-button { 
-    background: #0a84ff; color: white; border: none; 
-    padding: 14px 20px; font-size: 1.05em; font-weight: 600; 
-    border-radius: 14px; cursor: pointer; width: 100%; margin-top: 15px; 
-    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1); 
-}
-button:hover { background: #0071e3; transform: scale(0.98); }
-button:active { transform: scale(0.95); opacity: 0.8; }
-button:disabled { background: #3a3a3c; color: #8e8e93; cursor: not-allowed; transform: none; }
-.btn-secondary { background: #2c2c2e; color: #f5f5f7; }
-.btn-secondary:hover { background: #3a3a3c; }
-
-label { font-size: 0.85em; color: #8e8e93; margin-top: 15px; margin-bottom: 5px; display: block; font-weight: 500; }
-input, textarea { 
-    width: 100%; padding: 14px 16px; background: #1c1c1e; 
-    border: 1px solid transparent; border-radius: 12px; color: #f5f5f7; 
-    font-size: 1em; font-family: inherit; box-sizing: border-box; transition: all 0.2s ease; 
-}
-input:focus, textarea:focus { outline: none; border-color: #0a84ff; background: #2c2c2e; }
-textarea { height: 160px; resize: vertical; line-height: 1.5; }
-.search-input { margin-top: 10px; margin-bottom: 5px; background: #1c1c1e; border-radius: 10px; padding: 12px 16px; font-size: 1.05em; }
-
-.artist-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 5px 0 10px 0; margin-bottom: 5px; }
-.chip { background: #1c1c1e; color: #8e8e93; border: 1px solid #3a3a3c; padding: 6px 16px; border-radius: 20px; font-size: 0.85em; white-space: nowrap; transition: all 0.2s; cursor: pointer; width: auto; margin-top: 0; }
-.chip.active { background: #0a84ff; color: #ffffff; border-color: #0a84ff; }
-.chip:hover { background: #2c2c2e; }
-
-#songList { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; max-height: 58vh; overflow-y: auto; padding-bottom: 20px; }
-#songList::-webkit-scrollbar { width: 5px; }
-#songList::-webkit-scrollbar-track { background: transparent; }
-#songList::-webkit-scrollbar-thumb { background: #48484a; border-radius: 10px; }
-
-/* การ์ดเพลง */
-.song-item { position: relative; padding: 16px; border-radius: 18px; margin-bottom: 0; border: none; display: flex; flex-direction: column; justify-content: space-between; align-items: center; gap: 14px; z-index: 1; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
-.song-item::before { content: ""; position: absolute; inset: -2px; border-radius: 20px; background: var(--theme-glow); background-size: 300% 300%; z-index: -2; filter: blur(6px); opacity: 0; transition: opacity 0.3s ease; animation: appleAiGlow 6s ease-in-out infinite; }
-.song-item::after { content: ""; position: absolute; inset: 0; border-radius: 18px; background: #1c1c1e; z-index: -1; transition: background 0.3s ease; }
-.song-item:hover { transform: scale(1.03) translateY(-3px); }
-.song-item:hover::before { opacity: 1; }
-.song-item:hover::after { background: rgba(44, 44, 46, 0.95); }
-
-.song-info-wrapper { display: flex; flex-direction: column; align-items: flex-start; flex-grow: 1; min-width: 0; overflow: hidden; width: 100%; }
-
-.song-thumbnail { 
-    width: 100%; 
-    aspect-ratio: 16 / 9; 
-    border-radius: 10px; 
-    object-fit: cover; 
-    margin-bottom: 12px; 
-    flex-shrink: 0; 
-    background: #2c2c2e; 
-}
-
-.song-item-title-container { width: 100%; flex-grow: 1; min-width: 0; overflow-x: auto; white-space: nowrap; scrollbar-width: none; -ms-overflow-style: none; }
-.song-item-title-container::-webkit-scrollbar { display: none; }
-.song-item-title { font-size: 1.05em; font-weight: 600; letter-spacing: -0.3px; display: inline-block; padding-right: 10px; color: #ffffff; }
-.song-item-actions { display: flex; gap: 8px; flex-shrink: 0; width: 100%; justify-content: center; }
-.btn-action { margin: 0; padding: 8px; border-radius: 10px; font-size: 0.9em; flex-grow: 1; text-align: center; }
-
-/* YouTube Video Container */
-.youtube-container { 
-    position: relative; 
-    width: 100%; 
-    aspect-ratio: 16 / 9; 
-    margin-bottom: 16px; 
-    border-radius: 16px; 
-    background: #1c1c1e; 
-    flex-shrink: 0; 
-    z-index: 1; 
-}
-
-.youtube-container::before { content: ""; position: absolute; inset: -5px; border-radius: 20px; background: var(--theme-glow); background-size: 300% 300%; z-index: -1; filter: blur(20px); opacity: 0.75; animation: appleAiGlow 8s ease-in-out infinite; }
-.youtube-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 16px; z-index: 2; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
-
-@keyframes appleAiGlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-
-.lyrics-wrapper { 
-    position: relative; 
-    width: 100%; 
-    height: 42vh; 
-    margin: 16px 0; 
-    border-radius: 24px; 
-    z-index: 1; 
-}
-
-.lyrics-wrapper::before { content: ""; position: absolute; inset: -3px; border-radius: 26px; background: var(--theme-glow); background-size: 300% 300%; z-index: -2; filter: blur(8px); animation: appleAiGlow 6s ease-in-out infinite; }
-.lyrics-wrapper::after { content: ""; position: absolute; inset: 0; border-radius: 24px; background: rgba(28, 28, 30, 0.85); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); z-index: -1; }
-
-.lyrics-container { 
-    position: relative; 
-    height: 100%; 
-    overflow-y: auto; 
-    scroll-behavior: smooth; 
-    scrollbar-width: none; 
-    padding: 60px 20px 80px 20px; 
-    box-sizing: border-box; 
-    display: block; 
-    mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%); 
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%); 
-}
-.lyrics-container::-webkit-scrollbar { display: none; }
-
-.lyric-line { 
-    font-size: 1.15em; 
-    font-weight: 600; 
-    color: rgba(255, 255, 255, 0.4); 
-    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); 
-    white-space: pre-wrap; 
-    word-break: break-word; 
-    line-height: 1.4; 
-    padding: 6px 16px; 
-    margin-bottom: 18px; 
-    display: flex; 
-    flex-direction: column; 
-    width: 100%; 
-    box-sizing: border-box; 
-}
-.lyric-line:last-child { margin-bottom: 0; }
-
-/* =========================================
-   ระบบเนื้อเพลงแบบ Fit บรรทัดเดียว
-   ========================================= */
-.lyric-line.active { 
-    color: #ffffff !important; 
-    text-shadow: 0 0 12px rgba(255, 255, 255, 0.8), 0 0 25px rgba(255, 255, 255, 0.4) !important; 
-    transform: scale(1.05); 
-    margin: 25px 0; 
-    white-space: pre-wrap !important; 
-    word-break: break-word; 
-}
-
-.layout-horizontal .lyrics-wrapper {
-    container-type: inline-size; 
-}
-
-.layout-horizontal .lyric-line.active {
-    font-size: clamp(1em, 2.5cqw, 1.6em) !important; 
-    line-height: 1.5;
-}
-
-.lyric-line.active .singer-badge {
-    font-size: 0.6em; 
-    padding: 6px 16px;
-    margin-bottom: 8px;
-    white-space: normal; 
-}
-
-.lyric-line {
-    font-size: 1.1em; 
-    color: rgba(255, 255, 255, 0.3); 
-    white-space: pre-wrap !important; 
-    word-break: break-word;
-}
-
-.lyric-line.align-left { text-align: left; align-items: flex-start; transform-origin: left center; }
-.lyric-line.align-right { text-align: right; align-items: flex-end; transform-origin: right center; }
-.lyric-line.align-center { text-align: center; align-items: center; transform-origin: center; }
-
-/* สไตล์ป้ายชื่อนักร้อง */
-.singer-badges { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-.singer-badge { font-size: 0.65em; color: rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 4px 14px; border-radius: 20px; font-weight: bold; letter-spacing: 0.5px; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
-.lyric-line.active .singer-badge { color: #ffffff; background: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.6); box-shadow: 0 4px 15px rgba(255, 255, 255, 0.25); transform: translateY(-3px) scale(1.05); }
-
-/* Dropdown สำหรับหน้า Admin */
-.ts-singer-dropdown { position: relative; }
-.ts-dropdown-toggle { background: rgba(10, 132, 255, 0.15) !important; border: 1px solid rgba(10, 132, 255, 0.4) !important; color: #0a84ff !important; padding: 4px 8px !important; border-radius: 6px !important; font-size: 0.8em !important; font-weight: 500; cursor: pointer; width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; margin: 0 !important; transition: background 0.2s; }
-.ts-dropdown-toggle:hover { background: rgba(10, 132, 255, 0.25) !important; }
-
-.ts-dropdown-menu { display: none; background: #2c2c2e; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px; z-index: 99999; box-shadow: 0 10px 25px rgba(0,0,0,0.8); min-width: 140px; max-height: 180px; overflow-y: auto; }
-.ts-dropdown-menu.show { display: flex; flex-direction: column; gap: 8px; }
-.ts-dropdown-item { display: flex; align-items: center; gap: 8px; font-size: 0.85em; color: #f5f5f7; cursor: pointer; }
-.ts-dropdown-item input { width: 16px; height: 16px; margin: 0; cursor: pointer; }
-
-#lyricControlBtnGroup { display: flex; gap: 12px; width: 100%; margin-top: 10px; }
-#lyricControlBtnGroup button { margin-top: 0; }
-
-.timestamp-editor-container { margin-top: 30px; background: #1c1c1e; border-radius: 16px; padding: 20px; flex-shrink: 0; }
-.timestamp-list { max-height: 250px; overflow-y: auto; padding-right: 8px; margin-top: 10px; overflow-x: visible; }
-.timestamp-list::-webkit-scrollbar { width: 5px; }
-.timestamp-list::-webkit-scrollbar-thumb { background: #48484a; border-radius: 10px; }
-
-#view-player { flex-direction: column; min-height: 80vh; padding-bottom: 30px; } 
-#view-player.active { display: flex; }
-.view { display: none; animation: fadeIn 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
-.view.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
-#loadingOverlay { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 999; justify-content: center; align-items: center; font-size: 1.1em; font-weight: 600; color: #f5f5f7; flex-direction: column; gap: 15px; transition: opacity 0.3s; }
-
-/* การตั้งค่าธีมและสีพื้นหลัง */
-.theme-list { display: flex; flex-direction: column; gap: 15px; margin-top: 10px; }
-.theme-btn { border-radius: 16px; padding: 18px; font-size: 1.05em; font-weight: bold; border: 2px solid transparent; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-.theme-btn:active { transform: scale(0.95); }
-.bg-btn { flex: 1; min-width: 120px; border-radius: 12px; padding: 12px; font-size: 0.9em; font-weight: bold; color: white; border: 2px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
-.bg-btn:hover { border-color: rgba(255,255,255,0.5); transform: translateY(-2px); }
-.bg-btn:active { transform: scale(0.95); }
-
-/* --- ระบบ Layout สลับโหมด แนวตั้ง/แนวนอน --- */
-
-#playerContentLayout {
-    display: flex;
-    gap: 16px;
-    width: 100%;
-    transition: all 0.3s ease;
-}
-
-.layout-vertical {
-    flex-direction: column;
-}
-.layout-vertical .youtube-container {
-    width: 100%;
-}
-.layout-vertical .lyrics-wrapper {
-    width: 100%;
-    height: 42vh; 
-    margin: 0; 
-}
-
-.layout-horizontal {
-    flex-direction: row;
-    align-items: stretch; 
-}
-.layout-horizontal .youtube-container {
-    flex: 1; 
-    margin-bottom: 0;
-}
-.layout-horizontal .lyrics-wrapper {
-    flex: 1; 
-    margin: 0;
-    height: auto; 
-    aspect-ratio: 16 / 9; 
-}
-
-.container.wide-mode {
-    max-width: 1800px; 
-    width: 95%; 
-    transition: max-width 0.3s ease, width 0.3s ease;
-}
-
-@media (max-width: 768px) {
-    #btnToggleLayout { 
-        display: none; 
-    }
-    #playerContentLayout { 
-        flex-direction: column !important; 
-    }
-    .layout-horizontal .youtube-container,
-    .layout-horizontal .lyrics-wrapper {
-        flex: none;
-        width: 100%;
-    }
-    .layout-horizontal .lyrics-wrapper {
-        height: 42vh;
-        aspect-ratio: auto;
-    }
-}
-
-/* =========================================
-   ระบบซ่อนภาษาเนื้อเพลง (Language Toggle)
-   ========================================= */
-.hide-lang-0 .lang-0 { display: none !important; }
-.hide-lang-1 .lang-1 { display: none !important; }
-.hide-lang-2 .lang-2 { display: none !important; }
-.hide-lang-3 .lang-3 { display: none !important; }
-
-.lang-toggle { cursor: pointer; }
-.lang-toggle input { width: 16px; height: 16px; cursor: pointer; margin: 0; }
-
-/* =========================================
-   ระบบ Dynamic Background (ดูดสีปกเพลง)
-   ========================================= */
 #dynamic-bg {
-    position: fixed;
-    /* ขยายกรอบให้ใหญ่กว่าจอเล็กน้อยเพื่อซ่อนขอบที่เบลอ */
-    top: -10%; left: -10%; width: 120vw; height: 120vh;
-    background-size: cover;
-    background-position: center;
-    /* เบลอภาพและลดความสว่างลงเพื่อให้ตัวหนังสืออ่านง่าย */
-    filter: blur(40px) brightness(0.4);
-    -webkit-filter: blur(40px) brightness(0.4);
-    z-index: -10; 
-    opacity: 0;
-    transition: opacity 1s ease-in-out, background-image 1s ease-in-out;
-    pointer-events: none;
+    position: fixed; top: -5%; left: -5%; width: 110vw; height: 110vh;
+    background-size: cover; background-position: center;
+    filter: blur(40px) brightness(0.4); z-index: -10;
+    transition: all 1s ease; opacity: 0;
 }
-#dynamic-bg.active {
-    opacity: 1;
-} /* 🔴 ใส่ปีกกาปิดตรงนี้ให้ถูกต้อง เพื่อไม่ให้ CSS พัง */
+#dynamic-bg.active { opacity: 1; }
 
 /* =========================================
-   ตกแต่งเฉพาะแถบ Scrollbar
+   แถบ Dock ด้านบน (OS Taskbar)
    ========================================= */
-::-webkit-scrollbar {
-    width: 6px;
+.os-dock {
+    position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+    background: rgba(20, 20, 25, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px;
+    padding: 10px 20px; display: flex; gap: 20px; align-items: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 9999;
 }
-::-webkit-scrollbar-track {
-    background: transparent; 
+.dock-title { font-weight: bold; color: #fff; font-size: 1.1em; }
+.dock-buttons { display: flex; gap: 8px; }
+.dock-btn { 
+    background: rgba(255, 255, 255, 0.1); border: none; color: white;
+    padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600;
+    transition: all 0.2s;
 }
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2); 
-    border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.4); 
-}
+.dock-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
+.btn-login { color: #0a84ff; }
+.btn-logout { color: #ff3b30; }
 
-   /* =========================================
-   ระบบซ่อนแถบ Header อัตโนมัติเวลาเลื่อนหน้าจอ
-   ========================================= */
-header {
-    /* เพิ่ม Transition ให้เวลาสไลด์ซ่อน/โชว์ มีความนุ่มนวล */
-    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s ease !important;
-}
-
-/* คลาสนี้จะถูกเรียกใช้โดย JavaScript เพื่อดัน Header ขึ้นไปซ่อน */
-.header-hidden {
-    transform: translateY(-100%);
-    box-shadow: none !important;
-}
 /* =========================================
-   แก้ไขโหมดแนวตั้งบน Desktop (กล่องเท่ากันเป๊ะ & Fit พอดีจอ)
+   หน้าต่าง WinBox
    ========================================= */
-@media (min-width: 1024px) {
-    /* จัดเลย์เอาต์ให้อยู่ตรงกลางจอ */
-    .layout-vertical {
-        align-items: center !important; 
-    }
-
-    /* 1. บังคับให้ทั้งวิดีโอและกล่องเนื้อเพลง "กว้างเท่ากันเป๊ะ" */
-    .layout-vertical .youtube-container,
-    .layout-vertical .lyrics-wrapper {
-        width: 100% !important;
-        max-width: 768px !important; /* ล็อกความกว้างไว้ที่ไซส์หน้าจอ iPad */
-        margin: 0 auto !important;
-    }
-
-    /* 2. จัดการวิดีโอ และเว้นระยะห่างด้านล่าง */
-    .layout-vertical .youtube-container {
-        margin-bottom: 24px !important; /* ช่องว่างระหว่างกล่องบน-ล่าง */
-        box-shadow: 0 10px 35px rgba(0,0,0,0.5);
-        flex-shrink: 0;
-    }
-    
-    /* 3. ล็อกความสูงเนื้อเพลงให้ "พอดีหน้าจอ" ไม่ดันจนล้นขอบล่าง */
-    .layout-vertical .lyrics-wrapper {
-        height: 38vh !important; /* ให้กล่องเนื้อเพลงสูงประมาณ 38% ของหน้าจอคอม */
-        min-height: 250px !important; /* ห้ามเตี้ยเกินไปจนอ่านไม่รู้เรื่อง */
-        max-height: 380px !important; /* ห้ามสูงเกินไปจนดันวิดีโอตกจอ */
-    }
-    
-    /* 4. ปรับขนาดอักษรให้อ่านง่ายและพอดีกับกล่องใหม่ */
-    .layout-vertical .lyric-line {
-        font-size: 1.15em !important;
-    }
-    .layout-vertical .lyric-line.active {
-        font-size: 1.4em !important; 
-        margin: 20px 0 !important;
-    }
+.winbox {
+    border-radius: 12px; overflow: hidden;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.6) !important;
+    background: #1c1c1e !important; border: 1px solid rgba(255, 255, 255, 0.1);
 }
+.wb-header { background: rgba(30, 30, 35, 0.95) !important; color: white !important; font-weight: bold; }
+.wb-body { background: transparent !important; }
+.wb-full { display: none !important; }
+.wb-content-padding { padding: 20px; box-sizing: border-box; height: 100%; overflow-y: auto; }
+
+/* ปรับแต่งส่วนย่อย */
+button { font-family: inherit; }
+.btn-primary { background: #0a84ff; color: white; border: none; padding: 12px 18px; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+.btn-primary:hover { background: #0071e3; transform: scale(0.98); }
+.btn-secondary { background: #3a3a3c; color: white; border: none; padding: 12px 18px; border-radius: 12px; cursor: pointer; transition: 0.2s; }
+.btn-secondary:hover { background: #48484a; }
+
+.button-group { display: flex; gap: 10px; margin-bottom: 15px; }
+.button-group button { flex: 1; }
+
+input, textarea { 
+    width: 100%; padding: 12px 16px; background: #2c2c2e; border: 1px solid transparent; 
+    border-radius: 10px; color: #f5f5f7; font-size: 1em; font-family: inherit; box-sizing: border-box; 
+    margin-bottom: 12px; transition: 0.2s;
+}
+input:focus, textarea:focus { outline: none; border-color: #0a84ff; }
+textarea { height: 120px; resize: vertical; }
+label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; font-weight: 500; }
+
+.library-toolbar { display: flex; gap: 10px; align-items: flex-start; }
+.library-toolbar input { flex: 1; margin-bottom: 0; }
+.library-toolbar button { margin-bottom: 0; }
+
+.artist-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 15px 0; }
+.chip { background: #2c2c2e; color: #8e8e93; border: 1px solid #3a3a3c; padding: 6px 16px; border-radius: 20px; font-size: 0.85em; cursor: pointer; transition: 0.2s; }
+.chip.active { background: #0a84ff; color: #fff; border-color: #0a84ff; }
+
+.song-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
+.song-item { 
+    background: #2c2c2e; padding: 12px; border-radius: 14px; 
+    transition: transform 0.2s; position: relative; display: flex; flex-direction: column; gap: 10px;
+}
+.song-item:hover { transform: translateY(-5px); }
+.song-item img { width: 100%; aspect-ratio: 16/9; border-radius: 8px; object-fit: cover; }
+.song-title { font-weight: bold; font-size: 1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color:#fff;}
+.song-artist { color: #8e8e93; font-size: 0.8em; margin-bottom: 10px; }
+.song-actions { display: flex; gap: 8px; }
+.song-actions button { flex: 1; padding: 8px; font-size: 0.85em; }
+
+/* เนื้อเพลง */
+.lyrics-container { padding: 20px 10px; text-align: center; }
+.lyric-line { font-size: 1.15em; font-weight: 600; color: rgba(255,255,255,0.3); transition: all 0.3s; margin-bottom: 15px; }
+.lyric-line.active { font-size: 1.5em; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); transform: scale(1.05); margin: 30px 0; }
+.singer-badges { display: flex; gap: 8px; margin-bottom: 8px; justify-content: center; flex-wrap: wrap; }
+.singer-badge { font-size: 0.65em; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; }
+.lyric-line.active .singer-badge { background: #0a84ff; color: #fff; }
+
+.hide-lang-0 .lang-0, .hide-lang-1 .lang-1, .hide-lang-2 .lang-2 { display: none !important; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+#loadingOverlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 99999;
+    display: flex; justify-content: center; align-items: center; font-size: 1.2em; font-weight: bold;
+}
+.theme-btn { border-radius: 12px; padding: 15px; font-weight: bold; border: none; cursor: pointer; display: block; width: 100%; margin-bottom: 10px; }

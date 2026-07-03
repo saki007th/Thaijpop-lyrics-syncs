@@ -3,157 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Lyric Player</title>
+    <title>My Lyric Workspace</title>
     <link rel="stylesheet" href="style.css">
+    <!-- นำเข้า WinBox.js สำหรับทำหน้าต่างอิสระ -->
+    <script src="https://cdn.jsdelivr.net/npm/winbox@0.2.82/dist/winbox.bundle.min.js"></script>
 </head>
 <body>
-    <!-- 🔴 เพิ่มเลเยอร์สำหรับทำ Dynamic Background -->
+    <!-- เลเยอร์พื้นหลัง -->
     <div id="dynamic-bg"></div>
 
     <div id="loadingOverlay">
         <div>กำลังโหลดข้อมูลคลังเพลง...</div>
     </div>
 
-  <header>
-        <!-- เปลี่ยนคลาสให้สั้นลง และเอา style ออกให้หมด -->
-        <div class="header-left"></div>
-        <div id="headerTitle" class="header-title">คลังเพลงของฉัน</div>
-        <div class="header-right">
-            <!-- 🔴 เพิ่มปุ่ม PiP ตรงนี้ (สมมติว่ากล่องเนื้อเพลงของคุณใช้ id="lyricsContainer") -->
-            <button class="btn-auth" onclick="togglePiPMode()" title="เปิดหน้าต่างลอย">🪟 PiP</button>
+    <!-- แถบเมนูหลัก (สไตล์ Dock) -->
+    <nav class="os-dock">
+        <div class="dock-title">🎵 My Music Workspace</div>
+        <div class="dock-buttons">
+            <button class="dock-btn" onclick="wm.openLibrary()">🏠 คลังเพลง</button>
+            <button class="dock-btn" onclick="wm.openSettings()">⚙️ ตั้งค่า</button>
+            <button id="btnHeaderLogin" class="dock-btn btn-login" onclick="loginWithGoogle()">เข้าสู่ระบบ</button>
+            <button id="btnHeaderLogout" class="dock-btn btn-logout" style="display:none;" onclick="logout()">ออกจากระบบ</button>
+        </div>
+    </nav>
+
+    <!-- =========================================
+         โกดังเก็บเนื้อหา (ซ่อนไว้รอ WinBox ดึงไปใช้)
+         ========================================= -->
+    <div id="window-warehouse" style="display: none;">
+        
+        <!-- 📦 1. เนื้อหา: คลังเพลง -->
+        <div id="content-library" class="wb-content-padding">
+            <div class="library-toolbar">
+                <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหาชื่อเพลง หรือ ศิลปิน..." oninput="filterSongs()">
+                <button id="btnAddSong" class="btn-primary" onclick="openAddView()" style="display: none;">✨ เพิ่มเพลง</button>
+            </div>
+            <div id="artistChips" class="artist-chips"></div>
+            <div id="songList" class="song-grid"></div>
+        </div>
+
+        <!-- 📦 2. เนื้อหา: เครื่องเล่น YouTube -->
+        <div id="content-player" style="width: 100%; height: 100%; background: #000;">
+            <div id="youtubePlayer" style="width: 100%; height: 100%;"></div>
+        </div>
+
+        <!-- 📦 3. เนื้อหา: เนื้อเพลง -->
+        <div id="content-lyrics" class="wb-content-padding">
+            <div class="button-group" id="lyricControlBtnGroup">
+                <button class="btn-secondary" onclick="prevLyric()">⏮ ย้อน</button>
+                <button class="btn-primary" onclick="nextLyric()">⏭ ถัดไป</button>
+            </div>
+            <div id="lyricsContainer" class="lyrics-container"></div>
             
-            <button class="btn-auth" onclick="showView('view-settings')">⚙️</button>
-            <button id="btnHeaderLogin" class="btn-auth btn-login" onclick="loginWithGoogle()">เข้าสู่ระบบ</button>
-            <button id="btnHeaderLogout" class="btn-auth btn-logout" style="display:none;" onclick="logout()">ออกจากระบบ</button>
-        </div>
-    </header>
-
-    <div class="container">
-        <!-- หน้าคลังเพลง -->
-        <div id="view-list" class="view active">
-            <button id="btnAddSong" onclick="openAddView()" style="display: none;">✨ เพิ่มเพลงใหม่</button>
-            <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหาชื่อเพลง หรือ ศิลปิน..." oninput="filterSongs()">
-            <div id="artistChips" class="artist-chips">
-                <button class="chip active" onclick="filterByArtist('All')">ทั้งหมด</button>
+            <div class="timestamp-editor-container" id="timestampEditorSection" style="display: none;">
+                <h4 style="margin-top:0;">⏱ ตั้งเวลา (Admin)</h4>
+                <div id="timestampList" class="timestamp-list"></div>
+                <button id="btnResetSync" class="btn-secondary" onclick="resetSync()" style="margin-top: 15px; width: 100%;">🔄 ล้างเวลา</button>
             </div>
-            <h3 style="margin-top:15px; font-weight: normal; color: #b0bec5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">เลือกเพลงที่ต้องการฟัง</h3>
-            <div id="songList"></div>
         </div>
 
-        <!-- หน้าการตั้งค่า -->
-        <div id="view-settings" class="view">
-            <h3 style="font-weight: normal; color: #b0bec5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 0;">✨ เลือกสีออร่าการ์ดเพลง</h3>
+        <!-- 📦 4. เนื้อหา: ตั้งค่าแอป -->
+        <div id="content-settings" class="wb-content-padding">
+            <h3 style="margin-top:0;">✨ เลือกสีออร่า</h3>
             <div class="theme-list">
-                <button onclick="setTheme('default')" class="theme-btn" style="background: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff);">🌈 Apple Glow (ค่าเริ่มต้น)</button>
-                <button onclick="setTheme('ocean')" class="theme-btn" style="background: linear-gradient(120deg, #2193b0, #6dd5ed, #2193b0); color: #000;">🌊 Ocean Blue</button>
-                <button onclick="setTheme('sunset')" class="theme-btn" style="background: linear-gradient(120deg, #ff4e50, #f9d423, #ff4e50); color: #000;">🌅 Sunset Vibes</button>
-                <button onclick="setTheme('neon')" class="theme-btn" style="background: linear-gradient(120deg, #ff0099, #493240, #ff0099);">🌸 Cyberpunk Pink</button>
-                <button onclick="setTheme('emerald')" class="theme-btn" style="background: linear-gradient(120deg, #11998e, #38ef7d, #11998e); color: #000;">💎 Emerald Green</button>
+                <button onclick="setTheme('default')" class="theme-btn" style="background: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85); color:white;">🌈 Apple Glow</button>
+                <button onclick="setTheme('ocean')" class="theme-btn" style="background: linear-gradient(120deg, #2193b0, #6dd5ed); color:black;">🌊 Ocean Blue</button>
             </div>
-
-            <h3 style="font-weight: normal; color: #b0bec5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 30px;">🎨 เลือกสีพื้นหลังจอ</h3>
-            <div class="bg-color-list" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
-                <button onclick="setBackground('black')" class="bg-btn" style="background: #000000;">🖤 ดำสนิท</button>
-                <button onclick="setBackground('darkgray')" class="bg-btn" style="background: #1c1c1e;">🩶 เทาเข้ม</button>
-                <button onclick="setBackground('midnight')" class="bg-btn" style="background: #0a0f24;">🌌 มิดไนท์บลู</button>
-                <button onclick="setBackground('deeppurple')" class="bg-btn" style="background: #1a0b2e;">🔮 ม่วงหม่น</button>
-            </div>
-
-            <h3 style="font-weight: normal; color: #b0bec5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 30px;">🖥️ เลือกโหมดมุมมองเครื่องเล่น</h3>
-            <div class="layout-color-list" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
-                <button id="btnOptVertical" onclick="setPlayerLayout('vertical')" class="bg-btn">📱 มุมมองแนวตั้ง</button>
-                <button id="btnOptHorizontal" onclick="setPlayerLayout('horizontal')" class="bg-btn">🖥️ มุมมองแนวนอน</button>
-            </div>
-
-            <!-- ย้ายระบบซ่อนภาษามาไว้ที่นี่ -->
-            <h3 style="font-weight: normal; color: #b0bec5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 30px;">🈯️ แสดง/ซ่อนภาษาของเนื้อเพลง</h3>
-            <div id="lyricLangToggles" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
-                <label class="bg-btn lang-toggle" style="display: flex; justify-content: center; align-items: center; gap: 8px;"><input type="checkbox" checked onchange="toggleLang(0)"> 🇯🇵 ญี่ปุ่น</label>
-                <label class="bg-btn lang-toggle" style="display: flex; justify-content: center; align-items: center; gap: 8px;"><input type="checkbox" checked onchange="toggleLang(1)"> 🔤 โรมาจิ</label>
-                <label class="bg-btn lang-toggle" style="display: flex; justify-content: center; align-items: center; gap: 8px;"><input type="checkbox" checked onchange="toggleLang(2)"> 🇹🇭 ไทย</label>
-            </div>
-
-            <div style="display: flex; gap: 12px; margin-top: 40px; width: 100%;">
-                <button class="btn-secondary" onclick="showView('view-list')" style="margin-top: 0; flex: 1;">🏠 กลับคลังเพลง</button>
-                <button id="btnReturnToPlayer" class="btn-action" onclick="showView('view-player')" style="margin-top: 0; flex: 1; display: none; background: #0a84ff; color: white; font-weight: 600; border-radius: 14px;">🎵 กลับไปหน้าเล่นเพลง</button>
+            <h3 style="margin-top: 25px;">🈯️ แสดง/ซ่อนภาษา</h3>
+            <div id="lyricLangToggles" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <label class="lang-toggle"><input type="checkbox" checked onchange="toggleLang(0)"> 🇯🇵 ญี่ปุ่น</label>
+                <label class="lang-toggle"><input type="checkbox" checked onchange="toggleLang(1)"> 🔤 โรมาจิ</label>
+                <label class="lang-toggle"><input type="checkbox" checked onchange="toggleLang(2)"> 🇹🇭 ไทย</label>
             </div>
         </div>
 
-        <!-- หน้าเพิ่ม/แก้ไขเพลง -->
-        <div id="view-add" class="view">
+        <!-- 📦 5. เนื้อหา: เพิ่ม/แก้ไขเพลง (Admin) -->
+        <div id="content-add" class="wb-content-padding">
             <label>ชื่อเพลง:</label>
             <input type="text" id="inputTitle" placeholder="เช่น ソワレ (Soirée)">
-            <label>ชื่อศิลปิน (หากมีหลายคน สามารถใส่ลูกน้ำ หรือ [ชื่อ1] [ชื่อ2]):</label>
-            <input type="text" id="inputArtist" placeholder="เช่น [Suisei] [Miko] หรือ Suisei, Miko">
-            
+            <label>ชื่อศิลปิน:</label>
+            <input type="text" id="inputArtist" placeholder="เช่น [Suisei] [Miko]">
             <label>ลิงก์ YouTube:</label>
             <input type="text" id="inputAudio" placeholder="วางลิงก์วิดีโอ YouTube ที่นี่">
-            <label>เนื้อเพลง (เว้นบรรทัด 1 บรรทัดเปล่า เพื่อแบ่งท่อนถัดไป):</label>
-            <textarea id="inputLyrics" placeholder="ท่อนที่ 1 ญี่ปุ่น&#10;ท่อนที่ 1 โรมาจิ&#10;ท่อนที่ 1 ไทย&#10;&#10;ท่อนที่ 2 ญี่ปุ่น..."></textarea>
-            
-            <button id="btnSave" onclick="saveSong()">💾 บันทึกเพลง</button>
-            <button class="btn-secondary" onclick="showView('view-list')">❌ ยกเลิก</button>
+            <label>เนื้อเพลง:</label>
+            <textarea id="inputLyrics" placeholder="ท่อนที่ 1 ญี่ปุ่น&#10;ท่อนที่ 1 โรมาจิ&#10;ท่อนที่ 1 ไทย&#10;&#10;ท่อนที่ 2..."></textarea>
+            <button id="btnSave" class="btn-primary" onclick="saveSong()" style="width: 100%; margin-top: 15px;">💾 บันทึกเพลง</button>
         </div>
-
-        <!-- หน้าเครื่องเล่นเพลง -->
-        <div id="view-player" class="view">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <div id="playerSongInfo" style="text-align: left; line-height: 1.2;">
-                    <div id="playerTitle" style="font-size: 1.1em; font-weight: bold; color: #00b4db;">ชื่อเพลง</div>
-                    <div id="playerArtist" style="font-size: 0.85em; color: #b0bec5; margin-top: 2px;">ศิลปิน</div>
-                </div>
-                
-                <div style="display: flex; gap: 8px;">
-                    <button id="btnShareSong" class="btn-secondary" onclick="shareSong()" style="width: auto; margin-top: 0; padding: 6px 12px; font-size: 0.9em; border-radius: 8px;">🔗 แชร์</button>
-                    <button id="btnToggleLayout" class="btn-secondary" onclick="togglePlayerLayout()" style="width: auto; margin-top: 0; padding: 6px 12px; font-size: 0.9em; border-radius: 8px;">🖥️ แนวนอน</button>
-                </div>
-            </div>
-
-            <div id="playerContentLayout" class="layout-vertical">
-                <div class="youtube-container">
-                    <div id="youtubePlayer"></div>
-                </div>
-                
-                <div class="lyrics-wrapper">
-                    <div id="lyricsContainer" class="lyrics-container"></div>
-                </div>
-            </div> 
-            
-            <div class="button-group" id="lyricControlBtnGroup">
-                <button class="btn-secondary" onclick="prevLyric()" style="flex: 1;">⏮ ย้อนกลับ</button>
-                <button onclick="nextLyric()" style="flex: 2; font-size: 1.2em;">⏭ ถัดไป</button>
-            </div>
-
-            <div class="timestamp-editor-container" id="timestampEditorSection">
-                <h4 style="margin: 0 0 10px 0; font-weight: normal; color: #b0bec5; font-size: 0.95em; display: flex; justify-content: space-between;">
-                    <span id="tsEditorTitle">⏱ ตั้งเวลา & ใส่ชื่อคนร้อง (Admin)</span>
-                </h4>
-                <div id="timestampList" class="timestamp-list"></div>
-            </div>
-            
-            <button id="btnResetSync" class="btn-secondary" onclick="resetSync()" style="margin-top: 15px; font-size: 0.9em; background: rgba(255, 152, 0, 0.1); border-color: rgba(255, 152, 0, 0.3); color: #ff9800; display: none;">🔄 ล้างเวลาซิงค์ทั้งหมด (เริ่มจับจังหวะใหม่)</button>
-            <button class="btn-secondary" onclick="showView('view-list')" style="margin-top: 15px;">🏠 กลับคลังเพลง</button>
-        </div>
+        
     </div>
-    <script src="pip.js"></script>
-    <!-- ระบบซ่อน Header อัตโนมัติ -->
-    <script>
-        let lastScrollTop = 0;
-        const header = document.querySelector('header');
 
-        window.addEventListener('scroll', function() {
-            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            
-            // ถ้าเลื่อนหน้าจอลง (และเลื่อนเลยช่วงบนสุดมาแล้ว 60px) ให้ซ่อน Header
-            if (scrollTop > lastScrollTop && scrollTop > 60) {
-                header.classList.add('header-hidden');
-            } else {
-                // ถ้าเลื่อนหน้าจอขึ้น ให้โชว์ Header กลับมา
-                header.classList.remove('header-hidden');
-            }
-            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; // ป้องกันการเลื่อนติดลบในมือถือ
-        }, { passive: true });
-    </script>
     <script type="module" src="app.js"></script>
 </body>
 </html>
