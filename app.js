@@ -20,29 +20,21 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 const songsCollection = collection(db, 'songs');
 
-window.songs = [];
-window.currentLyricsArray = [];
-window.currentLyricIndex = -1;
-window.editingSongId = null;
-window.currentSongId = null;
-window.ytPlayer = null;
-window.syncInterval = null;
-window.isLoggedIn = false; 
-window.isAdmin = false;
-window.isYTApiReady = false;
-window.currentFilter = 'All'; 
+window.songs = []; window.currentLyricsArray = []; window.currentLyricIndex = -1;
+window.editingSongId = null; window.currentSongId = null; window.ytPlayer = null;
+window.syncInterval = null; window.isLoggedIn = false; window.isAdmin = false;
+window.isYTApiReady = false; window.currentFilter = 'All'; 
 
 // ==========================================
-// 🪟 Window Manager (ระบบจัดการหน้าต่าง OS)
+// 🪟 Window Manager (แยกหน้าต่าง Admin อิสระ)
 // ==========================================
 window.wm = {
-    libWin: null, playerWin: null, lyricsWin: null, settingsWin: null, addWin: null,
+    libWin: null, playerWin: null, lyricsWin: null, settingsWin: null, addWin: null, adminSyncWin: null,
 
     openLibrary: function() {
         if (this.libWin) { this.libWin.focus(); return; }
-        const mountObj = document.getElementById("content-library");
         this.libWin = new WinBox("🏠 คลังเพลงของฉัน", {
-            mount: mountObj, width: "80%", height: "80%", x: "center", y: "center", class: ["wb-dark"],
+            mount: document.getElementById("content-library"), width: "80%", height: "80%", x: "center", y: "center", class: ["wb-dark"],
             onclose: () => { this.libWin = null; }
         });
         window.renderSongList();
@@ -70,11 +62,6 @@ window.wm = {
             mount: document.getElementById("content-lyrics"), width: "500px", height: "80%", x: "right", y: "center", class: ["wb-dark"],
             onclose: () => { this.lyricsWin = null; }
         });
-        
-        // เช็คโหมด Admin 
-        document.getElementById('timestampEditorSection').style.display = window.isAdmin ? 'block' : 'none';
-        document.getElementById('btnResetSync').style.display = window.isAdmin ? 'block' : 'none';
-        document.getElementById('lyricControlBtnGroup').style.display = window.isAdmin ? 'flex' : 'none';
     },
     openAdd: function(title) {
         if (this.addWin) { this.addWin.setTitle(title); this.addWin.focus(); return; }
@@ -82,12 +69,22 @@ window.wm = {
             mount: document.getElementById("content-add"), width: "450px", height: "650px", x: "center", y: "center", class: ["wb-dark"],
             onclose: () => { this.addWin = null; }
         });
+    },
+    // 🔴 หน้าต่าง Admin อิสระสำหรับจัดการและซิงค์เนื้อเพลง
+    openAdminSync: function() {
+        if (!window.isAdmin || !window.currentSongId) return;
+        const song = window.songs.find(s => s.id === window.currentSongId);
+        if (this.adminSyncWin) { this.adminSyncWin.setTitle("⏱ ซิงค์: " + song.title); this.adminSyncWin.focus(); return; }
+        
+        this.adminSyncWin = new WinBox("⏱ ซิงค์: " + song.title, {
+            mount: document.getElementById("content-admin-sync"), width: "450px", height: "650px", x: "center", y: "center", class: ["wb-dark"],
+            onclose: () => { this.adminSyncWin = null; }
+        });
+        window.renderTimestampEditor(); 
     }
 };
 
-// ==========================================
-// ฟังก์ชันปิด Dropdown ของ Admin
-// ==========================================
+// ปิด Dropdown ครอบคลุมเมื่อคลิกที่อื่น
 document.addEventListener('click', function(e) {
     if (!e.target.closest('.ts-singer-dropdown')) {
         document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show'));
@@ -106,22 +103,17 @@ window.getSingersList = function(artistStr) {
 };
 
 window.setTheme = function(themeName) {
-    const themes = {
-        'default': 'linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff)',
-        'ocean': 'linear-gradient(120deg, #2193b0, #6dd5ed, #2193b0, #6dd5ed)'
-    };
+    const themes = { 'default': 'linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff)', 'ocean': 'linear-gradient(120deg, #2193b0, #6dd5ed, #2193b0, #6dd5ed)' };
     document.documentElement.style.setProperty('--theme-glow', themes[themeName] || themes['default']);
     localStorage.setItem('selectedTheme', themeName);
 }
 window.setTheme(localStorage.getItem('selectedTheme') || 'default');
 
 window.onYouTubeIframeAPIReady = function() { window.isYTApiReady = true; };
-const tag = document.createElement('script');
-tag.src = "https://www.youtube.com/iframe_api";
-document.head.appendChild(tag);
+const tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(tag);
 
 // ==========================================
-// ระบบ Login & ดึงข้อมูล
+// การตรวจสิทธิ์ & ดึงข้อมูล
 // ==========================================
 onAuthStateChanged(auth, (user) => {
     window.isLoggedIn = !!user;
@@ -131,15 +123,14 @@ onAuthStateChanged(auth, (user) => {
     document.getElementById('btnHeaderLogin').style.display = window.isLoggedIn ? 'none' : 'block';
     document.getElementById('btnAddSong').style.display = window.isAdmin ? 'block' : 'none';
     
+    // โชว์ปุ่ม Admin Sync เฉพาะตอนที่ล็อกอินแอดมิน
+    document.getElementById('btnDockAdminSync').style.display = window.isAdmin ? 'block' : 'none';
+    
     fetchSongs(); 
 });
 
-window.loginWithGoogle = async function() {
-    try { await signInWithPopup(auth, provider); } catch (e) { alert("เข้าสู่ระบบไม่สำเร็จ"); }
-}
-window.logout = async function() {
-    if(confirm('ต้องการออกจากระบบใช่หรือไม่?')) { await signOut(auth); }
-}
+window.loginWithGoogle = async function() { try { await signInWithPopup(auth, provider); } catch (e) { alert("เข้าสู่ระบบไม่สำเร็จ"); } }
+window.logout = async function() { if(confirm('ต้องการออกจากระบบใช่หรือไม่?')) { await signOut(auth); } }
 
 async function fetchSongs() {
     document.getElementById('loadingOverlay').style.display = 'flex';
@@ -148,10 +139,7 @@ async function fetchSongs() {
         window.songs = [];
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            window.songs.push({
-                id: doc.id, title: data.title, artist: data.artist, audioPath: data.audioPath,
-                lyrics: data.lyrics, timestamps: data.timestamps || [], singers: data.singers || [] 
-            });
+            window.songs.push({ id: doc.id, title: data.title, artist: data.artist, audioPath: data.audioPath, lyrics: data.lyrics, timestamps: data.timestamps || [], singers: data.singers || [] });
         });
         document.getElementById('loadingOverlay').style.display = 'none';
         
@@ -161,11 +149,8 @@ async function fetchSongs() {
             const foundSong = window.songs.find(s => s.id === songIdFromUrl);
             if (foundSong) { window.playSong(foundSong.id); return; }
         }
-        window.wm.openLibrary(); // เปิดคลังเพลงเป็นหน้าต่างแรกสุด
-    } catch (error) {
-        console.error(error); alert("เชื่อมต่อฐานข้อมูลไม่สำเร็จ");
-        document.getElementById('loadingOverlay').style.display = 'none';
-    }
+        window.wm.openLibrary(); 
+    } catch (error) { document.getElementById('loadingOverlay').style.display = 'none'; }
 }
 
 window.extractYouTubeID = function(url) {
@@ -173,189 +158,123 @@ window.extractYouTubeID = function(url) {
     return (match && match[2].length === 11) ? match[2] : null;
 }
 
-// ==========================================
-// ระบบเพิ่ม/แก้ไขเพลง
-// ==========================================
 window.openAddView = function() {
     if (!window.isAdmin) return;
     window.editingSongId = null;
-    document.getElementById('inputTitle').value = '';
-    document.getElementById('inputArtist').value = '';
-    document.getElementById('inputAudio').value = '';
-    document.getElementById('inputLyrics').value = '';
+    document.getElementById('inputTitle').value = ''; document.getElementById('inputArtist').value = ''; document.getElementById('inputAudio').value = ''; document.getElementById('inputLyrics').value = '';
     window.wm.openAdd('✨ เพิ่มเพลงใหม่');
 }
 
 window.editSong = function(id) {
     if (!window.isAdmin) return;
-    const song = window.songs.find(s => s.id === id);
-    if (!song) return;
+    const song = window.songs.find(s => s.id === id); if (!song) return;
     window.editingSongId = id;
-    document.getElementById('inputTitle').value = song.title;
-    document.getElementById('inputArtist').value = song.artist || '';
-    document.getElementById('inputAudio').value = song.audioPath;
-    document.getElementById('inputLyrics').value = song.lyrics;
+    document.getElementById('inputTitle').value = song.title; document.getElementById('inputArtist').value = song.artist || ''; document.getElementById('inputAudio').value = song.audioPath; document.getElementById('inputLyrics').value = song.lyrics;
     window.wm.openAdd('✏️ แก้ไขเพลง');
 }
 
 window.saveSong = async function() {
     if (!window.isAdmin) return;
-    const title = document.getElementById('inputTitle').value.trim();
-    const artist = document.getElementById('inputArtist').value.trim();
-    const audioPath = document.getElementById('inputAudio').value.trim();
-    const lyrics = document.getElementById('inputLyrics').value.trim();
+    const title = document.getElementById('inputTitle').value.trim(); const artist = document.getElementById('inputArtist').value.trim(); const audioPath = document.getElementById('inputAudio').value.trim(); const lyrics = document.getElementById('inputLyrics').value.trim();
     const btnSave = document.getElementById('btnSave');
 
-    if (!title || !lyrics || !window.extractYouTubeID(audioPath)) { alert("ข้อมูลไม่ครบถ้วน หรือลิงก์ YouTube ผิด"); return; }
+    if (!title || !lyrics || !window.extractYouTubeID(audioPath)) { alert("ข้อมูลไม่ครบ หรือลิงก์ผิด"); return; }
     btnSave.disabled = true; btnSave.innerText = "กำลังบันทึก...";
 
     try {
-        if (window.editingSongId) {
-            await updateDoc(doc(db, "songs", window.editingSongId), { title, artist, audioPath, lyrics });
-        } else {
-            await addDoc(songsCollection, { title, artist, audioPath, lyrics, timestamps: [], singers: [] });
-        }
+        if (window.editingSongId) { await updateDoc(doc(db, "songs", window.editingSongId), { title, artist, audioPath, lyrics }); } 
+        else { await addDoc(songsCollection, { title, artist, audioPath, lyrics, timestamps: [], singers: [] }); }
         await fetchSongs();
-        if(window.wm.addWin) window.wm.addWin.close(); // ปิดหน้าต่างบันทึก
-        if(window.wm.libWin) window.renderSongList(); // รีเฟรชคลังเพลง
-    } catch (e) { console.error(e); alert("บันทึกไม่สำเร็จ"); } 
-    finally { btnSave.disabled = false; btnSave.innerText = "💾 บันทึกเพลง"; window.editingSongId = null; }
+        if(window.wm.addWin) window.wm.addWin.close(); 
+        if(window.wm.libWin) window.renderSongList(); 
+    } catch (e) { alert("บันทึกไม่สำเร็จ"); } finally { btnSave.disabled = false; btnSave.innerText = "💾 บันทึกเพลง"; window.editingSongId = null; }
 }
 
 window.deleteSong = async function(id) {
     if (!window.isAdmin) return;
-    if(confirm('ต้องการลบเพลงนี้ใช่หรือไม่?')) {
-        try { await deleteDoc(doc(db, "songs", id)); await fetchSongs(); if(window.wm.libWin) window.renderSongList(); } 
-        catch(e) { console.error(e); }
-    }
+    if(confirm('ต้องการลบเพลงนี้ใช่หรือไม่?')) { try { await deleteDoc(doc(db, "songs", id)); await fetchSongs(); if(window.wm.libWin) window.renderSongList(); } catch(e) { console.error(e); } }
 }
 
-// ==========================================
-// ระบบค้นหาและ Filter
-// ==========================================
-window.filterByArtist = function(artistName) {
-    window.currentFilter = artistName;
-    window.renderSongList(document.getElementById('searchInput').value.toLowerCase(), artistName);
-}
-window.filterSongs = function() {
-    window.renderSongList(document.getElementById('searchInput').value.toLowerCase(), window.currentFilter);
-}
+window.filterByArtist = function(artistName) { window.currentFilter = artistName; window.renderSongList(document.getElementById('searchInput').value.toLowerCase(), artistName); }
+window.filterSongs = function() { window.renderSongList(document.getElementById('searchInput').value.toLowerCase(), window.currentFilter); }
 
 window.renderSongList = function(query = '', artistFilter = 'All') {
-    const listContainer = document.getElementById('songList');
-    const chipContainer = document.getElementById('artistChips');
-    if(!listContainer) return;
-    listContainer.innerHTML = '';
+    const listContainer = document.getElementById('songList'); const chipContainer = document.getElementById('artistChips');
+    if(!listContainer) return; listContainer.innerHTML = '';
 
     if (chipContainer) {
         let artistSet = new Set();
         window.songs.forEach(s => window.getSingersList(s.artist).forEach(n => artistSet.add(n)));
         const artists = ['All', ...Array.from(artistSet)];
-        chipContainer.innerHTML = artists.map(a => 
-            `<button class="chip ${artistFilter === a ? 'active' : ''}" onclick="filterByArtist('${a}')">${a === 'All' ? 'ทั้งหมด' : a}</button>`
-        ).join('');
+        chipContainer.innerHTML = artists.map(a => `<button class="chip ${artistFilter === a ? 'active' : ''}" onclick="filterByArtist('${a}')">${a === 'All' ? 'ทั้งหมด' : a}</button>`).join('');
     }
 
     const filtered = window.songs.filter(song => {
         const q = query.toLowerCase(); const artist = song.artist || '';
-        const searchMatch = (song.title && song.title.toLowerCase().includes(q)) || artist.toLowerCase().includes(q);
-        const filterMatch = (artistFilter === 'All' || artist.includes(artistFilter));
-        return searchMatch && filterMatch;
+        return ((song.title && song.title.toLowerCase().includes(q)) || artist.toLowerCase().includes(q)) && (artistFilter === 'All' || artist.includes(artistFilter));
     });
 
     filtered.forEach(song => {
-        const item = document.createElement('div');
-        item.className = 'song-item';
+        const item = document.createElement('div'); item.className = 'song-item';
         const videoId = window.extractYouTubeID(song.audioPath);
         const thumbUrl = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : '';
-        
         let actionsHtml = window.isAdmin ? `<button class="btn-secondary" onclick="editSong('${song.id}')">✏️</button><button class="btn-secondary" style="color:#ff3b30;" onclick="deleteSong('${song.id}')">ลบ</button>` : '';
         item.innerHTML = `
             <img src="${thumbUrl}" onerror="this.style.display='none'">
-            <div>
-                <div class="song-title">${song.title}</div>
-                <div class="song-artist">🎤 ${song.artist || '-'}</div>
-            </div>
-            <div class="song-actions">
-                <button class="btn-primary" onclick="playSong('${song.id}')">▶ เล่น</button>
-                ${actionsHtml}
-            </div>
+            <div><div class="song-title">${song.title}</div><div class="song-artist">🎤 ${song.artist || '-'}</div></div>
+            <div class="song-actions"><button class="btn-primary" onclick="playSong('${song.id}')">▶ เล่น</button>${actionsHtml}</div>
         `;
         listContainer.appendChild(item);
     });
 }
 
 // ==========================================
-// ระบบเล่นเพลง & เนื้อเพลง
+// ระบบเล่นเพลง & จัดการเวลา (Full Admin Controls)
 // ==========================================
 window.renderLyricsToContainer = function() {
-    const container = document.getElementById('lyricsContainer');
-    if(!container) return;
-    container.innerHTML = ''; 
-    if (window.currentLyricsArray.length === 0) { container.innerHTML = 'ไม่มีเนื้อเพลง'; return; }
-
+    const container = document.getElementById('lyricsContainer'); if(!container) return;
+    container.innerHTML = ''; if (window.currentLyricsArray.length === 0) { container.innerHTML = 'ไม่มีเนื้อเพลง'; return; }
     const song = window.songs.find(s => s.id === window.currentSongId);
-    window.currentLyricsArray.forEach((lyric, index) => {
-        const lineDiv = document.createElement('div');
-        lineDiv.className = 'lyric-line';
-        lineDiv.id = `lyric-line-${index}`;
 
+    window.currentLyricsArray.forEach((lyric, index) => {
+        const lineDiv = document.createElement('div'); lineDiv.className = 'lyric-line'; lineDiv.id = `lyric-line-${index}`;
         const linesHtml = lyric.split('\n').map((l, i) => `<div class="lang-${i}">${l}</div>`).join('');
         const singerString = (song && song.singers && song.singers[index]) ? song.singers[index] : null;
 
         if (singerString) {
             const badgesHtml = singerString.split(',').filter(s=>s.trim()).map(s => `<span class="singer-badge">${s.trim()}</span>`).join('');
             lineDiv.innerHTML = `<div class="singer-badges">${badgesHtml}</div>${linesHtml}`;
-        } else {
-            lineDiv.innerHTML = linesHtml;
-        }
+        } else { lineDiv.innerHTML = linesHtml; }
         container.appendChild(lineDiv);
     });
 }
 
 window.playSong = function(id) {
-    window.currentSongId = id;
-    const song = window.songs.find(s => s.id === id);
-    if (!song) return;
+    window.currentSongId = id; const song = window.songs.find(s => s.id === id); if (!song) return;
 
-    window.currentLyricsArray = song.lyrics.split(/\n\s*\n/);
-    window.currentLyricIndex = -1;
+    window.currentLyricsArray = song.lyrics.split(/\n\s*\n/); window.currentLyricIndex = -1;
     
-    // 🔴 เรียกหน้าต่างขึ้นมา
-    window.wm.openPlayer(song.title);
-    window.wm.openLyrics(song.title);
+    window.wm.openPlayer(song.title); window.wm.openLyrics(song.title);
+    if (window.wm.adminSyncWin) window.wm.adminSyncWin.setTitle("⏱ ซิงค์: " + song.title); // อัปเดตชื่อหน้าต่างซิงค์ถ้าเปิดอยู่
 
-    window.renderTimestampEditor();
-    window.renderLyricsToContainer(); 
-    window.updateLyricDisplay();
+    window.renderTimestampEditor(); window.renderLyricsToContainer(); window.updateLyricDisplay();
 
     const videoId = window.extractYouTubeID(song.audioPath);
     const bgEl = document.getElementById('dynamic-bg');
-    if (bgEl && videoId) {
-        bgEl.style.backgroundImage = `url('https://img.youtube.com/vi/${videoId}/hqdefault.jpg')`;
-        bgEl.classList.add('active');
-    }
+    if (bgEl && videoId) { bgEl.style.backgroundImage = `url('https://img.youtube.com/vi/${videoId}/hqdefault.jpg')`; bgEl.classList.add('active'); }
     
-    if (window.ytPlayer) {
-        if (typeof window.ytPlayer.loadVideoById === 'function') window.ytPlayer.loadVideoById(videoId);
-    } else {
+    if (window.ytPlayer) { if (typeof window.ytPlayer.loadVideoById === 'function') window.ytPlayer.loadVideoById(videoId); } 
+    else {
         if (window.isYTApiReady || (window.YT && window.YT.Player)) {
-            window.ytPlayer = new YT.Player('youtubePlayer', {
-                height: '100%', width: '100%', videoId: videoId,
-                playerVars: { 'playsinline': 1, 'controls': 1 },
-                events: { 'onStateChange': window.onPlayerStateChange }
-            });
+            window.ytPlayer = new YT.Player('youtubePlayer', { height: '100%', width: '100%', videoId: videoId, playerVars: { 'playsinline': 1, 'controls': 1 }, events: { 'onStateChange': window.onPlayerStateChange } });
         }
     }
 
     clearInterval(window.syncInterval);
     window.syncInterval = setInterval(() => {
         if (!window.ytPlayer || typeof window.ytPlayer.getCurrentTime !== 'function') return;
-        const currentSong = window.songs.find(s => s.id === window.currentSongId);
-        if (!currentSong || !currentSong.timestamps) return;
-
-        const currentTime = window.ytPlayer.getCurrentTime();
-        if (currentTime === undefined || currentTime === 0) return;
+        const currentSong = window.songs.find(s => s.id === window.currentSongId); if (!currentSong || !currentSong.timestamps) return;
+        const currentTime = window.ytPlayer.getCurrentTime(); if (currentTime === undefined || currentTime === 0) return;
 
         const nextIndex = window.currentLyricIndex + 1;
         if (nextIndex <= window.currentLyricsArray.length) {
@@ -365,9 +284,7 @@ window.playSong = function(id) {
     }, 100); 
 }
 
-// ==========================================
-// โค้ด Admin: แก้ไขเวลา & เนื้อเพลง
-// ==========================================
+// 🔴 ระบบ Admin แบบเต็ม (เพิ่มเนื้อ ลบเนื้อ เลือกคนร้อง)
 window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
     if (!window.isAdmin) return;
     const song = window.songs.find(s => s.id === window.currentSongId);
@@ -387,51 +304,125 @@ window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
 }
 
 window.renderTimestampEditor = function() {
-    const container = document.getElementById('timestampList');
-    if(!container) return;
+    const container = document.getElementById('timestampList'); if(!container) return;
     container.innerHTML = '';
-    const song = window.songs.find(s => s.id === window.currentSongId);
-    if (!song) return;
+    const song = window.songs.find(s => s.id === window.currentSongId); if (!song) return;
 
     window.currentLyricsArray.forEach((lyric, index) => {
-        const row = document.createElement('div');
-        row.style.background = 'rgba(255,255,255,0.05)'; row.style.padding = '10px'; row.style.marginBottom = '10px'; row.style.borderRadius = '8px';
+        const row = document.createElement('div'); row.className = 'ts-row'; row.id = `ts-row-${index}`;
+        row.style.background = 'rgba(255, 255, 255, 0.05)'; row.style.padding = '12px 10px'; row.style.borderRadius = '8px'; row.style.marginBottom = '12px'; row.style.border = '1px solid rgba(255, 255, 255, 0.1)';
 
+        // 1. ช่องเขียนเนื้อเพลง
         const lyricEditor = document.createElement('textarea');
-        lyricEditor.value = lyric; lyricEditor.style.height = '60px'; lyricEditor.style.marginBottom = '10px';
-        if (!window.isAdmin) { lyricEditor.readOnly = true; } 
+        lyricEditor.value = lyric; lyricEditor.style.width = '100%'; lyricEditor.style.minHeight = '55px'; lyricEditor.style.marginBottom = '10px';
+        if (!window.isAdmin) { lyricEditor.readOnly = true; lyricEditor.style.border = 'none'; lyricEditor.style.background = 'transparent'; } 
         else { lyricEditor.onchange = (e) => { window.currentLyricsArray[index] = e.target.value.trim(); window.saveTimestampsToFirebase(true); }; }
-        
         row.appendChild(lyricEditor);
-        container.appendChild(row);
+
+        const controlsDiv = document.createElement('div'); controlsDiv.style.display = 'flex'; controlsDiv.style.justifyContent = 'space-between'; controlsDiv.style.alignItems = 'center'; controlsDiv.style.flexWrap = 'wrap'; controlsDiv.style.gap = '8px';
+        const leftControls = document.createElement('div'); leftControls.style.display = 'flex'; leftControls.style.gap = '8px'; leftControls.style.alignItems = 'center';
+        
+        // แบทจ์ลำดับ
+        const badge = document.createElement('span'); badge.innerText = `#${index + 1}`; badge.style.color = '#0a84ff'; badge.style.fontWeight = 'bold'; leftControls.appendChild(badge);
+
+        if (window.isAdmin) {
+            // 2. Dropdown เลือกนักร้อง
+            const allSingers = window.getSingersList(song.artist);
+            const dropdown = document.createElement('div'); dropdown.className = 'ts-singer-dropdown';
+            const toggleBtn = document.createElement('button'); toggleBtn.className = 'ts-dropdown-toggle';
+            const currentSingers = (song.singers && song.singers[index]) ? song.singers[index].split(',').map(s=>s.trim()).filter(s=>s) : [];
+            toggleBtn.innerText = currentSingers.length > 0 ? currentSingers.join(', ') : '👤 เลือกร้อง';
+            
+            const menu = document.createElement('div'); menu.className = 'ts-dropdown-menu';
+            allSingers.forEach(singer => {
+                const itemLabel = document.createElement('label'); itemLabel.className = 'ts-dropdown-item';
+                const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.value = singer; checkbox.checked = currentSingers.includes(singer);
+                checkbox.onchange = () => {
+                    const selected = Array.from(menu.querySelectorAll('input:checked')).map(cb => cb.value);
+                    toggleBtn.innerText = selected.length > 0 ? selected.join(', ') : '👤 เลือกร้อง';
+                    if (!song.singers) song.singers = []; song.singers[index] = selected.length > 0 ? selected.join(', ') : "";
+                    window.saveTimestampsToFirebase(true); 
+                };
+                itemLabel.appendChild(checkbox); itemLabel.appendChild(document.createTextNode(' ' + singer)); menu.appendChild(itemLabel);
+            });
+            toggleBtn.onclick = (e) => {
+                e.stopPropagation(); const isShowing = menu.classList.contains('show'); document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show'));
+                if (!isShowing) { menu.classList.add('show'); const rect = toggleBtn.getBoundingClientRect(); menu.style.position = 'fixed'; menu.style.left = rect.left + 'px'; menu.style.top = (rect.bottom + 5) + 'px'; }
+            };
+            dropdown.appendChild(toggleBtn); dropdown.appendChild(menu); leftControls.appendChild(dropdown);
+
+            // 3. ช่องกรอกเวลาแบบละเอียด
+            const timeInput = document.createElement('input'); timeInput.type = 'number'; timeInput.step = '0.1'; timeInput.min = '0';
+            timeInput.style.width = '70px'; timeInput.style.margin = '0'; timeInput.style.padding = '4px 6px'; timeInput.style.textAlign = 'center';
+            timeInput.value = (song.timestamps && song.timestamps[index] != null) ? song.timestamps[index].toFixed(1) : '';
+            timeInput.onchange = (e) => { const val = parseFloat(e.target.value); if (!song.timestamps) song.timestamps = []; song.timestamps[index] = isNaN(val) ? null : val; window.saveTimestampsToFirebase(); };
+            leftControls.appendChild(timeInput);
+        }
+
+        const rightControls = document.createElement('div'); rightControls.style.display = 'flex'; rightControls.style.gap = '8px';
+        if (window.isAdmin) {
+            // 4. ปุ่ม แทรก / ลบ 
+            const btnAdd = document.createElement('button'); btnAdd.innerText = '➕'; btnAdd.style.background = 'rgba(52, 199, 89, 0.2)'; btnAdd.style.color = '#34c759'; btnAdd.style.border = '1px solid rgba(52, 199, 89, 0.4)'; btnAdd.style.padding = '4px 10px'; btnAdd.onclick = () => window.addLyricLine(index);
+            const btnDel = document.createElement('button'); btnDel.innerText = '🗑️'; btnDel.style.background = 'rgba(255, 59, 48, 0.2)'; btnDel.style.color = '#ff3b30'; btnDel.style.border = '1px solid rgba(255, 59, 48, 0.4)'; btnDel.style.padding = '4px 10px'; btnDel.onclick = () => window.deleteLyricLine(index);
+            rightControls.appendChild(btnAdd); rightControls.appendChild(btnDel);
+        }
+        
+        controlsDiv.appendChild(leftControls); controlsDiv.appendChild(rightControls);
+        row.appendChild(controlsDiv); container.appendChild(row);
+    });
+    
+    if (window.isAdmin) {
+        const btnAddEnd = document.createElement('button'); btnAddEnd.innerText = '➕ เพิ่มท่อนใหม่ต่อท้ายสุด'; btnAddEnd.style.background = 'rgba(255, 255, 255, 0.1)'; btnAddEnd.style.padding = "8px"; btnAddEnd.style.color = "#fff"; btnAddEnd.style.border = "none"; btnAddEnd.style.borderRadius = "8px"; btnAddEnd.style.width = "100%"; btnAddEnd.style.cursor = "pointer";
+        btnAddEnd.onclick = () => window.addLyricLine(window.currentLyricsArray.length - 1); container.appendChild(btnAddEnd);
+    }
+}
+
+window.addLyricLine = function(index) {
+    if (!confirm('ต้องการแทรกเนื้อเพลงใช่หรือไม่?')) return;
+    const song = window.songs.find(s => s.id === window.currentSongId); if(!song) return;
+    const insertAt = index + 1;
+    window.currentLyricsArray.splice(insertAt, 0, "ท่อนใหม่...");
+    if(!song.timestamps) song.timestamps = []; song.timestamps.splice(insertAt, 0, null);
+    if(!song.singers) song.singers = []; song.singers.splice(insertAt, 0, "");
+    window.saveTimestampsToFirebase(true).then(() => { window.renderTimestampEditor(); });
+}
+
+window.deleteLyricLine = function(index) {
+    if (!confirm('ลบท่อนนี้ใช่หรือไม่?\nเนื้อเพลงและเวลาที่เกี่ยวข้องจะหายไปทั้งหมด')) return;
+    const song = window.songs.find(s => s.id === window.currentSongId); if(!song) return;
+    window.currentLyricsArray.splice(index, 1);
+    if(song.timestamps) song.timestamps.splice(index, 1);
+    if(song.singers) song.singers.splice(index, 1);
+    window.saveTimestampsToFirebase(true).then(() => { window.renderTimestampEditor(); });
+}
+
+window.syncTimestampEditorUI = function() {
+    window.currentLyricsArray.forEach((_, index) => {
+        const row = document.getElementById(`ts-row-${index}`);
+        if (row) {
+            if (index === window.currentLyricIndex) { row.style.background = 'rgba(10, 132, 255, 0.25)'; row.style.borderColor = '#0a84ff'; } 
+            else { row.style.background = 'rgba(255, 255, 255, 0.05)'; row.style.borderColor = 'rgba(255, 255, 255, 0.1)'; }
+        }
     });
 }
 
 window.updateLyricDisplay = function() {
-    const container = document.getElementById('lyricsContainer');
-    if (!container) return;
+    const container = document.getElementById('lyricsContainer'); if (!container) return;
     container.querySelectorAll('.lyric-line').forEach(line => line.classList.remove('active'));
 
     if (window.currentLyricIndex >= 0 && window.currentLyricIndex < window.currentLyricsArray.length) {
         const activeLine = document.getElementById(`lyric-line-${window.currentLyricIndex}`);
-        if (activeLine) {
-            activeLine.classList.add('active'); 
-            activeLine.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
+        if (activeLine) { activeLine.classList.add('active'); activeLine.scrollIntoView({ behavior: "smooth", block: "center" }); }
     }
+    window.syncTimestampEditorUI(); // ไฮไลต์กล่องในหน้าต่าง Admin ด้วย
 }
 
 window.nextLyric = function(isAuto = false) {
     if (window.currentLyricIndex < window.currentLyricsArray.length) {
-        window.currentLyricIndex++;
-        window.updateLyricDisplay();
+        window.currentLyricIndex++; window.updateLyricDisplay();
         if (!isAuto && window.isAdmin && window.currentSongId && window.ytPlayer) {
             const song = window.songs.find(s => s.id === window.currentSongId);
-            if (song) {
-                if (!song.timestamps) song.timestamps = [];
-                song.timestamps[window.currentLyricIndex] = window.ytPlayer.getCurrentTime();
-                window.saveTimestampsToFirebase();
-            }
+            if (song) { if (!song.timestamps) song.timestamps = []; song.timestamps[window.currentLyricIndex] = window.ytPlayer.getCurrentTime(); window.saveTimestampsToFirebase(); }
         }
     }
 }
@@ -450,18 +441,13 @@ window.resetSync = function() {
     if (!window.isAdmin) return;
     if(confirm('ล้างเวลาทั้งหมด?')) {
         const song = window.songs.find(s => s.id === window.currentSongId);
-        if (song) {
-            song.timestamps = []; song.singers = []; window.saveTimestampsToFirebase();
-            window.currentLyricIndex = -1; window.renderTimestampEditor(); window.updateLyricDisplay();
-        }
+        if (song) { song.timestamps = []; song.singers = []; window.saveTimestampsToFirebase(); window.currentLyricIndex = -1; window.renderTimestampEditor(); window.updateLyricDisplay(); }
     }
 }
 
 window.toggleLang = function(langIndex) {
-    const container = document.getElementById('lyricsContainer');
-    if (!container) return;
-    if (event.target.checked) container.classList.remove(`hide-lang-${langIndex}`);
-    else container.classList.add(`hide-lang-${langIndex}`);
+    const container = document.getElementById('lyricsContainer'); if (!container) return;
+    if (event.target.checked) container.classList.remove(`hide-lang-${langIndex}`); else container.classList.add(`hide-lang-${langIndex}`);
 }
 
 window.onPlayerStateChange = function(event) {
