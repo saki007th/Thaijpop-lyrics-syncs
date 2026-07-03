@@ -5,34 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Lyric Workspace</title>
     <link rel="stylesheet" href="style.css">
-    <!-- นำเข้า WinBox.js สำหรับทำหน้าต่างอิสระ -->
     <script src="https://cdn.jsdelivr.net/npm/winbox@0.2.82/dist/winbox.bundle.min.js"></script>
 </head>
 <body>
-    <!-- เลเยอร์พื้นหลัง -->
     <div id="dynamic-bg"></div>
 
     <div id="loadingOverlay">
         <div>กำลังโหลดข้อมูลคลังเพลง...</div>
     </div>
 
-    <!-- แถบเมนูหลัก (สไตล์ Dock) -->
+    <!-- แถบ Dock -->
     <nav class="os-dock">
         <div class="dock-title">🎵 My Music Workspace</div>
         <div class="dock-buttons">
             <button class="dock-btn" onclick="wm.openLibrary()">🏠 คลังเพลง</button>
             <button class="dock-btn" onclick="wm.openSettings()">⚙️ ตั้งค่า</button>
+            <!-- 🔴 เพิ่มปุ่มเครื่องมือ Admin ใน Dock -->
+            <button id="btnDockAdminSync" class="dock-btn" style="display:none; color: #ffcc00;" onclick="if(window.currentSongId) wm.openAdminSync(); else alert('กรุณากดเล่นเพลงที่ต้องการซิงค์ก่อนครับ');">⏱ ซิงค์ & จัดการเนื้อ</button>
+            
             <button id="btnHeaderLogin" class="dock-btn btn-login" onclick="loginWithGoogle()">เข้าสู่ระบบ</button>
             <button id="btnHeaderLogout" class="dock-btn btn-logout" style="display:none;" onclick="logout()">ออกจากระบบ</button>
         </div>
     </nav>
 
-    <!-- =========================================
-         โกดังเก็บเนื้อหา (ซ่อนไว้รอ WinBox ดึงไปใช้)
-         ========================================= -->
+    <!-- โกดังเก็บหน้าต่าง -->
     <div id="window-warehouse" style="display: none;">
         
-        <!-- 📦 1. เนื้อหา: คลังเพลง -->
+        <!-- 1. คลังเพลง -->
         <div id="content-library" class="wb-content-padding">
             <div class="library-toolbar">
                 <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหาชื่อเพลง หรือ ศิลปิน..." oninput="filterSongs()">
@@ -42,27 +41,27 @@
             <div id="songList" class="song-grid"></div>
         </div>
 
-        <!-- 📦 2. เนื้อหา: เครื่องเล่น YouTube -->
+        <!-- 2. วิดีโอ -->
         <div id="content-player" style="width: 100%; height: 100%; background: #000;">
             <div id="youtubePlayer" style="width: 100%; height: 100%;"></div>
         </div>
 
-        <!-- 📦 3. เนื้อหา: เนื้อเพลง -->
+        <!-- 3. เนื้อเพลง (ตอนนี้มีแค่กล่องเนื้อเพลงคลีนๆ) -->
         <div id="content-lyrics" class="wb-content-padding">
-            <div class="button-group" id="lyricControlBtnGroup">
-                <button class="btn-secondary" onclick="prevLyric()">⏮ ย้อน</button>
-                <button class="btn-primary" onclick="nextLyric()">⏭ ถัดไป</button>
-            </div>
             <div id="lyricsContainer" class="lyrics-container"></div>
-            
-            <div class="timestamp-editor-container" id="timestampEditorSection" style="display: none;">
-                <h4 style="margin-top:0;">⏱ ตั้งเวลา (Admin)</h4>
-                <div id="timestampList" class="timestamp-list"></div>
-                <button id="btnResetSync" class="btn-secondary" onclick="resetSync()" style="margin-top: 15px; width: 100%;">🔄 ล้างเวลา</button>
-            </div>
         </div>
 
-        <!-- 📦 4. เนื้อหา: ตั้งค่าแอป -->
+        <!-- 🔴 4. หน้าต่าง Admin: เครื่องมือซิงค์ & แก้ไขเนื้อเพลง -->
+        <div id="content-admin-sync" class="wb-content-padding">
+            <div class="button-group" id="lyricControlBtnGroup" style="margin-bottom: 20px;">
+                <button class="btn-secondary" onclick="prevLyric()">⏮ ย้อน (ลบเวลา)</button>
+                <button class="btn-primary" onclick="nextLyric()" style="background: #ffcc00; color: #000;">⏭ ถัดไป (จับจังหวะ)</button>
+            </div>
+            <div id="timestampList" class="timestamp-list"></div>
+            <button id="btnResetSync" class="btn-secondary" onclick="resetSync()" style="margin-top: 15px; width: 100%;">🔄 ล้างเวลาซิงค์เริ่มใหม่</button>
+        </div>
+
+        <!-- 5. ตั้งค่า -->
         <div id="content-settings" class="wb-content-padding">
             <h3 style="margin-top:0;">✨ เลือกสีออร่า</h3>
             <div class="theme-list">
@@ -77,7 +76,7 @@
             </div>
         </div>
 
-        <!-- 📦 5. เนื้อหา: เพิ่ม/แก้ไขเพลง (Admin) -->
+        <!-- 6. เพิ่ม/แก้ไขเพลง -->
         <div id="content-add" class="wb-content-padding">
             <label>ชื่อเพลง:</label>
             <input type="text" id="inputTitle" placeholder="เช่น ソワレ (Soirée)">
