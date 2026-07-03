@@ -372,4 +372,22 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 }
 #dynamic-bg.active {
     opacity: 1;
+
+    /* =========================================
+   ตกแต่งเฉพาะหน้าต่าง PiP
+   ========================================= */
+/* ซ่อนแถบ Scrollbar แต่ยังเลื่อนเนื้อเพลงได้ปกติ (เพื่อความสวยงามในหน้าต่างเล็ก) */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent; 
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2); 
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4); 
+}
 }
