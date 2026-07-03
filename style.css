@@ -32,7 +32,17 @@ header {
 .btn-logout { color: #ff453a; }
 .btn-auth:hover { opacity: 0.7; }
 
-.container { padding: 12px 20px; max-width: 650px; margin: auto; flex-grow: 1; width: 100%; box-sizing: border-box; }
+.container { 
+    padding: 12px 20px; 
+    max-width: 650px; 
+    margin: auto; 
+    flex-grow: 1; 
+    width: 100%; 
+    box-sizing: border-box; 
+    /* เพิ่ม 2 บรรทัดนี้เพื่อแก้บั๊กจอดำบน iPad/iOS */
+    position: relative; 
+    z-index: 1; 
+}
 
 button { 
     background: #0a84ff; color: white; border: none; 
