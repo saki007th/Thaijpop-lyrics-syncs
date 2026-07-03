@@ -19,6 +19,9 @@
         <div class="header-left"></div>
         <div id="headerTitle" class="header-title">คลังเพลงของฉัน</div>
         <div class="header-right">
+            <!-- 🔴 เพิ่มปุ่ม PiP ตรงนี้ (สมมติว่ากล่องเนื้อเพลงของคุณใช้ id="lyricsContainer") -->
+            <button class="btn-auth" onclick="togglePiPMode('lyricsContainer')" title="เปิดหน้าต่างเนื้อเพลงลอย">🪟 PiP</button>
+            
             <button class="btn-auth" onclick="showView('view-settings')">⚙️</button>
             <button id="btnHeaderLogin" class="btn-auth btn-login" onclick="loginWithGoogle()">เข้าสู่ระบบ</button>
             <button id="btnHeaderLogout" class="btn-auth btn-logout" style="display:none;" onclick="logout()">ออกจากระบบ</button>
@@ -132,7 +135,7 @@
             <button class="btn-secondary" onclick="showView('view-list')" style="margin-top: 15px;">🏠 กลับคลังเพลง</button>
         </div>
     </div>
-
+    <script src="pip.js"></script>
     <script type="module" src="app.js"></script>
 </body>
 </html>
