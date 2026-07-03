@@ -162,3 +162,42 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 .ts-dropdown-menu.show { display: flex; flex-direction: column; gap: 10px; }
 .ts-dropdown-item { display: flex; align-items: center; gap: 10px; font-size: 0.9em; color: #f5f5f7; cursor: pointer; }
 .ts-dropdown-item input { width: 16px; height: 16px; margin: 0; cursor: pointer; }
+
+/* =========================================
+   แก้ไขปุ่มหน้าต่าง (สไตล์ Mac OS)
+   ========================================= */
+.wb-header .wb-control { 
+    filter: none !important; /* 🔴 ล้างคำสั่งทำสีเพี้ยนทิ้งไป */
+    display: flex;
+    align-items: center;
+    padding-right: 10px; /* ขยับออกจากขอบขวาให้ดูพอดี */
+    gap: 8px; /* ระยะห่างระหว่างปุ่ม */
+}
+
+/* ปรับทรงให้เป็นวงกลมสมบูรณ์ และย่อขนาดไอคอนข้างใน */
+.wb-header .wb-min, 
+.wb-header .wb-max, 
+.wb-header .wb-close {
+    width: 14px !important;
+    height: 14px !important;
+    border-radius: 50% !important;
+    margin: 0 !important; 
+    background-size: 8px !important; /* ขนาดของไอคอนกากบาท/สี่เหลี่ยม */
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    transition: transform 0.2s ease, filter 0.2s;
+    cursor: pointer;
+}
+
+/* ใส่สีแดง เหลือง เขียว สไตล์ Apple */
+.wb-header .wb-min { background-color: #ffcc00 !important; }
+.wb-header .wb-max { background-color: #34c759 !important; }
+.wb-header .wb-close { background-color: #ff3b30 !important; }
+
+/* ลูกเล่นเวลาเอาเมาส์ชี้ ให้ปุ่มขยายขึ้นนิดนึงและสว่างขึ้น */
+.wb-header .wb-min:hover, 
+.wb-header .wb-max:hover, 
+.wb-header .wb-close:hover {
+    transform: scale(1.2);
+    filter: brightness(1.2);
+}
