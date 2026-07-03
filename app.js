@@ -201,6 +201,11 @@ window.showView = function(viewId) {
         headerTitle.innerText = 'คลังเพลงของฉัน';
         if(mainContainer) mainContainer.classList.remove('wide-mode'); 
         document.getElementById('btnAddSong').style.display = window.isAdmin ? 'block' : 'none';
+
+        // 🔴 แทรกโค้ดชุดนี้ลงไป (ปิด Dynamic Background เมื่อย้อนกลับหน้าแรก)
+        const bgEl = document.getElementById('dynamic-bg');
+        if (bgEl) bgEl.classList.remove('active');
+        
         const searchInput = document.getElementById('searchInput');
         if(searchInput) searchInput.value = '';
         window.currentFilter = 'All'; 
@@ -469,6 +474,12 @@ window.playSong = function(id) {
     window.showView('view-player');
 
     const videoId = window.extractYouTubeID(song.audioPath);
+
+    const bgEl = document.getElementById('dynamic-bg');
+    if (bgEl && videoId) {
+        bgEl.style.backgroundImage = `url('https://img.youtube.com/vi/${videoId}/hqdefault.jpg')`;
+        bgEl.classList.add('active');
+    }
     
     if (window.ytPlayer) {
         if (typeof window.ytPlayer.loadVideoById === 'function') window.ytPlayer.loadVideoById(videoId);
