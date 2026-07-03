@@ -393,22 +393,30 @@ textarea { height: 160px; resize: vertical; line-height: 1.5; }
 }
 
 /* =========================================
-   แก้ไขโหมดแนวตั้งบน Desktop (ป้องกันวิดีโอดันเนื้อเพลงตกจอ)
+   แก้ไขโหมดแนวตั้งบน Desktop (ปรับสมดุลใหม่ สวยงามเต็มตา)
    ========================================= */
 @media (min-width: 1024px) {
-    /* 1. บีบขนาดกล่องวิดีโอไม่ให้ขยายความกว้างเต็มจอคอม */
+    /* 1. วิดีโอขนาดกำลังดี (ไซส์ประมาณจอ iPad) ไม่เล็กจิ๋ว และมีเงาให้ดูลอยเด่น */
     .layout-vertical .youtube-container {
-        max-width: 550px !important; /* จำกัดความกว้าง เพื่อหยุดการขยายความสูง */
-        margin: 0 auto 20px auto !important; /* จัดวิดีโอให้อยู่กึ่งกลาง */
-        width: 100%;
-        border-radius: 16px; /* แถม: ทำมุมมนให้วิดีโอดูเข้ากับแอป */
-        overflow: hidden;
+        max-width: 768px !important; 
+        margin: 0 auto 24px auto !important;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.5); 
     }
     
-    /* 2. บังคับให้กล่องเนื้อเพลงมีพื้นที่แสดงผลเสมอ */
+    /* 2. กล่องเนื้อเพลงกว้างขึ้นเพื่อฐานที่มั่นคง และมีความสูงพอดีจอ */
     .layout-vertical .lyrics-wrapper {
-        flex-grow: 1;
-        min-height: 40vh !important; /* จองพื้นที่ไว้อย่างน้อย 40% ของความสูงหน้าจอ */
-        overflow-y: auto; /* ถ้าเนื้อเพลงยาว ให้สามารถสกอร์ลเลื่อนในกล่องได้ */
+        max-width: 850px !important; 
+        margin: 0 auto !important;
+        height: 46vh !important; 
+    }
+    
+    /* 3. ขยายขนาดอักษรเนื้อเพลงให้ใหญ่ขึ้นสมกับจอ Desktop (อ่านง่ายขึ้น) */
+    .layout-vertical .lyric-line {
+        font-size: 1.25em;
+        padding: 8px 20px;
+    }
+    .layout-vertical .lyric-line.active {
+        font-size: 1.8em !important;
+        margin: 35px 0;
     }
 }
