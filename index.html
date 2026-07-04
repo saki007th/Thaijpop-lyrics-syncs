@@ -26,6 +26,12 @@
                 <div class="icon-box" style="background: linear-gradient(135deg, #007aff, #5ac8fa);">🏠</div>
                 <span>คลังเพลง</span>
             </button>
+             <!-- 1. คลังศิลปิน -->
+            <button class="ipad-icon-btn" onclick="wm.openArtists()" title="ศิลปิน">
+                <div class="icon-box" style="background: linear-gradient(135deg, #ff9500, #ffcc00);">🎤</div>
+                <span>ศิลปิน</span>
+            </button>
+            
             <!-- 1.2. เนื้อเพลง -->
             <button class="ipad-icon-btn" onclick="openActiveLyrics()" title="เนื้อเพลง">
                 <div class="icon-box" style="background: linear-gradient(135deg, #ff2a85, #ff7a9e);">📝</div>
@@ -68,14 +74,28 @@
     <!-- โกดังเก็บหน้าต่าง -->
     <div id="window-warehouse" style="display: none;">
         
-        <!-- 1. คลังเพลง -->
+        <!-- 📦 1. เนื้อหา: คลังเพลง (หน้าต่างนี้จะสะอาดขึ้นแล้ว!) -->
         <div id="content-library" class="wb-content-padding">
-            <div class="library-toolbar">
-                <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหาชื่อเพลง หรือ ศิลปิน..." oninput="filterSongs()">
-                <button id="btnAddSong" class="btn-primary" onclick="openAddView()" style="display: none;">✨ เพิ่มเพลง</button>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" id="searchInput" placeholder="🔍 ค้นหาชื่อเพลง หรือ ศิลปิน..." oninput="filterSongs()" style="flex: 1;">
+                <button class="btn-primary" onclick="wm.openAdd('✨ เพิ่มเพลง')">✨ เพิ่มเพลง</button>
             </div>
-            <div id="artistChips" class="artist-chips"></div>
-            <div id="songList" class="song-grid"></div>
+            
+            <!-- โค้ดแท็กศิลปินตรงนี้ถูกย้ายออกไปแล้ว -->
+            
+            <div id="songGrid" class="song-grid"></div>
+        </div>
+
+        <!-- 🔴 สร้างหน้าต่างใหม่: รายชื่อศิลปิน -->
+        <div id="content-artists" class="wb-content-padding">
+            <h3 style="margin-top: 0; margin-bottom: 15px;">🎤 รายชื่อศิลปินทั้งหมด</h3>
+            <!-- วางโค้ดแท็กศิลปินของคุณตรงนี้ (ตัวอย่างด้านล่าง) -->
+            <div id="artistChips" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <button class="chip active" onclick="filterByArtist('All', this)">ทั้งหมด</button>
+                <button class="chip" onclick="filterByArtist('Tokino Sora', this)">Tokino Sora</button>
+                <button class="chip" onclick="filterByArtist('Hoshimachi Suisei', this)">Hoshimachi Suisei</button>
+                <!-- ใส่ชื่อศิลปินอื่นๆ ของคุณต่อให้ครบครับ -->
+            </div>
         </div>
 
         <!-- 2. วิดีโอ -->
