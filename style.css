@@ -40,26 +40,50 @@ body {
 #dynamic-bg.active { opacity: 1; }
 
 /* =========================================
-   แถบ Dock ด้านบน (OS Taskbar)
+   แถบ Dock ด้านบน (สไตล์ Floating Pill)
    ========================================= */
-.os-dock {
-    position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
-    background: rgba(20, 20, 25, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px;
-    padding: 10px 20px; display: flex; gap: 20px; align-items: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 9999;
+.floating-pill-dock {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(20, 20, 25, 0.6); 
+    backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.15); 
+    border-radius: 50px; /* ทำให้หัวมนเป็นแคปซูล */
+    padding: 8px 12px; display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 9999;
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); /* アニメーションยืดหดนุ่มนวล */
 }
-.dock-title { font-weight: bold; color: #fff; font-size: 1.1em; }
-.dock-buttons { display: flex; gap: 8px; }
-.dock-btn { 
-    background: rgba(255, 255, 255, 0.1); border: none; color: white;
-    padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600;
+
+/* 🔴 ลูกเล่น Live Activity */
+.live-activity {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 14px 4px 8px; border-radius: 40px;
+    background: rgba(10, 132, 255, 0.15); 
+    border: 1px solid rgba(10, 132, 255, 0.3);
+    cursor: pointer; transition: all 0.4s ease;
+    max-width: 250px; overflow: hidden;
+}
+.live-activity:hover { background: rgba(10, 132, 255, 0.25); transform: scale(1.02); }
+.live-activity.hidden { max-width: 0; padding: 0; margin: 0; opacity: 0; border: none; pointer-events: none; }
+
+.live-icon { font-size: 1.2em; animation: pulse 2s infinite; }
+@keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.15);} 100% {transform: scale(1);} }
+
+.live-info { display: flex; flex-direction: column; line-height: 1.2; white-space: nowrap; }
+.live-title { font-size: 0.85em; font-weight: bold; color: #fff; text-overflow: ellipsis; overflow: hidden; width: 100%; max-width: 150px; }
+.live-artist { font-size: 0.7em; color: #0a84ff; text-overflow: ellipsis; overflow: hidden; width: 100%; max-width: 150px; }
+
+.dock-divider { width: 1px; height: 24px; background: rgba(255, 255, 255, 0.2); transition: all 0.3s; }
+.dock-divider.hidden { width: 0; margin: 0; opacity: 0; }
+
+/* ปุ่มเมนูแบบไอคอน */
+.dock-buttons { display: flex; gap: 4px; }
+.pill-btn {
+    background: transparent; border: none; color: white;
+    font-size: 1.3em; width: 40px; height: 40px; border-radius: 50%;
+    cursor: pointer; display: flex; justify-content: center; align-items: center;
     transition: all 0.2s;
 }
-.dock-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
-.btn-login { color: #0a84ff; }
-.btn-logout { color: #ff3b30; }
-
+.pill-btn:hover { background: rgba(255, 255, 255, 0.1); transform: scale(1.15); }
 /* =========================================
    หน้าต่าง WinBox
    ========================================= */
