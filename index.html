@@ -16,20 +16,25 @@
         <div>กำลังโหลดข้อมูลคลังเพลง...</div>
     </div>
 
-    <!-- แถบ Dock -->
-    <nav class="os-dock">
-        <div class="dock-title">🎵 My Music Workspace</div>
-        <div class="dock-buttons">
-            <button class="dock-btn" onclick="wm.openLibrary()">🏠 คลังเพลง</button>
-            <button class="dock-btn" onclick="wm.openSettings()">⚙️ ตั้งค่า</button>
-            <button class="dock-btn" onclick="togglePiPMode()" style="color: #00d2ff;">🪟 PiP (หน้าต่างลอย)</button>
-            <!-- 🔴 เพิ่มปุ่มเครื่องมือ Admin ใน Dock -->
-            <button id="btnDockAdminSync" class="dock-btn" style="display:none; color: #ffcc00;" onclick="if(window.currentSongId) wm.openAdminSync(); else alert('กรุณากดเล่นเพลงที่ต้องการซิงค์ก่อนครับ');">⏱ ซิงค์ & จัดการเนื้อ</button>
-            
-            <button id="btnHeaderLogin" class="dock-btn btn-login" onclick="loginWithGoogle()">เข้าสู่ระบบ</button>
-            <button id="btnHeaderLogout" class="dock-btn btn-logout" style="display:none;" onclick="logout()">ออกจากระบบ</button>
+    <!-- =========================================
+         Draggable Floating Dock (ปุ่มเมนูลอยลากได้)
+         ========================================= -->
+    <div id="draggable-dock" class="floating-dock">
+        <!-- 🎵 ปุ่มหลักสำหรับจับลาก -->
+        <div class="dock-handle" id="dock-handle" title="ลากเพื่อย้ายตำแหน่ง">
+            🎵
         </div>
-    </nav>
+        
+        <!-- 🛠️ เมนูย่อยที่จะโผล่มาตอนเอาเมาส์ชี้ -->
+        <div class="dock-menu-items">
+            <button class="dock-icon-btn" onclick="wm.openLibrary()" title="คลังเพลง">🏠</button>
+            <button class="dock-icon-btn" onclick="wm.openSettings()" title="ตั้งค่า">⚙️</button>
+            <button class="dock-icon-btn" onclick="togglePiPMode()" style="color: #00d2ff;" title="PiP (หน้าต่างลอย)">🪟</button>
+            <button id="btnDockAdminSync" class="dock-icon-btn" style="display:none; color: #ffcc00;" onclick="if(window.currentSongId) wm.openAdminSync(); else alert('กรุณากดเล่นเพลงที่ต้องการซิงค์ก่อนครับ');" title="ซิงค์ & จัดการเนื้อ">⏱</button>
+            <button id="btnHeaderLogin" class="dock-icon-btn btn-login" onclick="loginWithGoogle()" title="เข้าสู่ระบบ">👤</button>
+            <button id="btnHeaderLogout" class="dock-icon-btn btn-logout" style="display:none; color: #ff3b30;" onclick="logout()" title="ออกจากระบบ">🚪</button>
+        </div>
+    </div>
 
     <!-- โกดังเก็บหน้าต่าง -->
     <div id="window-warehouse" style="display: none;">
