@@ -523,3 +523,56 @@ window.onPlayerStateChange = function(event) {
         if (idx !== -1 && idx + 1 < window.songs.length) window.playSong(window.songs[idx + 1].id);
     }
 };
+
+// ==========================================
+// ⚙️ ระบบ Custom Theme & Personalization
+// ==========================================
+window.setAccentColor = function(color) {
+    document.documentElement.style.setProperty('--accent-color', color);
+    localStorage.setItem('ws_accent', color);
+}
+
+window.setWindowStyle = function() {
+    const op = document.getElementById('sliderOpacity').value;
+    const blur = document.getElementById('sliderBlur').value;
+    const opacityVal = op / 100;
+    
+    document.documentElement.style.setProperty('--window-opacity', opacityVal);
+    document.documentElement.style.setProperty('--window-blur', blur + 'px');
+    
+    localStorage.setItem('ws_opacity', opacityVal);
+    localStorage.setItem('ws_blur', blur);
+}
+
+window.setLyricFontSize = function(size) {
+    document.documentElement.style.setProperty('--lyric-font-size', size + 'em');
+    localStorage.setItem('ws_fontsize', size);
+}
+
+// โหลดค่า Custom ทั้งหมดตอนเปิดแอป
+window.loadCustomSettings = function() {
+    const acc = localStorage.getItem('ws_accent');
+    const op = localStorage.getItem('ws_opacity');
+    const bl = localStorage.getItem('ws_blur');
+    const fs = localStorage.getItem('ws_fontsize');
+
+    if(acc) setAccentColor(acc);
+    if(op && bl) {
+        document.documentElement.style.setProperty('--window-opacity', op);
+        document.documentElement.style.setProperty('--window-blur', bl + 'px');
+        const slOp = document.getElementById('sliderOpacity');
+        const slBl = document.getElementById('sliderBlur');
+        if(slOp) slOp.value = Math.round(op * 100);
+        if(slBl) slBl.value = bl;
+    }
+    if(fs) {
+        setLyricFontSize(fs);
+        const slFs = document.getElementById('sliderFontSize');
+        if(slFs) slFs.value = fs;
+    }
+}
+
+// สั่งให้โหลดค่าทันที
+document.addEventListener('DOMContentLoaded', () => {
+    window.loadCustomSettings();
+});
