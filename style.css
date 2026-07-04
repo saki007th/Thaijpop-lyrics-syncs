@@ -30,15 +30,35 @@ body {
 }
 
 /* 2. พื้นหลังไดนามิกเบลอปกเพลง (ซ้อนทับวอลเปเปอร์อีกทีเวลาเล่นเพลง) */
-#dynamic-bg {
-    position: fixed; top: -5%; left: -5%; width: 110vw; height: 110vh;
-    background-size: cover; background-position: center;
-    /* ลดความมืดลงหน่อย เพื่อให้เห็นวอลเปเปอร์รำไรเวลาเพลงเล่น */
-    filter: blur(45px) brightness(0.35); 
-    z-index: -10;
-    transition: all 1s ease; opacity: 0;
+/* =========================================
+   ระบบพื้นหลังแบบ Dynamic (อัปเกรดแสงเคลื่อนไหว)
+   ========================================= */
+/* สร้างจังหวะการขยับและซูมช้าๆ (1 รอบใช้เวลา 40 วินาที) */
+@keyframes ambientMotion {
+    0% { transform: scale(1.1) translate(0, 0); }
+    33% { transform: scale(1.2) translate(-2%, -2%); }
+    66% { transform: scale(1.15) translate(2%, 1%); }
+    100% { transform: scale(1.1) translate(0, 0); }
 }
-#dynamic-bg.active { opacity: 1; }
+
+#dynamic-bg {
+    /* ขยายขนาดให้ใหญ่กว่าจอ 20% เพื่อไม่ให้เห็นขอบเวลาภาพขยับ */
+    position: fixed; top: -10%; left: -10%; width: 120vw; height: 120vh;
+    background-size: cover; background-position: center;
+    
+    /* ปรับความเบลอให้ฟุ้งละมุน และดรอปแสงลงไม่ให้กวนสายตา */
+    filter: blur(50px) brightness(0.4) saturate(1.2); 
+    z-index: -10;
+    
+    /* อนิเมชันเฟดภาพตอนเปลี่ยนเพลง */
+    opacity: 0; transition: opacity 1.5s ease-in-out;
+    
+    /* เรียกใช้อนิเมชันเคลื่อนไหวตลอดเวลา */
+    animation: ambientMotion 40s infinite ease-in-out;
+}
+#dynamic-bg.active { 
+    opacity: 1; 
+}
 
 /* =========================================
    iPad OS Style Dock
