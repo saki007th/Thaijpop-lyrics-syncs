@@ -22,6 +22,7 @@
         <div class="dock-buttons">
             <button class="dock-btn" onclick="wm.openLibrary()">🏠 คลังเพลง</button>
             <button class="dock-btn" onclick="wm.openSettings()">⚙️ ตั้งค่า</button>
+            <button class="dock-btn" onclick="togglePiPMode()" style="color: #00d2ff;">🪟 PiP (หน้าต่างลอย)</button>
             <!-- 🔴 เพิ่มปุ่มเครื่องมือ Admin ใน Dock -->
             <button id="btnDockAdminSync" class="dock-btn" style="display:none; color: #ffcc00;" onclick="if(window.currentSongId) wm.openAdminSync(); else alert('กรุณากดเล่นเพลงที่ต้องการซิงค์ก่อนครับ');">⏱ ซิงค์ & จัดการเนื้อ</button>
             
