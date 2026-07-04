@@ -26,7 +26,7 @@ window.syncInterval = null; window.isLoggedIn = false; window.isAdmin = false;
 window.isYTApiReady = false; window.currentFilter = 'All'; 
 
 // ==========================================
-// 🪟 Window Manager(เพิ่มระบบบันทึกตำแหน่งและขนาด)
+// 🪟 Window Manager (เพิ่มระบบบันทึกตำแหน่งและขนาด)
 // ==========================================
 window.wm = {
     libWin: null, playerWin: null, lyricsWin: null, settingsWin: null, addWin: null, adminSyncWin: null, artistWin: null,
@@ -68,12 +68,29 @@ window.wm = {
     },
 
     openLibrary: function() {
+        // 🔴 1. สั่งเปิดหน้าต่างศิลปินขึ้นมาพร้อมกันเสมอ
+        if (!this.artistWin) {
+            this.openArtists();
+        } else {
+            this.artistWin.focus(); // ถ้าเปิดทิ้งไว้อยู่แล้ว ให้เด้งขึ้นมาด้านหน้า
+        }
+
+        // 🏠 2. โค้ดเปิดคลังเพลง
         if (this.libWin) { this.libWin.focus(); return; }
         this.libWin = new WinBox("🏠 คลังเพลงของฉัน", this.applyMemory('library', {
             mount: document.getElementById("content-library"), width: "80%", height: "80%", x: "center", y: "center", class: ["wb-dark"],
             onclose: () => { this.libWin = null; }
         }));
         window.renderSongList();
+    },
+    openArtists: function() {
+        // 🎤 3. ฟังก์ชันเปิดหน้าต่างศิลปินใหม่
+        if (this.artistWin) { this.artistWin.focus(); return; }
+        this.artistWin = new WinBox("🎤 ศิลปิน", this.applyMemory('artists', {
+            mount: document.getElementById("content-artists"), 
+            width: "500px", height: "400px", x: "center", y: "center", class: ["wb-dark"],
+            onclose: () => { this.artistWin = null; }
+        }));
     },
     openSettings: function() {
         if (this.settingsWin) { this.settingsWin.focus(); return; }
@@ -249,7 +266,24 @@ window.deleteSong = async function(id) {
     if(confirm('ต้องการลบเพลงนี้ใช่หรือไม่?')) { try { await deleteDoc(doc(db, "songs", id)); await fetchSongs(); if(window.wm.libWin) window.renderSongList(); } catch(e) { console.error(e); } }
 }
 
-window.filterByArtist = function(artistName) { window.currentFilter = artistName; window.renderSongList(document.getElementById('searchInput').value.toLowerCase(), artistName); }
+// 🔴 อัปเกรดฟังก์ชันกรองศิลปิน (สลับหน้าต่างได้ทันที)
+window.filterByArtist = function(artist, btnElement) {
+    // 1. จัดการไฮไลต์สีปุ่ม
+    const chips = document.querySelectorAll('#artistChips .chip');
+    if (chips.length > 0) {
+        chips.forEach(c => c.classList.remove('active'));
+        if (btnElement) btnElement.classList.add('active');
+    }
+
+    // 2. กรองเพลง
+    window.currentFilter = artist;
+    const searchVal = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase() : '';
+    window.renderSongList(searchVal, artist);
+
+    // 3. โฟกัสหน้าต่างคลังเพลงให้เด้งขึ้นมาด้านหน้า
+    window.wm.openLibrary();
+}
+
 window.filterSongs = function() { window.renderSongList(document.getElementById('searchInput').value.toLowerCase(), window.currentFilter); }
 
 window.renderSongList = function(query = '', artistFilter = 'All') {
@@ -260,7 +294,8 @@ window.renderSongList = function(query = '', artistFilter = 'All') {
         let artistSet = new Set();
         window.songs.forEach(s => window.getSingersList(s.artist).forEach(n => artistSet.add(n)));
         const artists = ['All', ...Array.from(artistSet)];
-        chipContainer.innerHTML = artists.map(a => `<button class="chip ${artistFilter === a ? 'active' : ''}" onclick="filterByArtist('${a}')">${a === 'All' ? 'ทั้งหมด' : a}</button>`).join('');
+        // 🔴 ส่งค่า this ไปใน onclick ด้วยเพื่อให้ปุ่มเปลี่ยนสีตอนกดได้ถูกต้อง
+        chipContainer.innerHTML = artists.map(a => `<button class="chip ${artistFilter === a ? 'active' : ''}" onclick="filterByArtist('${a}', this)">${a === 'All' ? 'ทั้งหมด' : a}</button>`).join('');
     }
 
     const filtered = window.songs.filter(song => {
@@ -603,7 +638,8 @@ window.addEventListener('resize', () => {
         { id: 'player', ref: window.wm.playerWin },
         { id: 'lyrics', ref: window.wm.lyricsWin },
         { id: 'addedit', ref: window.wm.addWin },
-        { id: 'adminsync', ref: window.wm.adminSyncWin }
+        { id: 'adminsync', ref: window.wm.adminSyncWin },
+        { id: 'artists', ref: window.wm.artistWin } // 🔴 เพิ่มหน้าต่างศิลปินเข้ามาในระบบตรวจจับด้วย
     ];
 
     wins.forEach(winObj => {
