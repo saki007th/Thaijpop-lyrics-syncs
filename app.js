@@ -29,7 +29,7 @@ window.isYTApiReady = false; window.currentFilter = 'All';
 // 🪟 Window Manager(เพิ่มระบบบันทึกตำแหน่งและขนาด)
 // ==========================================
 window.wm = {
-    libWin: null, playerWin: null, lyricsWin: null, settingsWin: null, addWin: null, adminSyncWin: null,
+    libWin: null, playerWin: null, lyricsWin: null, settingsWin: null, addWin: null, adminSyncWin: null, artistWin: null,
 
     // 🧠 ระบบจำค่าและป้องกันหน้าต่างหาย
     applyMemory: function(winId, options) {
