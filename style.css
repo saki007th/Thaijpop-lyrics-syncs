@@ -41,62 +41,62 @@ body {
 #dynamic-bg.active { opacity: 1; }
 
 /* =========================================
-   Floating Action Menu (ปุ่มลากได้)
+   iPad OS Style Dock
    ========================================= */
-.floating-dock {
+.ipad-dock-container {
     position: fixed;
-    bottom: 30px; right: 30px; /* ตำแหน่งเกิดเริ่มต้น (มุมขวาล่าง) */
+    bottom: 25px; /* ลอยอยู่ขอบล่างของจอ */
+    left: 0; width: 100vw;
+    display: flex; justify-content: center;
     z-index: 99999;
-    display: flex;
-    flex-direction: column-reverse; /* ให้เมนูขยายพุ่งขึ้นด้านบน */
-    align-items: center;
-    gap: 12px;
+    pointer-events: none; /* ปล่อยให้คลิกทะลุพื้นที่ว่างซ้ายขวาได้ */
 }
 
-/* ปุ่มกลมๆ ตัวหลัก */
-.dock-handle {
-    width: 55px; height: 55px;
-    background: var(--accent-color, #0a84ff);
-    border-radius: 50%;
+.ipad-dock {
+    pointer-events: auto; /* ทำให้ตัว Dock กดได้ */
+    display: flex; gap: 15px; align-items: center;
+    background: rgba(255, 255, 255, 0.15); /* กระจกใสสว่างๆ */
+    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+    padding: 12px 18px;
+    border-radius: 35px; /* ขอบมนโค้งแบบ Apple */
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.ipad-icon-btn {
+    background: transparent; border: none; color: white;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    cursor: pointer; padding: 0;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* เอฟเฟกต์เวลาเอาเมาส์ชี้ (เด้งขึ้นและขยายตัวนิดๆ) */
+.ipad-icon-btn:hover {
+    transform: translateY(-10px) scale(1.15);
+}
+
+/* กล่องไอคอนแบบ App หน้าจอโฮม (Squircle) */
+.icon-box {
+    width: 54px; height: 54px;
+    border-radius: 14px; /* ความโค้งแบบไอคอนแอป */
     display: flex; justify-content: center; align-items: center;
-    font-size: 1.8em; cursor: grab;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    border: 2px solid rgba(255,255,255,0.2);
-    transition: transform 0.2s;
-    user-select: none;
-}
-.dock-handle:active { cursor: grabbing; transform: scale(0.95); }
-
-/* กล่องเก็บปุ่มเมนูย่อย */
-.dock-menu-items {
-    display: flex; flex-direction: column; gap: 10px;
-    background: rgba(20, 20, 25, 0.85);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    padding: 12px; border-radius: 30px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    opacity: 0; pointer-events: none;
-    transform: translateY(20px) scale(0.9);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    transform-origin: bottom center;
+    font-size: 1.8em;
+    box-shadow: 0 5px 12px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.2);
 }
 
-/* เอฟเฟกต์โชว์เมนูย่อย เมื่อเอาเมาส์ชี้ */
-.floating-dock:hover .dock-menu-items {
-    opacity: 1; pointer-events: auto;
-    transform: translateY(0) scale(1);
+.ipad-icon-btn span {
+    font-size: 0.75em; font-weight: 500;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    opacity: 0.9;
 }
 
-/* ดีไซน์ไอคอนแต่ละปุ่ม */
-.dock-icon-btn {
-    width: 45px; height: 45px;
-    background: rgba(255,255,255,0.05);
-    border: none; color: white;
-    border-radius: 50%; font-size: 1.3em;
-    cursor: pointer; transition: 0.2s;
-    display: flex; justify-content: center; align-items: center;
+/* เส้นกั้นระหว่างแอปหลัก กับ เมนูล็อกอิน */
+.dock-divider {
+    width: 2px; height: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px; margin: 0 5px;
 }
-.dock-icon-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.15); }
 
 /* =========================================
    หน้าต่าง WinBox
