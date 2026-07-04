@@ -575,4 +575,64 @@ document.addEventListener('DOMContentLoaded', () => {
     window.loadCustomSettings();
 });
 
+// ==========================================
+// 📝 ระบบเรียกดูเนื้อเพลงซ้ำ
+// ==========================================
+window.openActiveLyrics = function() {
+    if (!window.currentSongId) {
+        alert('กรุณาเลือกเปิดเพลงจากคลังเพลงก่อนครับ 🎵');
+        return;
+    }
+    const song = window.songs.find(s => s.id === window.currentSongId);
+    if (song) {
+        window.wm.openLyrics(song.title);
+        // สั่งให้วาดเนื้อเพลงและไฮไลต์ท่อนปัจจุบันใหม่
+        window.renderLyricsToContainer();
+        window.updateLyricDisplay();
+    }
+};
 
+// ==========================================
+// 🔄 ระบบดึงหน้าต่างกลับเข้าจอ (แก้ปัญหาหมุนจอ iPad)
+// ==========================================
+window.addEventListener('resize', () => {
+    // รวมหน้าต่างทั้งหมดที่มีโอกาสถูกเปิดไว้
+    const wins = [
+        { id: 'library', ref: window.wm.libWin },
+        { id: 'settings', ref: window.wm.settingsWin },
+        { id: 'player', ref: window.wm.playerWin },
+        { id: 'lyrics', ref: window.wm.lyricsWin },
+        { id: 'addedit', ref: window.wm.addWin },
+        { id: 'adminsync', ref: window.wm.adminSyncWin }
+    ];
+
+    wins.forEach(winObj => {
+        // เช็คว่าหน้าต่างนั้นเปิดอยู่ไหม
+        if (winObj.ref && winObj.ref.dom) {
+            const rect = winObj.ref.dom.getBoundingClientRect();
+            let newX = rect.left;
+            let newY = rect.top;
+            let needMove = false;
+
+            // ถ้าหน้าต่างหลุดขอบขวา (เกินความกว้างจอ)
+            if (newX + 50 > window.innerWidth) { 
+                newX = Math.max(10, window.innerWidth - rect.width - 20); 
+                needMove = true; 
+            }
+            // ถ้าหน้าต่างหลุดขอบล่าง (เกินความสูงจอ)
+            if (newY + 50 > window.innerHeight) { 
+                newY = Math.max(10, window.innerHeight - rect.height - 100); // เผื่อที่ให้ Dock ด้วย
+                needMove = true; 
+            }
+            // ถ้าหน้าต่างหลุดขอบซ้าย หรือ ขอบบน
+            if (newX < 0) { newX = 20; needMove = true; }
+            if (newY < 0) { newY = 20; needMove = true; }
+
+            // ถ้าหลุดขอบให้สั่งย้ายพิกัดกลับเข้าจอ
+            if (needMove) {
+                winObj.ref.move(newX, newY);
+                window.wm.saveMemory(winObj.id, winObj.ref); // เซฟตำแหน่งใหม่ทับของเดิม
+            }
+        }
+    });
+});
