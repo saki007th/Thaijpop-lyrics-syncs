@@ -26,7 +26,7 @@ window.syncInterval = null; window.isLoggedIn = false; window.isAdmin = false;
 window.isYTApiReady = false; window.currentFilter = 'All'; 
 
 // ==========================================
-// 🪟 Window Manager (เพิ่มระบบบันทึกตำแหน่งและขนาด)
+// 🪟 Window Manager(เพิ่มระบบบันทึกตำแหน่งและขนาด)
 // ==========================================
 window.wm = {
     libWin: null, playerWin: null, lyricsWin: null, settingsWin: null, addWin: null, adminSyncWin: null,
