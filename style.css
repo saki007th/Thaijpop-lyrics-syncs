@@ -1,6 +1,13 @@
 :root {
     --theme-glow: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff);
     --bg-color: #000000;
+    /* ตัวแปรระบบ Custom Theme */
+    --accent-color: #0a84ff;
+    --window-opacity: 0.95;
+    --window-blur: 15px;
+    --lyric-font-size: 1.5em;
+    --window-bg-rgb: 28, 28, 30; /* พื้นหลังสีเทาดำ #1c1c1e */
+    --bg-color: #000000;
 }
 
 body {
@@ -60,7 +67,15 @@ body {
 .winbox {
     border-radius: 12px; overflow: hidden;
     box-shadow: 0 15px 50px rgba(0,0,0,0.6) !important;
-    background: #1c1c1e !important; border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(var(--window-bg-rgb), var(--window-opacity)) !important;
+    backdrop-filter: blur(var(--window-blur)) !important;
+    -webkit-backdrop-filter: blur(var(--window-blur)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.wb-header { 
+    background: rgba(20, 20, 25, var(--window-opacity)) !important; 
+    backdrop-filter: blur(var(--window-blur)) !important;
+    color: white !important; font-weight: bold; 
 }
 .wb-header { background: rgba(30, 30, 35, 0.95) !important; color: white !important; font-weight: bold; }
 .wb-body { background: transparent !important; }
@@ -228,3 +243,34 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
     transform: scale(1.2);
     filter: brightness(1.2);
 }
+
+/* =========================================
+   สไตล์ระบบตั้งค่า Custom Theme
+   ========================================= */
+.color-btn {
+    width: 35px; height: 35px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); 
+    cursor: pointer; transition: 0.2s; padding: 0; outline: none;
+}
+.color-btn:hover { transform: scale(1.15); border-color: #fff; }
+
+.custom-slider {
+    -webkit-appearance: none; width: 100%; height: 6px; background: rgba(255,255,255,0.2);
+    border-radius: 5px; outline: none; padding: 0; margin-bottom: 20px;
+}
+.custom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent-color); cursor: pointer; transition: 0.2s;
+}
+.custom-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+/* เปลี่ยนสีส่วนประกอบต่างๆ ให้วิ่งตามตัวแปร Accent Color */
+.btn-primary { background: var(--accent-color); }
+.btn-primary:hover { filter: brightness(1.2); background: var(--accent-color); }
+input:focus, textarea:focus { border-color: var(--accent-color); }
+.chip.active { background: var(--accent-color); border-color: var(--accent-color); }
+.lyric-line.active .singer-badge { background: var(--accent-color); }
+.ts-row.active-row { border-color: var(--accent-color); background: rgba(255,255,255,0.1); }
+
+/* ผูกขนาดตัวอักษรเนื้อเพลง */
+.lyric-line.active { font-size: var(--lyric-font-size); color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); transform: scale(1.05); margin: 30px 0; }
