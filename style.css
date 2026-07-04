@@ -1,6 +1,12 @@
 :root {
     --theme-glow: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff);
     --bg-color: #000000;
+    --theme-glow: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff);
+    --bg-color: #000000;
+    /* 🔴 ตัวแปรความโปร่งใสและขนาดที่เพิ่มใหม่ */
+    --window-opacity: 0.95;
+    --window-blur: 20px;
+    --lyric-font-size: 1.15em;
 }
 
 body {
@@ -60,9 +66,18 @@ body {
 .winbox {
     border-radius: 12px; overflow: hidden;
     box-shadow: 0 15px 50px rgba(0,0,0,0.6) !important;
-    background: #1c1c1e !important; border: 1px solid rgba(255, 255, 255, 0.1);
+    /* 🔴 เปลี่ยนให้ดึงค่า opacity และ blur จากระบบตั้งค่า */
+    background: rgba(28, 28, 30, var(--window-opacity)) !important;
+    backdrop-filter: blur(var(--window-blur));
+    -webkit-backdrop-filter: blur(var(--window-blur));
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
-.wb-header { background: rgba(30, 30, 35, 0.95) !important; color: white !important; font-weight: bold; }
+.wb-header { 
+    background: rgba(30, 30, 35, var(--window-opacity)) !important; 
+    backdrop-filter: blur(var(--window-blur));
+    -webkit-backdrop-filter: blur(var(--window-blur));
+    color: white !important; font-weight: bold; 
+}
 .wb-body { background: transparent !important; }
 .wb-full { display: none !important; }
 .wb-content-padding { padding: 20px; box-sizing: border-box; height: 100%; overflow-y: auto; }
@@ -158,8 +173,8 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 
 /* เนื้อเพลง */
 .lyrics-container { padding: 20px 10px; text-align: center; }
-.lyric-line { font-size: 1.15em; font-weight: 600; color: rgba(255,255,255,0.3); transition: all 0.3s; margin-bottom: 15px; }
-.lyric-line.active { font-size: 1.5em; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); transform: scale(1.05); margin: 30px 0; }
+.lyric-line { font-size: var(--lyric-font-size); font-weight: 600; color: rgba(255,255,255,0.3); transition: all 0.3s; margin-bottom: 15px; }
+.lyric-line.active { font-size: calc(var(--lyric-font-size) + 0.35em); color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); transform: scale(1.05); margin: 30px 0; }
 .singer-badges { display: flex; gap: 8px; margin-bottom: 8px; justify-content: center; flex-wrap: wrap; }
 .singer-badge { font-size: 0.65em; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; }
 .lyric-line.active .singer-badge { background: #0a84ff; color: #fff; }
