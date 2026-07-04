@@ -70,7 +70,7 @@ window.wm = {
     openLibrary: function() {
         if (this.libWin) { this.libWin.focus(); return; }
         this.libWin = new WinBox("🏠 คลังเพลงของฉัน", this.applyMemory('library', {
-            mount: document.getElementById("content-library"), width: "80%", height: "80%", x: "center", y: "center", top: 70, class: ["wb-dark"],
+            mount: document.getElementById("content-library"), width: "80%", height: "80%", x: "center", y: "center", class: ["wb-dark"],
             onclose: () => { this.libWin = null; }
         }));
         window.renderSongList();
@@ -78,22 +78,20 @@ window.wm = {
     openSettings: function() {
         if (this.settingsWin) { this.settingsWin.focus(); return; }
         this.settingsWin = new WinBox("⚙️ การตั้งค่า", this.applyMemory('settings', {
-            mount: document.getElementById("content-settings"), width: "350px", height: "450px", x: "center", y: "center", top: 70, class: ["wb-dark"],
+            mount: document.getElementById("content-settings"), width: "350px", height: "450px", x: "center", y: "center", class: ["wb-dark"],
             onclose: () => { this.settingsWin = null; }
         }));
     },
     openPlayer: function(title) {
         if (this.playerWin) { this.playerWin.setTitle("🎥 " + title); this.playerWin.focus(); return; }
         this.playerWin = new WinBox("🎥 " + title, this.applyMemory('player', {
-            mount: document.getElementById("content-player"), width: "500px", height: "320px", x: "20px", y: "80px", top: 70, class: ["wb-dark", "no-min"],
+            mount: document.getElementById("content-player"), width: "500px", height: "320px", x: "20px", y: "20px", class: ["wb-dark", "no-min"],
             onclose: () => { 
                 this.playerWin = null;
-                // เมื่อปิดหน้าต่าง ให้ทำลายเครื่องเล่น YouTube ทิ้งไปเลย เพื่อป้องกันเพลงค้าง
                 if (window.ytPlayer && typeof window.ytPlayer.destroy === 'function') {
                     window.ytPlayer.destroy();
                     window.ytPlayer = null;
                 }
-                // สร้างกล่องเปล่าๆ มารอไว้ สำหรับให้เพลงถัดไปสร้างเครื่องเล่นใหม่
                 document.getElementById("content-player").innerHTML = '<div id="youtubePlayer" style="width: 100%; height: 100%;"></div>';
             }
         }));
@@ -101,14 +99,14 @@ window.wm = {
     openLyrics: function(title) {
         if (this.lyricsWin) { this.lyricsWin.setTitle("📝 " + title); this.lyricsWin.focus(); return; }
         this.lyricsWin = new WinBox("📝 " + title, this.applyMemory('lyrics', {
-            mount: document.getElementById("content-lyrics"), width: "500px", height: "80%", x: "right", y: "center", top: 70, class: ["wb-dark"],
+            mount: document.getElementById("content-lyrics"), width: "500px", height: "80%", x: "right", y: "center", class: ["wb-dark"],
             onclose: () => { this.lyricsWin = null; }
         }));
     },
     openAdd: function(title) {
         if (this.addWin) { this.addWin.setTitle(title); this.addWin.focus(); return; }
         this.addWin = new WinBox(title, this.applyMemory('addedit', {
-            mount: document.getElementById("content-add"), width: "450px", height: "80%", x: "center", y: "center", top: 70, class: ["wb-dark"],
+            mount: document.getElementById("content-add"), width: "450px", height: "80%", x: "center", y: "center", class: ["wb-dark"],
             onclose: () => { this.addWin = null; }
         }));
     },
@@ -118,7 +116,7 @@ window.wm = {
         if (this.adminSyncWin) { this.adminSyncWin.setTitle("⏱ ซิงค์: " + song.title); this.adminSyncWin.focus(); return; }
         
         this.adminSyncWin = new WinBox("⏱ ซิงค์: " + song.title, this.applyMemory('adminsync', {
-            mount: document.getElementById("content-admin-sync"), width: "450px", height: "80%", x: "center", y: "center", top: 70, class: ["wb-dark"],
+            mount: document.getElementById("content-admin-sync"), width: "450px", height: "80%", x: "center", y: "center", class: ["wb-dark"],
             onclose: () => { this.adminSyncWin = null; }
         }));
         window.renderTimestampEditor(); 
