@@ -45,8 +45,9 @@ window.wm = {
 
         const originalOnMove = options.onmove;
         options.onmove = function(x, y) {
+            // 🔴 แอบจดไว้ว่าหน้าต่าง ID ไหนกำลังถูกลากอยู่ตอนนี้
+            window.activeDragWin = { id: winId, instance: this };
             if (originalOnMove) originalOnMove.call(this, x, y);
-            window.wm.saveMemory(winId, this);
         };
 
         const originalOnResize = options.onresize;
@@ -568,3 +569,54 @@ window.loadCustomSettings = function() {
 document.addEventListener('DOMContentLoaded', () => {
     window.loadCustomSettings();
 });
+// ==========================================
+// 🧲 ระบบ Snap หน้าต่าง (Aero Snap)
+// ==========================================
+window.activeDragWin = null;
+
+// ล้างค่าเมื่อเริ่มคลิก ป้องกันการเผลอ snap ผิดจังหวะ
+document.addEventListener('mousedown', () => { window.activeDragWin = null; });
+document.addEventListener('touchstart', () => { window.activeDragWin = null; }, {passive: true});
+
+function handleSnap(e) {
+    if (!window.activeDragWin) return;
+    
+    const win = window.activeDragWin.instance;
+    const winId = window.activeDragWin.id;
+    
+    // หาพิกัดเมาส์ (รองรับทั้งการใช้เมาส์และนิ้วสัมผัส)
+    const clientX = e.type.includes('mouse') ? e.clientX : e.changedTouches[0].clientX;
+    const clientY = e.type.includes('mouse') ? e.clientY : e.changedTouches[0].clientY;
+    
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight;
+    const dockHeight = 70; // เว้นที่ให้แถบเมนูด้านบน
+    
+    let snapped = false;
+
+    // ⬅️ ลากชนขอบซ้าย (แบ่งครึ่งจอซ้าย)
+    if (clientX <= 20) {
+        win.resize(screenW / 2, screenH - dockHeight).move(0, dockHeight);
+        snapped = true;
+    } 
+    // ➡️ ลากชนขอบขวา (แบ่งครึ่งจอขวา)
+    else if (clientX >= screenW - 20) {
+        win.resize(screenW / 2, screenH - dockHeight).move(screenW / 2, dockHeight);
+        snapped = true;
+    } 
+    // ⬆️ ลากชนแถบด้านบน (ขยายเต็มจอ)
+    else if (clientY <= dockHeight + 15) { 
+        win.resize(screenW, screenH - dockHeight).move(0, dockHeight);
+        snapped = true;
+    }
+
+    // เซฟพิกัดใหม่ลงหน่วยความจำทันทีที่ Snap
+    if (snapped) {
+        window.wm.saveMemory(winId, win);
+    }
+    
+    window.activeDragWin = null;
+}
+
+document.addEventListener('mouseup', handleSnap);
+document.addEventListener('touchend', handleSnap);
