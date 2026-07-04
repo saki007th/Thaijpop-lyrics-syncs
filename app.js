@@ -45,9 +45,8 @@ window.wm = {
 
         const originalOnMove = options.onmove;
         options.onmove = function(x, y) {
-            // 🔴 แอบจดไว้ว่าหน้าต่าง ID ไหนกำลังถูกลากอยู่ตอนนี้
-            window.activeDragWin = { id: winId, instance: this };
             if (originalOnMove) originalOnMove.call(this, x, y);
+            window.wm.saveMemory(winId, this);
         };
 
         const originalOnResize = options.onresize;
@@ -569,57 +568,3 @@ window.loadCustomSettings = function() {
 document.addEventListener('DOMContentLoaded', () => {
     window.loadCustomSettings();
 });
-
-// ==========================================
-// 🧲 ระบบ Snap หน้าต่าง (อัปเกรดแก้บั๊กการลาก)
-// ==========================================
-window.activeDragWin = null;
-
-// ใช้ capture: true เพื่อดักจับคลิกก่อนที่ WinBox จะขัดจังหวะ
-window.addEventListener('mousedown', () => { window.activeDragWin = null; }, true);
-window.addEventListener('touchstart', () => { window.activeDragWin = null; }, { passive: true, capture: true });
-
-function handleSnap(e) {
-    if (!window.activeDragWin) return;
-    
-    const win = window.activeDragWin.instance;
-    const winId = window.activeDragWin.id;
-    
-    const clientX = e.type.includes('mouse') ? e.clientX : e.changedTouches[0].clientX;
-    const clientY = e.type.includes('mouse') ? e.clientY : e.changedTouches[0].clientY;
-    
-    const screenW = window.innerWidth;
-    const screenH = window.innerHeight;
-    const dockHeight = 70; // ความสูงของแถบเมนู
-    
-    let targetW = null, targetH = null, targetX = null, targetY = null;
-
-    // ⬅️ ชนขอบซ้าย
-    if (clientX <= 20) {
-        targetW = screenW / 2; targetH = screenH - dockHeight; targetX = 0; targetY = dockHeight;
-    } 
-    // ➡️ ชนขอบขวา
-    else if (clientX >= screenW - 20) {
-        targetW = screenW / 2; targetH = screenH - dockHeight; targetX = screenW / 2; targetY = dockHeight;
-    } 
-    // ⬆️ ชนด้านบน (ขยายเต็มจอ)
-    else if (clientY <= dockHeight + 15) { 
-        targetW = screenW; targetH = screenH - dockHeight; targetX = 0; targetY = dockHeight;
-    }
-
-    if (targetW !== null) {
-        // 🔴 ไม้ตาย: สั่งให้รอ 50 มิลลิวินาที ให้ WinBox ทำงานจบก่อน แล้วเราค่อย Snap ยัดเข้าไป!
-        setTimeout(() => {
-            if (win) {
-                win.resize(targetW, targetH).move(targetX, targetY);
-                window.wm.saveMemory(winId, win);
-            }
-        }, 50);
-    }
-    
-    window.activeDragWin = null;
-}
-
-// ใช้ capture: true เพื่อแย่งการสั่งการมาจาก WinBox
-window.addEventListener('mouseup', handleSnap, true);
-window.addEventListener('touchend', handleSnap, true);
