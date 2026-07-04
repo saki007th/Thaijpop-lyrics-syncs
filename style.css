@@ -77,7 +77,6 @@ body {
     backdrop-filter: blur(var(--window-blur)) !important;
     color: white !important; font-weight: bold; 
 }
-.wb-header { background: rgba(30, 30, 35, 0.95) !important; color: white !important; font-weight: bold; }
 .wb-body { background: transparent !important; }
 .wb-full { display: none !important; }
 .wb-content-padding { padding: 20px; box-sizing: border-box; height: 100%; overflow-y: auto; }
