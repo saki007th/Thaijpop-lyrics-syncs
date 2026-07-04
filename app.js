@@ -26,10 +26,10 @@ window.syncInterval = null; window.isLoggedIn = false; window.isAdmin = false;
 window.isYTApiReady = false; window.currentFilter = 'All'; 
 
 // ==========================================
-// 🪟 Window Manager  (เพิ่มระบบบันทึกตำแหน่งและขนาด)
+// 🪟 Window Manager (เพิ่มระบบบันทึกตำแหน่งและขนาด)
 // ==========================================
 window.wm = {
-    libWin: null, playerWin: null, lyricsWin: null, settingsWin: null, addWin: null, adminSyncWin: null, artistWin: null,
+    libWin: null, playerWin: null, lyricsWin: null, settingsWin: null, addWin: null, adminSyncWin: null,
 
     // 🧠 ระบบจำค่าและป้องกันหน้าต่างหาย
     applyMemory: function(winId, options) {
@@ -68,47 +68,32 @@ window.wm = {
     },
 
     openLibrary: function() {
-        // 🔴 1. สั่งเปิดหน้าต่างศิลปินขึ้นมาพร้อมกันเสมอ
-        if (!this.artistWin) {
-            this.openArtists();
-        } else {
-            this.artistWin.focus(); // ถ้าเปิดทิ้งไว้อยู่แล้ว ให้เด้งขึ้นมาด้านหน้า
-        }
-
-        // 🏠 2. โค้ดเปิดคลังเพลง
         if (this.libWin) { this.libWin.focus(); return; }
         this.libWin = new WinBox("🏠 คลังเพลงของฉัน", this.applyMemory('library', {
-            mount: document.getElementById("content-library"), width: "80%", height: "80%", x: "center", y: "center", class: ["wb-dark"],
+            mount: document.getElementById("content-library"), width: "80%", height: "80%", x: "center", y: "center", top: 70, class: ["wb-dark"],
             onclose: () => { this.libWin = null; }
         }));
         window.renderSongList();
     },
-    openArtists: function() {
-        // 🎤 3. ฟังก์ชันเปิดหน้าต่างศิลปินใหม่
-        if (this.artistWin) { this.artistWin.focus(); return; }
-        this.artistWin = new WinBox("🎤 ศิลปิน", this.applyMemory('artists', {
-            mount: document.getElementById("content-artists"), 
-            width: "500px", height: "400px", x: "center", y: "center", class: ["wb-dark"],
-            onclose: () => { this.artistWin = null; }
-        }));
-    },
     openSettings: function() {
         if (this.settingsWin) { this.settingsWin.focus(); return; }
         this.settingsWin = new WinBox("⚙️ การตั้งค่า", this.applyMemory('settings', {
-            mount: document.getElementById("content-settings"), width: "350px", height: "450px", x: "center", y: "center", class: ["wb-dark"],
+            mount: document.getElementById("content-settings"), width: "350px", height: "450px", x: "center", y: "center", top: 70, class: ["wb-dark"],
             onclose: () => { this.settingsWin = null; }
         }));
     },
     openPlayer: function(title) {
         if (this.playerWin) { this.playerWin.setTitle("🎥 " + title); this.playerWin.focus(); return; }
         this.playerWin = new WinBox("🎥 " + title, this.applyMemory('player', {
-            mount: document.getElementById("content-player"), width: "500px", height: "320px", x: "20px", y: "20px", class: ["wb-dark", "no-min"],
+            mount: document.getElementById("content-player"), width: "500px", height: "320px", x: "20px", y: "80px", top: 70, class: ["wb-dark", "no-min"],
             onclose: () => { 
                 this.playerWin = null;
+                // เมื่อปิดหน้าต่าง ให้ทำลายเครื่องเล่น YouTube ทิ้งไปเลย เพื่อป้องกันเพลงค้าง
                 if (window.ytPlayer && typeof window.ytPlayer.destroy === 'function') {
                     window.ytPlayer.destroy();
                     window.ytPlayer = null;
                 }
+                // สร้างกล่องเปล่าๆ มารอไว้ สำหรับให้เพลงถัดไปสร้างเครื่องเล่นใหม่
                 document.getElementById("content-player").innerHTML = '<div id="youtubePlayer" style="width: 100%; height: 100%;"></div>';
             }
         }));
@@ -116,14 +101,14 @@ window.wm = {
     openLyrics: function(title) {
         if (this.lyricsWin) { this.lyricsWin.setTitle("📝 " + title); this.lyricsWin.focus(); return; }
         this.lyricsWin = new WinBox("📝 " + title, this.applyMemory('lyrics', {
-            mount: document.getElementById("content-lyrics"), width: "500px", height: "80%", x: "right", y: "center", class: ["wb-dark"],
+            mount: document.getElementById("content-lyrics"), width: "500px", height: "80%", x: "right", y: "center", top: 70, class: ["wb-dark"],
             onclose: () => { this.lyricsWin = null; }
         }));
     },
     openAdd: function(title) {
         if (this.addWin) { this.addWin.setTitle(title); this.addWin.focus(); return; }
         this.addWin = new WinBox(title, this.applyMemory('addedit', {
-            mount: document.getElementById("content-add"), width: "450px", height: "80%", x: "center", y: "center", class: ["wb-dark"],
+            mount: document.getElementById("content-add"), width: "450px", height: "80%", x: "center", y: "center", top: 70, class: ["wb-dark"],
             onclose: () => { this.addWin = null; }
         }));
     },
@@ -133,7 +118,7 @@ window.wm = {
         if (this.adminSyncWin) { this.adminSyncWin.setTitle("⏱ ซิงค์: " + song.title); this.adminSyncWin.focus(); return; }
         
         this.adminSyncWin = new WinBox("⏱ ซิงค์: " + song.title, this.applyMemory('adminsync', {
-            mount: document.getElementById("content-admin-sync"), width: "450px", height: "80%", x: "center", y: "center", class: ["wb-dark"],
+            mount: document.getElementById("content-admin-sync"), width: "450px", height: "80%", x: "center", y: "center", top: 70, class: ["wb-dark"],
             onclose: () => { this.adminSyncWin = null; }
         }));
         window.renderTimestampEditor(); 
@@ -266,24 +251,7 @@ window.deleteSong = async function(id) {
     if(confirm('ต้องการลบเพลงนี้ใช่หรือไม่?')) { try { await deleteDoc(doc(db, "songs", id)); await fetchSongs(); if(window.wm.libWin) window.renderSongList(); } catch(e) { console.error(e); } }
 }
 
-// 🔴 อัปเกรดฟังก์ชันกรองศิลปิน (สลับหน้าต่างได้ทันที)
-window.filterByArtist = function(artist, btnElement) {
-    // 1. จัดการไฮไลต์สีปุ่ม
-    const chips = document.querySelectorAll('#artistChips .chip');
-    if (chips.length > 0) {
-        chips.forEach(c => c.classList.remove('active'));
-        if (btnElement) btnElement.classList.add('active');
-    }
-
-    // 2. กรองเพลง
-    window.currentFilter = artist;
-    const searchVal = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase() : '';
-    window.renderSongList(searchVal, artist);
-
-    // 3. โฟกัสหน้าต่างคลังเพลงให้เด้งขึ้นมาด้านหน้า
-    window.wm.openLibrary();
-}
-
+window.filterByArtist = function(artistName) { window.currentFilter = artistName; window.renderSongList(document.getElementById('searchInput').value.toLowerCase(), artistName); }
 window.filterSongs = function() { window.renderSongList(document.getElementById('searchInput').value.toLowerCase(), window.currentFilter); }
 
 window.renderSongList = function(query = '', artistFilter = 'All') {
@@ -294,8 +262,7 @@ window.renderSongList = function(query = '', artistFilter = 'All') {
         let artistSet = new Set();
         window.songs.forEach(s => window.getSingersList(s.artist).forEach(n => artistSet.add(n)));
         const artists = ['All', ...Array.from(artistSet)];
-        // 🔴 ส่งค่า this ไปใน onclick ด้วยเพื่อให้ปุ่มเปลี่ยนสีตอนกดได้ถูกต้อง
-        chipContainer.innerHTML = artists.map(a => `<button class="chip ${artistFilter === a ? 'active' : ''}" onclick="filterByArtist('${a}', this)">${a === 'All' ? 'ทั้งหมด' : a}</button>`).join('');
+        chipContainer.innerHTML = artists.map(a => `<button class="chip ${artistFilter === a ? 'active' : ''}" onclick="filterByArtist('${a}')">${a === 'All' ? 'ทั้งหมด' : a}</button>`).join('');
     }
 
     const filtered = window.songs.filter(song => {
@@ -556,119 +523,3 @@ window.onPlayerStateChange = function(event) {
         if (idx !== -1 && idx + 1 < window.songs.length) window.playSong(window.songs[idx + 1].id);
     }
 };
-
-// ==========================================
-// ⚙️ ระบบ Custom Theme & Personalization
-// ==========================================
-window.setAccentColor = function(color) {
-    document.documentElement.style.setProperty('--accent-color', color);
-    localStorage.setItem('ws_accent', color);
-}
-
-window.setWindowStyle = function() {
-    const op = document.getElementById('sliderOpacity').value;
-    const blur = document.getElementById('sliderBlur').value;
-    const opacityVal = op / 100;
-    
-    document.documentElement.style.setProperty('--window-opacity', opacityVal);
-    document.documentElement.style.setProperty('--window-blur', blur + 'px');
-    
-    localStorage.setItem('ws_opacity', opacityVal);
-    localStorage.setItem('ws_blur', blur);
-}
-
-window.setLyricFontSize = function(size) {
-    document.documentElement.style.setProperty('--lyric-font-size', size + 'em');
-    localStorage.setItem('ws_fontsize', size);
-}
-
-// โหลดค่า Custom ทั้งหมดตอนเปิดแอป
-window.loadCustomSettings = function() {
-    const acc = localStorage.getItem('ws_accent');
-    const op = localStorage.getItem('ws_opacity');
-    const bl = localStorage.getItem('ws_blur');
-    const fs = localStorage.getItem('ws_fontsize');
-
-    if(acc) setAccentColor(acc);
-    if(op && bl) {
-        document.documentElement.style.setProperty('--window-opacity', op);
-        document.documentElement.style.setProperty('--window-blur', bl + 'px');
-        const slOp = document.getElementById('sliderOpacity');
-        const slBl = document.getElementById('sliderBlur');
-        if(slOp) slOp.value = Math.round(op * 100);
-        if(slBl) slBl.value = bl;
-    }
-    if(fs) {
-        setLyricFontSize(fs);
-        const slFs = document.getElementById('sliderFontSize');
-        if(slFs) slFs.value = fs;
-    }
-}
-
-// สั่งให้โหลดค่าทันที
-document.addEventListener('DOMContentLoaded', () => {
-    window.loadCustomSettings();
-});
-
-// ==========================================
-// 📝 ระบบเรียกดูเนื้อเพลงซ้ำ
-// ==========================================
-window.openActiveLyrics = function() {
-    if (!window.currentSongId) {
-        alert('กรุณาเลือกเปิดเพลงจากคลังเพลงก่อนครับ 🎵');
-        return;
-    }
-    const song = window.songs.find(s => s.id === window.currentSongId);
-    if (song) {
-        window.wm.openLyrics(song.title);
-        // สั่งให้วาดเนื้อเพลงและไฮไลต์ท่อนปัจจุบันใหม่
-        window.renderLyricsToContainer();
-        window.updateLyricDisplay();
-    }
-};
-
-// ==========================================
-// 🔄 ระบบดึงหน้าต่างกลับเข้าจอ (แก้ปัญหาหมุนจอ iPad)
-// ==========================================
-window.addEventListener('resize', () => {
-    // รวมหน้าต่างทั้งหมดที่มีโอกาสถูกเปิดไว้
-    const wins = [
-        { id: 'library', ref: window.wm.libWin },
-        { id: 'settings', ref: window.wm.settingsWin },
-        { id: 'player', ref: window.wm.playerWin },
-        { id: 'lyrics', ref: window.wm.lyricsWin },
-        { id: 'addedit', ref: window.wm.addWin },
-        { id: 'adminsync', ref: window.wm.adminSyncWin },
-        { id: 'artists', ref: window.wm.artistWin } // 🔴 เพิ่มหน้าต่างศิลปินเข้ามาในระบบตรวจจับด้วย
-    ];
-
-    wins.forEach(winObj => {
-        // เช็คว่าหน้าต่างนั้นเปิดอยู่ไหม
-        if (winObj.ref && winObj.ref.dom) {
-            const rect = winObj.ref.dom.getBoundingClientRect();
-            let newX = rect.left;
-            let newY = rect.top;
-            let needMove = false;
-
-            // ถ้าหน้าต่างหลุดขอบขวา (เกินความกว้างจอ)
-            if (newX + 50 > window.innerWidth) { 
-                newX = Math.max(10, window.innerWidth - rect.width - 20); 
-                needMove = true; 
-            }
-            // ถ้าหน้าต่างหลุดขอบล่าง (เกินความสูงจอ)
-            if (newY + 50 > window.innerHeight) { 
-                newY = Math.max(10, window.innerHeight - rect.height - 100); // เผื่อที่ให้ Dock ด้วย
-                needMove = true; 
-            }
-            // ถ้าหน้าต่างหลุดขอบซ้าย หรือ ขอบบน
-            if (newX < 0) { newX = 20; needMove = true; }
-            if (newY < 0) { newY = 20; needMove = true; }
-
-            // ถ้าหลุดขอบให้สั่งย้ายพิกัดกลับเข้าจอ
-            if (needMove) {
-                winObj.ref.move(newX, newY);
-                window.wm.saveMemory(winObj.id, winObj.ref); // เซฟตำแหน่งใหม่ทับของเดิม
-            }
-        }
-    });
-});

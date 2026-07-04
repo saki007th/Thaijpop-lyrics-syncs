@@ -1,13 +1,6 @@
 :root {
     --theme-glow: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff);
     --bg-color: #000000;
-    /* ตัวแปรระบบ Custom Theme */
-    --accent-color: #0a84ff;
-    --window-opacity: 0.95;
-    --window-blur: 15px;
-    --lyric-font-size: 1.5em;
-    --window-bg-rgb: 28, 28, 30; /* พื้นหลังสีเทาดำ#1c1c1e */
-    --bg-color: #000000;
 }
 
 body {
@@ -30,93 +23,36 @@ body {
 }
 
 /* 2. พื้นหลังไดนามิกเบลอปกเพลง (ซ้อนทับวอลเปเปอร์อีกทีเวลาเล่นเพลง) */
-/* =========================================
-   ระบบพื้นหลังแบบ Dynamic (อัปเกรดแสงเคลื่อนไหว)
-   ========================================= */
-/* สร้างจังหวะการขยับและซูมช้าๆ (1 รอบใช้เวลา 40 วินาที) */
-@keyframes ambientMotion {
-    0% { transform: scale(1.1) translate(0, 0); }
-    33% { transform: scale(1.2) translate(-2%, -2%); }
-    66% { transform: scale(1.15) translate(2%, 1%); }
-    100% { transform: scale(1.1) translate(0, 0); }
-}
-
 #dynamic-bg {
-    /* ขยายขนาดให้ใหญ่กว่าจอ 20% เพื่อไม่ให้เห็นขอบเวลาภาพขยับ */
-    position: fixed; top: -10%; left: -10%; width: 120vw; height: 120vh;
+    position: fixed; top: -5%; left: -5%; width: 110vw; height: 110vh;
     background-size: cover; background-position: center;
-    
-    /* ปรับความเบลอให้ฟุ้งละมุน และดรอปแสงลงไม่ให้กวนสายตา */
-    filter: blur(50px) brightness(0.4) saturate(1.2); 
+    /* ลดความมืดลงหน่อย เพื่อให้เห็นวอลเปเปอร์รำไรเวลาเพลงเล่น */
+    filter: blur(45px) brightness(0.35); 
     z-index: -10;
-    
-    /* อนิเมชันเฟดภาพตอนเปลี่ยนเพลง */
-    opacity: 0; transition: opacity 1.5s ease-in-out;
-    
-    /* เรียกใช้อนิเมชันเคลื่อนไหวตลอดเวลา */
-    animation: ambientMotion 40s infinite ease-in-out;
+    transition: all 1s ease; opacity: 0;
 }
-#dynamic-bg.active { 
-    opacity: 1; 
-}
+#dynamic-bg.active { opacity: 1; }
 
 /* =========================================
-   iPad OS Style Dock
+   แถบ Dock ด้านบน (OS Taskbar)
    ========================================= */
-.ipad-dock-container {
-    position: fixed;
-    bottom: 25px; /* ลอยอยู่ขอบล่างของจอ */
-    left: 0; width: 100vw;
-    display: flex; justify-content: center;
-    z-index: 99999;
-    pointer-events: none; /* ปล่อยให้คลิกทะลุพื้นที่ว่างซ้ายขวาได้ */
+.os-dock {
+    position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+    background: rgba(20, 20, 25, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px;
+    padding: 10px 20px; display: flex; gap: 20px; align-items: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 9999;
 }
-
-.ipad-dock {
-    pointer-events: auto; /* ทำให้ตัว Dock กดได้ */
-    display: flex; gap: 15px; align-items: center;
-    background: rgba(255, 255, 255, 0.15); /* กระจกใสสว่างๆ */
-    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-    padding: 12px 18px;
-    border-radius: 35px; /* ขอบมนโค้งแบบ Apple */
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    box-shadow: 0 15px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.4);
+.dock-title { font-weight: bold; color: #fff; font-size: 1.1em; }
+.dock-buttons { display: flex; gap: 8px; }
+.dock-btn { 
+    background: rgba(255, 255, 255, 0.1); border: none; color: white;
+    padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600;
+    transition: all 0.2s;
 }
-
-.ipad-icon-btn {
-    background: transparent; border: none; color: white;
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    cursor: pointer; padding: 0;
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* เอฟเฟกต์เวลาเอาเมาส์ชี้ (เด้งขึ้นและขยายตัวนิดๆ) */
-.ipad-icon-btn:hover {
-    transform: translateY(-10px) scale(1.15);
-}
-
-/* กล่องไอคอนแบบ App หน้าจอโฮม (Squircle) */
-.icon-box {
-    width: 54px; height: 54px;
-    border-radius: 14px; /* ความโค้งแบบไอคอนแอป */
-    display: flex; justify-content: center; align-items: center;
-    font-size: 1.8em;
-    box-shadow: 0 5px 12px rgba(0,0,0,0.3);
-    border: 1px solid rgba(255,255,255,0.2);
-}
-
-.ipad-icon-btn span {
-    font-size: 0.75em; font-weight: 500;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-    opacity: 0.9;
-}
-
-/* เส้นกั้นระหว่างแอปหลัก กับ เมนูล็อกอิน */
-.dock-divider {
-    width: 2px; height: 50px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 2px; margin: 0 5px;
-}
+.dock-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
+.btn-login { color: #0a84ff; }
+.btn-logout { color: #ff3b30; }
 
 /* =========================================
    หน้าต่าง WinBox
@@ -124,16 +60,9 @@ body {
 .winbox {
     border-radius: 12px; overflow: hidden;
     box-shadow: 0 15px 50px rgba(0,0,0,0.6) !important;
-    background: rgba(var(--window-bg-rgb), var(--window-opacity)) !important;
-    backdrop-filter: blur(var(--window-blur)) !important;
-    -webkit-backdrop-filter: blur(var(--window-blur)) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #1c1c1e !important; border: 1px solid rgba(255, 255, 255, 0.1);
 }
-.wb-header { 
-    background: rgba(20, 20, 25, var(--window-opacity)) !important; 
-    backdrop-filter: blur(var(--window-blur)) !important;
-    color: white !important; font-weight: bold; 
-}
+.wb-header { background: rgba(30, 30, 35, 0.95) !important; color: white !important; font-weight: bold; }
 .wb-body { background: transparent !important; }
 .wb-full { display: none !important; }
 .wb-content-padding { padding: 20px; box-sizing: border-box; height: 100%; overflow-y: auto; }
@@ -299,34 +228,3 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
     transform: scale(1.2);
     filter: brightness(1.2);
 }
-
-/* =========================================
-   สไตล์ระบบตั้งค่า Custom Theme
-   ========================================= */
-.color-btn {
-    width: 35px; height: 35px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); 
-    cursor: pointer; transition: 0.2s; padding: 0; outline: none;
-}
-.color-btn:hover { transform: scale(1.15); border-color: #fff; }
-
-.custom-slider {
-    -webkit-appearance: none; width: 100%; height: 6px; background: rgba(255,255,255,0.2);
-    border-radius: 5px; outline: none; padding: 0; margin-bottom: 20px;
-}
-.custom-slider::-webkit-slider-thumb {
-    -webkit-appearance: none; appearance: none;
-    width: 18px; height: 18px; border-radius: 50%;
-    background: var(--accent-color); cursor: pointer; transition: 0.2s;
-}
-.custom-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
-
-/* เปลี่ยนสีส่วนประกอบต่างๆ ให้วิ่งตามตัวแปร Accent Color */
-.btn-primary { background: var(--accent-color); }
-.btn-primary:hover { filter: brightness(1.2); background: var(--accent-color); }
-input:focus, textarea:focus { border-color: var(--accent-color); }
-.chip.active { background: var(--accent-color); border-color: var(--accent-color); }
-.lyric-line.active .singer-badge { background: var(--accent-color); }
-.ts-row.active-row { border-color: var(--accent-color); background: rgba(255,255,255,0.1); }
-
-/* ผูกขนาดตัวอักษรเนื้อเพลง */
-.lyric-line.active { font-size: var(--lyric-font-size); color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); transform: scale(1.05); margin: 30px 0; }
