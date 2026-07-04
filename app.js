@@ -569,14 +569,15 @@ window.loadCustomSettings = function() {
 document.addEventListener('DOMContentLoaded', () => {
     window.loadCustomSettings();
 });
+
 // ==========================================
-// 🧲 ระบบ Snap หน้าต่าง (Aero Snap)
+// 🧲 ระบบ Snap หน้าต่าง (อัปเกรดแก้บั๊กการลาก)
 // ==========================================
 window.activeDragWin = null;
 
-// ล้างค่าเมื่อเริ่มคลิก ป้องกันการเผลอ snap ผิดจังหวะ
-document.addEventListener('mousedown', () => { window.activeDragWin = null; });
-document.addEventListener('touchstart', () => { window.activeDragWin = null; }, {passive: true});
+// ใช้ capture: true เพื่อดักจับคลิกก่อนที่ WinBox จะขัดจังหวะ
+window.addEventListener('mousedown', () => { window.activeDragWin = null; }, true);
+window.addEventListener('touchstart', () => { window.activeDragWin = null; }, { passive: true, capture: true });
 
 function handleSnap(e) {
     if (!window.activeDragWin) return;
@@ -584,39 +585,41 @@ function handleSnap(e) {
     const win = window.activeDragWin.instance;
     const winId = window.activeDragWin.id;
     
-    // หาพิกัดเมาส์ (รองรับทั้งการใช้เมาส์และนิ้วสัมผัส)
     const clientX = e.type.includes('mouse') ? e.clientX : e.changedTouches[0].clientX;
     const clientY = e.type.includes('mouse') ? e.clientY : e.changedTouches[0].clientY;
     
     const screenW = window.innerWidth;
     const screenH = window.innerHeight;
-    const dockHeight = 70; // เว้นที่ให้แถบเมนูด้านบน
+    const dockHeight = 70; // ความสูงของแถบเมนู
     
-    let snapped = false;
+    let targetW = null, targetH = null, targetX = null, targetY = null;
 
-    // ⬅️ ลากชนขอบซ้าย (แบ่งครึ่งจอซ้าย)
+    // ⬅️ ชนขอบซ้าย
     if (clientX <= 20) {
-        win.resize(screenW / 2, screenH - dockHeight).move(0, dockHeight);
-        snapped = true;
+        targetW = screenW / 2; targetH = screenH - dockHeight; targetX = 0; targetY = dockHeight;
     } 
-    // ➡️ ลากชนขอบขวา (แบ่งครึ่งจอขวา)
+    // ➡️ ชนขอบขวา
     else if (clientX >= screenW - 20) {
-        win.resize(screenW / 2, screenH - dockHeight).move(screenW / 2, dockHeight);
-        snapped = true;
+        targetW = screenW / 2; targetH = screenH - dockHeight; targetX = screenW / 2; targetY = dockHeight;
     } 
-    // ⬆️ ลากชนแถบด้านบน (ขยายเต็มจอ)
+    // ⬆️ ชนด้านบน (ขยายเต็มจอ)
     else if (clientY <= dockHeight + 15) { 
-        win.resize(screenW, screenH - dockHeight).move(0, dockHeight);
-        snapped = true;
+        targetW = screenW; targetH = screenH - dockHeight; targetX = 0; targetY = dockHeight;
     }
 
-    // เซฟพิกัดใหม่ลงหน่วยความจำทันทีที่ Snap
-    if (snapped) {
-        window.wm.saveMemory(winId, win);
+    if (targetW !== null) {
+        // 🔴 ไม้ตาย: สั่งให้รอ 50 มิลลิวินาที ให้ WinBox ทำงานจบก่อน แล้วเราค่อย Snap ยัดเข้าไป!
+        setTimeout(() => {
+            if (win) {
+                win.resize(targetW, targetH).move(targetX, targetY);
+                window.wm.saveMemory(winId, win);
+            }
+        }, 50);
     }
     
     window.activeDragWin = null;
 }
 
-document.addEventListener('mouseup', handleSnap);
-document.addEventListener('touchend', handleSnap);
+// ใช้ capture: true เพื่อแย่งการสั่งการมาจาก WinBox
+window.addEventListener('mouseup', handleSnap, true);
+window.addEventListener('touchend', handleSnap, true);
