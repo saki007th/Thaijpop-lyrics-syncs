@@ -82,19 +82,25 @@ window.wm = {
             onclose: () => { this.settingsWin = null; }
         }));
     },
-    openPlayer: function(title) {
+   openPlayer: function(title) {
         if (this.playerWin) { this.playerWin.setTitle("🎥 " + title); this.playerWin.focus(); return; }
         this.playerWin = new WinBox("🎥 " + title, this.applyMemory('player', {
             mount: document.getElementById("content-player"), width: "500px", height: "320px", x: "20px", y: "80px", top: 70, class: ["wb-dark", "no-min"],
             onclose: () => { 
                 this.playerWin = null;
-                // เมื่อปิดหน้าต่าง ให้ทำลายเครื่องเล่น YouTube ทิ้งไปเลย เพื่อป้องกันเพลงค้าง
+                // ปิด YouTube
                 if (window.ytPlayer && typeof window.ytPlayer.destroy === 'function') {
                     window.ytPlayer.destroy();
                     window.ytPlayer = null;
                 }
-                // สร้างกล่องเปล่าๆ มารอไว้ สำหรับให้เพลงถัดไปสร้างเครื่องเล่นใหม่
                 document.getElementById("content-player").innerHTML = '<div id="youtubePlayer" style="width: 100%; height: 100%;"></div>';
+                
+                // 🔴 หดพับ Live Activity เก็บเมื่อปิดหน้าต่างเพลง
+                const liveAct = document.getElementById('liveActivity');
+                const liveDiv = document.getElementById('dockDivider');
+                if (liveAct) liveAct.classList.add('hidden');
+                if (liveDiv) liveDiv.classList.add('hidden');
+                window.currentSongId = null; // เคลียร์สถานะเพลง
             }
         }));
     },
@@ -305,9 +311,20 @@ window.renderLyricsToContainer = function() {
     });
 }
 
-window.playSong = function(id) {
-    window.currentSongId = id; const song = window.songs.find(s => s.id === id); if (!song) return;
+// (แทรกในฟังก์ชัน playSong)
+    // 🔴 โชว์และอัปเดต Live Activity
 
+window.playSong = function(id) {
+     
+    window.currentSongId = id; const song = window.songs.find(s => s.id === id); if (!song) return;
+   const liveAct = document.getElementById('liveActivity');
+    const liveDiv = document.getElementById('dockDivider');
+    if (liveAct && liveDiv) {
+        document.getElementById('liveTitle').innerText = song.title;
+        document.getElementById('liveArtist').innerText = '🎤 ' + (song.artist || '-');
+        liveAct.classList.remove('hidden');
+        liveDiv.classList.remove('hidden');
+    }
     window.currentLyricsArray = song.lyrics.split(/\n\s*\n/); window.currentLyricIndex = -1;
     
     window.wm.openPlayer(song.title); window.wm.openLyrics(song.title);
