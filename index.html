@@ -16,26 +16,50 @@
         <div>กำลังโหลดข้อมูลคลังเพลง...</div>
     </div>
 
-    <!-- =========================================
-         Draggable Floating Dock (ปุ่มเมนูลอยลากได้)
+   <!-- =========================================
+         iPad OS Style Dock (แถบเมนูแอปด้านล่าง)
          ========================================= -->
-    <div id="draggable-dock" class="floating-dock">
-        <!-- 🎵 ปุ่มหลักสำหรับจับลาก -->
-        <div class="dock-handle" id="dock-handle" title="ลากเพื่อย้ายตำแหน่ง">
-            🎵
-        </div>
-        
-        <!-- 🛠️ เมนูย่อยที่จะโผล่มาตอนเอาเมาส์ชี้ -->
-        <div class="dock-menu-items">
-            <button class="dock-icon-btn" onclick="wm.openLibrary()" title="คลังเพลง">🏠</button>
-            <button class="dock-icon-btn" onclick="wm.openSettings()" title="ตั้งค่า">⚙️</button>
-            <button class="dock-icon-btn" onclick="togglePiPMode()" style="color: #00d2ff;" title="PiP (หน้าต่างลอย)">🪟</button>
-            <button id="btnDockAdminSync" class="dock-icon-btn" style="display:none; color: #ffcc00;" onclick="if(window.currentSongId) wm.openAdminSync(); else alert('กรุณากดเล่นเพลงที่ต้องการซิงค์ก่อนครับ');" title="ซิงค์ & จัดการเนื้อ">⏱</button>
-            <button id="btnHeaderLogin" class="dock-icon-btn btn-login" onclick="loginWithGoogle()" title="เข้าสู่ระบบ">👤</button>
-            <button id="btnHeaderLogout" class="dock-icon-btn btn-logout" style="display:none; color: #ff3b30;" onclick="logout()" title="ออกจากระบบ">🚪</button>
+    <div class="ipad-dock-container">
+        <div class="ipad-dock">
+            <!-- 1. คลังเพลง -->
+            <button class="ipad-icon-btn" onclick="wm.openLibrary()" title="คลังเพลง">
+                <div class="icon-box" style="background: linear-gradient(135deg, #007aff, #5ac8fa);">🏠</div>
+                <span>คลังเพลง</span>
+            </button>
+            
+            <!-- 2. ตั้งค่า -->
+            <button class="ipad-icon-btn" onclick="wm.openSettings()" title="ตั้งค่า">
+                <div class="icon-box" style="background: linear-gradient(135deg, #8e8e93, #c7c7cc);">⚙️</div>
+                <span>ตั้งค่า</span>
+            </button>
+            
+            <!-- 3. PiP -->
+            <button class="ipad-icon-btn" onclick="togglePiPMode()" title="PiP (หน้าต่างลอย)">
+                <div class="icon-box" style="background: linear-gradient(135deg, #34c759, #a4e3b7);">🪟</div>
+                <span>PiP</span>
+            </button>
+            
+            <!-- 4. Admin Sync (ซ่อนไว้ก่อน) -->
+            <button id="btnDockAdminSync" class="ipad-icon-btn" style="display:none;" onclick="if(window.currentSongId) wm.openAdminSync(); else alert('กรุณากดเล่นเพลงที่ต้องการซิงค์ก่อนครับ');">
+                <div class="icon-box" style="background: linear-gradient(135deg, #ff9500, #ffcc00);">⏱</div>
+                <span>ซิงค์เนื้อ</span>
+            </button>
+            
+            <!-- เส้นกั้น (Divider) -->
+            <div class="dock-divider"></div>
+            
+            <!-- 5. Login / Logout -->
+            <button id="btnHeaderLogin" class="ipad-icon-btn" onclick="loginWithGoogle()">
+                <div class="icon-box" style="background: linear-gradient(135deg, #5856d6, #af52de);">👤</div>
+                <span>เข้าสู่ระบบ</span>
+            </button>
+            <button id="btnHeaderLogout" class="ipad-icon-btn" style="display:none;" onclick="logout()">
+                <div class="icon-box" style="background: linear-gradient(135deg, #ff3b30, #ff8d8a);">🚪</div>
+                <span>ออกระบบ</span>
+            </button>
         </div>
     </div>
-
+    
     <!-- โกดังเก็บหน้าต่าง -->
     <div id="window-warehouse" style="display: none;">
         
