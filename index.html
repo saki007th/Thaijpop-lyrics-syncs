@@ -65,7 +65,9 @@
         </div>
 
         <!-- 5. ตั้งค่า -->
+       <!-- 📦 4. เนื้อหา: ตั้งค่าแอป -->
         <div id="content-settings" class="wb-content-padding">
+            
             <h3 style="margin-top:0;">🖼️ ภาพพื้นหลัง (Wallpaper)</h3>
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
                 <button class="btn-secondary" style="flex: 1; font-size: 0.85em;" onclick="setWallpaper('default')">🌌 สีพื้นฐาน</button>
@@ -73,14 +75,36 @@
                 <button class="btn-secondary" style="flex: 1; font-size: 0.85em;" onclick="setWallpaper('https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=2000')">⛰️ ภูเขาดวงดาว</button>
                 <button class="btn-secondary" style="flex: 1; font-size: 0.85em;" onclick="setWallpaper('https://images.unsplash.com/photo-1506744626753-1fa28f673b0c?q=80&w=2000')">🏞️ ธรรมชาติ</button>
             </div>
-            <input type="text" id="inputCustomWallpaper" placeholder="หรือวางลิงก์รูปภาพ (URL) ของคุณที่นี่..." onchange="setWallpaper(this.value)" style="margin-bottom: 30px;">
-            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin-bottom: 25px;">
-            <h3 style="margin-top:0;">✨ เลือกสีออร่า</h3>
-            <div class="theme-list">
-                <button onclick="setTheme('default')" class="theme-btn" style="background: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85); color:white;">🌈 Apple Glow</button>
-                <button onclick="setTheme('ocean')" class="theme-btn" style="background: linear-gradient(120deg, #2193b0, #6dd5ed); color:black;">🌊 Ocean Blue</button>
+            <input type="text" id="inputCustomWallpaper" placeholder="หรือวางลิงก์รูปภาพ (URL) ของคุณที่นี่..." onchange="setWallpaper(this.value)" style="margin-bottom: 25px;">
+            
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
+
+            <!-- 🔴 ระบบใหม่: Accent Color -->
+            <h3 style="margin-top:0;">🎨 สีสัน (Accent Color)</h3>
+            <div style="display: flex; gap: 12px; margin-bottom: 25px; flex-wrap: wrap;">
+                <button class="color-btn" style="background: #0a84ff;" onclick="setAccentColor('#0a84ff')" title="Apple Blue"></button>
+                <button class="color-btn" style="background: #ff2a85;" onclick="setAccentColor('#ff2a85')" title="Neon Pink"></button>
+                <button class="color-btn" style="background: #34c759;" onclick="setAccentColor('#34c759')" title="Hacker Green"></button>
+                <button class="color-btn" style="background: #ffcc00;" onclick="setAccentColor('#ffcc00')" title="Cyber Yellow"></button>
+                <button class="color-btn" style="background: #9b51e0;" onclick="setAccentColor('#9b51e0')" title="Deep Purple"></button>
             </div>
-            <h3 style="margin-top: 25px;">🈯️ แสดง/ซ่อนภาษา</h3>
+
+            <!-- 🔴 ระบบใหม่: Glassmorphism -->
+            <h3 style="margin-top:0;">🪟 สไตล์กระจกหน้าต่าง (Glassmorphism)</h3>
+            <label>ความทึบแสง (Opacity)</label>
+            <input type="range" id="sliderOpacity" class="custom-slider" min="10" max="100" value="95" oninput="setWindowStyle()" style="margin-bottom: 15px;">
+            
+            <label>ความเบลอ (Blur)</label>
+            <input type="range" id="sliderBlur" class="custom-slider" min="0" max="40" value="15" oninput="setWindowStyle()" style="margin-bottom: 25px;">
+
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
+
+            <!-- 🔴 ระบบใหม่: Reading -->
+            <h3 style="margin-top:0;">📝 การอ่านเนื้อเพลง</h3>
+            <label>ขนาดตัวอักษรเนื้อเพลงตอนร้อง (Font Size)</label>
+            <input type="range" id="sliderFontSize" class="custom-slider" min="1" max="2.5" step="0.1" value="1.5" oninput="setLyricFontSize(this.value)" style="margin-bottom: 25px;">
+
+            <h3 style="margin-top:0;">🈯️ แสดง/ซ่อนภาษา</h3>
             <div id="lyricLangToggles" style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <label class="lang-toggle"><input type="checkbox" checked onchange="toggleLang(0)"> 🇯🇵 ญี่ปุ่น</label>
                 <label class="lang-toggle"><input type="checkbox" checked onchange="toggleLang(1)"> 🔤 โรมาจิ</label>
