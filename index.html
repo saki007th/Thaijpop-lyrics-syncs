@@ -16,18 +16,32 @@
         <div>กำลังโหลดข้อมูลคลังเพลง...</div>
     </div>
 
-    <!-- แถบ Dock -->
-    <nav class="os-dock">
-        <div class="dock-title">🎵 My Music Workspace</div>
+   <!-- แถบ Dock (สไตล์ แคปซูลลอย + Live Activity) -->
+    <nav class="floating-pill-dock" id="mainDock">
+        
+        <!-- 🔴 ส่วน Live Activity (จะโชว์ก็ต่อเมื่อมีเพลงเล่น) -->
+        <div id="liveActivity" class="live-activity hidden" onclick="if(window.currentSongId) wm.openPlayer(document.getElementById('liveTitle').innerText)" title="เปิดหน้าต่างเครื่องเล่น">
+            <div class="live-icon">🎵</div>
+            <div class="live-info">
+                <div id="liveTitle" class="live-title">-</div>
+                <div id="liveArtist" class="live-artist">-</div>
+            </div>
+        </div>
+
+        <!-- เส้นแบ่ง (จะโชว์เมื่อมี Live Activity) -->
+        <div id="dockDivider" class="dock-divider hidden"></div>
+
+        <!-- ส่วนเมนูหลัก (เปลี่ยนเป็นไอคอนล้วน) -->
         <div class="dock-buttons">
-            <button class="dock-btn" onclick="wm.openLibrary()">🏠 คลังเพลง</button>
-            <button class="dock-btn" onclick="wm.openSettings()">⚙️ ตั้งค่า</button>
-            <button class="dock-btn" onclick="togglePiPMode()" style="color: #00d2ff;">🪟 PiP (หน้าต่างลอย)</button>
-            <!-- 🔴 เพิ่มปุ่มเครื่องมือ Admin ใน Dock -->
-            <button id="btnDockAdminSync" class="dock-btn" style="display:none; color: #ffcc00;" onclick="if(window.currentSongId) wm.openAdminSync(); else alert('กรุณากดเล่นเพลงที่ต้องการซิงค์ก่อนครับ');">⏱ ซิงค์ & จัดการเนื้อ</button>
+            <button class="pill-btn" onclick="wm.openLibrary()" title="คลังเพลง">🏠</button>
+            <button class="pill-btn" onclick="wm.openSettings()" title="ตั้งค่า">⚙️</button>
+            <button class="pill-btn" style="color: #00d2ff;" onclick="togglePiPMode()" title="PiP (หน้าต่างลอย)">🪟</button>
             
-            <button id="btnHeaderLogin" class="dock-btn btn-login" onclick="loginWithGoogle()">เข้าสู่ระบบ</button>
-            <button id="btnHeaderLogout" class="dock-btn btn-logout" style="display:none;" onclick="logout()">ออกจากระบบ</button>
+            <!-- ปุ่มแอดมิน -->
+            <button id="btnDockAdminSync" class="pill-btn" style="display:none; color: #ffcc00;" onclick="if(window.currentSongId) wm.openAdminSync(); else alert('กรุณากดเล่นเพลงที่ต้องการซิงค์ก่อนครับ');" title="ซิงค์ & จัดการเนื้อ">⏱</button>
+            
+            <button id="btnHeaderLogin" class="pill-btn" style="color: #34c759;" onclick="loginWithGoogle()" title="เข้าสู่ระบบแอดมิน">👤</button>
+            <button id="btnHeaderLogout" class="pill-btn" style="display:none; color: #ff3b30;" onclick="logout()" title="ออกจากระบบ">🚪</button>
         </div>
     </nav>
 
