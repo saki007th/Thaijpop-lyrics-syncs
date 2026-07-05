@@ -264,17 +264,22 @@ window.deleteSong = async function(id) {
 window.filterByArtist = function(artistName) { window.currentFilter = artistName; window.renderSongList(document.getElementById('searchInput').value.toLowerCase(), artistName); }
 window.filterSongs = function() { window.renderSongList(document.getElementById('searchInput').value.toLowerCase(), window.currentFilter); }
 
-window.renderSongList = function(query = '', artistFilter = 'All') {
+wwindow.renderSongList = function(query = '', artistFilter = 'All') {
     const listContainer = document.getElementById('songList'); const chipContainer = document.getElementById('artistChips');
     if(!listContainer) return; listContainer.innerHTML = '';
 
     if (chipContainer) {
         let artistSet = new Set();
         window.songs.forEach(s => window.getSingersList(s.artist).forEach(n => artistSet.add(n)));
-        const artists = ['All', ...Array.from(artistSet)];
+        
+        // 🔴 เพิ่มการเรียงลำดับตัวอักษร (A-Z, ก-ฮ) ตรงนี้
+        const sortedArtists = Array.from(artistSet).sort((a, b) => a.localeCompare(b, 'th')); 
+        const artists = ['All', ...sortedArtists];
+        
         chipContainer.innerHTML = artists.map(a => `<button class="chip ${artistFilter === a ? 'active' : ''}" onclick="filterByArtist('${a}')">${a === 'All' ? 'ทั้งหมด' : a}</button>`).join('');
     }
 
+    // ... (โค้ดส่วนฟิลเตอร์เพลงด้านล่างปล่อยไว้เหมือนเดิมครับ) ...
     const filtered = window.songs.filter(song => {
         const q = query.toLowerCase(); const artist = song.artist || '';
         return ((song.title && song.title.toLowerCase().includes(q)) || artist.toLowerCase().includes(q)) && (artistFilter === 'All' || artist.includes(artistFilter));
