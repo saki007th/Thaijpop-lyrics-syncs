@@ -264,7 +264,7 @@ window.deleteSong = async function(id) {
 window.filterByArtist = function(artistName) { window.currentFilter = artistName; window.renderSongList(document.getElementById('searchInput').value.toLowerCase(), artistName); }
 window.filterSongs = function() { window.renderSongList(document.getElementById('searchInput').value.toLowerCase(), window.currentFilter); }
 
-wwindow.renderSongList = function(query = '', artistFilter = 'All') {
+window.renderSongList = function(query = '', artistFilter = 'All') {
     const listContainer = document.getElementById('songList'); const chipContainer = document.getElementById('artistChips');
     if(!listContainer) return; listContainer.innerHTML = '';
 
