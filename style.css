@@ -1,12 +1,11 @@
 :root {
     --theme-glow: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff);
     --bg-color: #000000;
-    --theme-glow: linear-gradient(120deg, #00d2ff, #9b51e0, #ff2a85, #ff8c00, #00d2ff);
-    --bg-color: #000000;
-    /* 🔴 ตัวแปรความโปร่งใสและขนาดที่เพิ่มใหม่ */
     --window-opacity: 0.95;
     --window-blur: 20px;
     --lyric-font-size: 1.15em;
+    /* 🔴 เพิ่มตัวแปรขนาดพื้นหลัง */
+    --bg-size: cover; 
 }
 
 body {
@@ -23,9 +22,14 @@ body {
 #desktop-wallpaper {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
     background-color: var(--bg-color); 
-    background-size: cover; background-position: center;
-    z-index: -20; /* อยู่หลังสุด */
-    transition: background 0.5s ease;
+    
+    /* 🔴 แก้ให้ดึงขนาดจากตัวแปร และตั้งให้ไม่โหลดรูปซ้ำ */
+    background-size: var(--bg-size); 
+    background-repeat: no-repeat;
+    background-position: center;
+    
+    z-index: -20; 
+    transition: background 0.5s ease, background-size 0.3s ease;
 }
 
 /* 2. พื้นหลังไดนามิกเบลอปกเพลง (ซ้อนทับวอลเปเปอร์อีกทีเวลาเล่นเพลง) */
