@@ -86,21 +86,25 @@ window.wm = {
         if (this.playerWin) { this.playerWin.setTitle("🎥 " + title); this.playerWin.focus(); return; }
         this.playerWin = new WinBox("🎥 " + title, this.applyMemory('player', {
             mount: document.getElementById("content-player"), width: "500px", height: "320px", x: "20px", y: "80px", top: 70, class: ["wb-dark", "no-min"],
-            onclose: () => { 
+                onclose: () => { 
                 this.playerWin = null;
-                // ปิด YouTube
                 if (window.ytPlayer && typeof window.ytPlayer.destroy === 'function') {
                     window.ytPlayer.destroy();
                     window.ytPlayer = null;
                 }
                 document.getElementById("content-player").innerHTML = '<div id="youtubePlayer" style="width: 100%; height: 100%;"></div>';
                 
-                // 🔴 หดพับ Live Activity เก็บเมื่อปิดหน้าต่างเพลง
+                // หดพับ Live Activity เก็บ
                 const liveAct = document.getElementById('liveActivity');
                 const liveDiv = document.getElementById('dockDivider');
                 if (liveAct) liveAct.classList.add('hidden');
                 if (liveDiv) liveDiv.classList.add('hidden');
-                window.currentSongId = null; // เคลียร์สถานะเพลง
+                
+                // 🔴 ปิดภาพพื้นหลังปกเพลงให้จางหายไป
+                const bgEl = document.getElementById('dynamic-bg');
+                if (bgEl) bgEl.classList.remove('active');
+
+                window.currentSongId = null;
             }
         }));
     },
@@ -535,9 +539,20 @@ window.toggleLang = function(langIndex) {
 }
 
 window.onPlayerStateChange = function(event) {
-    if (event.data === 0) {
+    if (event.data === 0) { // เลข 0 คือสถานะเพลงเล่นจบ
         const idx = window.songs.findIndex(s => s.id === window.currentSongId);
-        if (idx !== -1 && idx + 1 < window.songs.length) window.playSong(window.songs[idx + 1].id);
+        if (idx !== -1 && idx + 1 < window.songs.length) {
+            window.playSong(window.songs[idx + 1].id); // เล่นเพลงถัดไป
+        } else {
+            // 🔴 ถ้าไม่มีเพลงถัดไป ให้ซ่อนปกเพลงและ Live Activity
+            const bgEl = document.getElementById('dynamic-bg');
+            if (bgEl) bgEl.classList.remove('active');
+            
+            const liveAct = document.getElementById('liveActivity');
+            const liveDiv = document.getElementById('dockDivider');
+            if (liveAct) liveAct.classList.add('hidden');
+            if (liveDiv) liveDiv.classList.add('hidden');
+        }
     }
 };
 // ==========================================
@@ -559,7 +574,39 @@ window.setLyricFontSize = function(size) {
     document.documentElement.style.setProperty('--lyric-font-size', size + 'em');
     localStorage.setItem('ws_fontsize', size);
 }
+// 🔴 เพิ่มฟังก์ชันเปลี่ยนขนาดพื้นหลัง
+window.setBgSize = function(size) {
+    document.documentElement.style.setProperty('--bg-size', size);
+    localStorage.setItem('ws_bgsize', size);
+}
 
+// โหลดค่า Custom ทั้งหมดตอนเปิดแอป
+window.loadCustomSettings = function() {
+    const op = localStorage.getItem('ws_opacity');
+    const bl = localStorage.getItem('ws_blur');
+    const fs = localStorage.getItem('ws_fontsize');
+    const bgSz = localStorage.getItem('ws_bgsize'); // 🔴 โหลดค่าขนาดภาพ
+
+    if(op && bl) {
+        document.documentElement.style.setProperty('--window-opacity', op);
+        document.documentElement.style.setProperty('--window-blur', bl + 'px');
+        const slOp = document.getElementById('sliderOpacity');
+        const slBl = document.getElementById('sliderBlur');
+        if(slOp) slOp.value = Math.round(op * 100);
+        if(slBl) slBl.value = bl;
+    }
+    if(fs) {
+        setLyricFontSize(fs);
+        const slFs = document.getElementById('sliderFontSize');
+        if(slFs) slFs.value = fs;
+    }
+    // 🔴 นำค่าขนาดภาพไปใช้
+    if(bgSz) {
+        setBgSize(bgSz);
+        const selBg = document.getElementById('bgSizeSelect');
+        if(selBg) selBg.value = bgSz;
+    }
+}
 // โหลดค่า Custom ทั้งหมดตอนเปิดแอป
 window.loadCustomSettings = function() {
     const op = localStorage.getItem('ws_opacity');
