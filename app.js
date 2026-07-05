@@ -537,24 +537,41 @@ window.toggleLang = function(langIndex) {
     const container = document.getElementById('lyricsContainer'); if (!container) return;
     if (event.target.checked) container.classList.remove(`hide-lang-${langIndex}`); else container.classList.add(`hide-lang-${langIndex}`);
 }
-
 window.onPlayerStateChange = function(event) {
     if (event.data === 0) { // เลข 0 คือสถานะเพลงเล่นจบ
-        const idx = window.songs.findIndex(s => s.id === window.currentSongId);
-        if (idx !== -1 && idx + 1 < window.songs.length) {
-            window.playSong(window.songs[idx + 1].id); // เล่นเพลงถัดไป
+        if (!window.songs || window.songs.length === 0) return;
+
+        if (window.isShuffleEnabled) {
+            // 🔀 โหมดสุ่มเพลง (สุ่มให้ไม่ซ้ำเพลงเดิม)
+            let randomIndex = Math.floor(Math.random() * window.songs.length);
+            if (window.songs.length > 1) {
+                const currentIdx = window.songs.findIndex(s => s.id === window.currentSongId);
+                while (randomIndex === currentIdx) {
+                    randomIndex = Math.floor(Math.random() * window.songs.length);
+                }
+            }
+            window.playSong(window.songs[randomIndex].id);
         } else {
-            // 🔴 ถ้าไม่มีเพลงถัดไป ให้ซ่อนปกเพลงและ Live Activity
-            const bgEl = document.getElementById('dynamic-bg');
-            if (bgEl) bgEl.classList.remove('active');
-            
-            const liveAct = document.getElementById('liveActivity');
-            const liveDiv = document.getElementById('dockDivider');
-            if (liveAct) liveAct.classList.add('hidden');
-            if (liveDiv) liveDiv.classList.add('hidden');
+            // ➡️ โหมดเล่นเรียงตามปกติ (ตามลำดับในคลัง)
+            const idx = window.songs.findIndex(s => s.id === window.currentSongId);
+            if (idx !== -1 && idx + 1 < window.songs.length) {
+                window.playSong(window.songs[idx + 1].id);
+            } else {
+                // 🛑 ถ้าไม่มีเพลงต่อให้ซ่อน UI
+                const bgEl = document.getElementById('dynamic-bg');
+                if (bgEl) bgEl.classList.remove('active');
+                
+                const liveAct = document.getElementById('liveActivity');
+                const liveDiv = document.getElementById('dockDivider');
+                if (liveAct) liveAct.classList.add('hidden');
+                if (liveDiv) liveDiv.classList.add('hidden');
+                
+                window.currentSongId = null;
+            }
         }
     }
 };
+
 // ==========================================
 // ⚙️ ระบบ Custom Theme & Personalization
 // ==========================================
@@ -612,6 +629,8 @@ window.loadCustomSettings = function() {
     const op = localStorage.getItem('ws_opacity');
     const bl = localStorage.getItem('ws_blur');
     const fs = localStorage.getItem('ws_fontsize');
+    const bgSz = localStorage.getItem('ws_bgsize'); 
+    const shuffle = localStorage.getItem('ws_shuffle'); // 🔴 โหลดค่าโหมดสุ่ม
 
     if(op && bl) {
         document.documentElement.style.setProperty('--window-opacity', op);
@@ -626,9 +645,26 @@ window.loadCustomSettings = function() {
         const slFs = document.getElementById('sliderFontSize');
         if(slFs) slFs.value = fs;
     }
+    if(bgSz) {
+        setBgSize(bgSz);
+        const selBg = document.getElementById('bgSizeSelect');
+        if(selBg) selBg.value = bgSz;
+    }
+    // 🔴 นำค่าโหมดสุ่มเพลงไปใช้กับปุ่ม
+    if(shuffle === '1') {
+        window.isShuffleEnabled = true;
+        const chkShuffle = document.getElementById('toggleShuffleBtn');
+        if(chkShuffle) chkShuffle.checked = true;
+    }
 }
-
 // สั่งให้โหลดค่าทันทีเมื่อเปิดเว็บ
 document.addEventListener('DOMContentLoaded', () => {
     window.loadCustomSettings();
 });
+// 🔴 ฟังก์ชันเปิด/ปิดโหมดสุ่มเพลง
+window.isShuffleEnabled = false;
+
+window.toggleShuffle = function(isEnable) {
+    window.isShuffleEnabled = isEnable;
+    localStorage.setItem('ws_shuffle', isEnable ? '1' : '0');
+}
