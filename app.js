@@ -363,19 +363,31 @@ window.playSong = function(id) {
         }
     }
 
+    // (ส่วนนี้อยู่เกือบล่างสุดในฟังก์ชัน playSong)
+    
     clearInterval(window.syncInterval);
     window.syncInterval = setInterval(() => {
         if (!window.ytPlayer || typeof window.ytPlayer.getCurrentTime !== 'function') return;
-        const currentSong = window.songs.find(s => s.id === window.currentSongId); if (!currentSong || !currentSong.timestamps) return;
-        const currentTime = window.ytPlayer.getCurrentTime(); if (currentTime === undefined || currentTime === 0) return;
+        const currentSong = window.songs.find(s => s.id === window.currentSongId); 
+        if (!currentSong || !currentSong.timestamps) return;
+        const currentTime = window.ytPlayer.getCurrentTime(); 
+        if (currentTime === undefined || currentTime === 0) return;
 
-        const nextIndex = window.currentLyricIndex + 1;
-        if (nextIndex <= window.currentLyricsArray.length) {
-            const targetTime = currentSong.timestamps[nextIndex];
-            if (targetTime != null && currentTime >= targetTime) window.nextLyric(true); 
+        // 🔴 ระบบค้นหาท่อนเพลงแบบใหม่ (รองรับการกรอไปข้างหน้า และย้อนกลับ)
+        let correctIndex = -1;
+        for (let i = 0; i < currentSong.timestamps.length; i++) {
+            // หาว่าเวลาปัจจุบัน อยู่เลยเวลาของท่อนไหนมาแล้วบ้าง
+            if (currentSong.timestamps[i] != null && currentTime >= currentSong.timestamps[i]) {
+                correctIndex = i;
+            }
         }
-    }, 100); 
-}
+        
+        // ถ้าท่อนที่ควรจะเล่น ไม่ตรงกับท่อนที่แสดงอยู่ ให้เปลี่ยนหน้าจอทันที
+        if (window.currentLyricIndex !== correctIndex) {
+            window.currentLyricIndex = correctIndex;
+            window.updateLyricDisplay();
+        }
+    }, 100);
 
 // 🔴 ระบบ Admin แบบเต็ม (เพิ่มเนื้อ ลบเนื้อ เลือกคนร้อง)
 window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
