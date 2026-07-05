@@ -87,7 +87,14 @@
                 <button class="btn-secondary" style="flex: 1; font-size: 0.85em;" onclick="setWallpaper('https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=2000')">⛰️ ภูเขาดวงดาว</button>
                 <button class="btn-secondary" style="flex: 1; font-size: 0.85em;" onclick="setWallpaper('https://images.unsplash.com/photo-1506744626753-1fa28f673b0c?q=80&w=2000')">🏞️ ธรรมชาติ</button>
             </div>
-            <input type="text" id="inputCustomWallpaper" placeholder="หรือวางลิงก์รูปภาพ (URL) ของคุณที่นี่..." onchange="setWallpaper(this.value)" style="margin-bottom: 30px;">
+           <input type="text" id="inputCustomWallpaper" placeholder="หรือวางลิงก์รูปภาพ (URL) ของคุณที่นี่..." onchange="setWallpaper(this.value)" style="margin-bottom: 15px;">
+            
+            <!-- 🔴 เพิ่มเมนูให้ผู้ใช้เลือกขนาดภาพพื้นหลัง -->
+            <label>รูปแบบภาพพื้นหลัง:</label>
+            <select id="bgSizeSelect" onchange="setBgSize(this.value)" style="width:100%; padding:10px; margin-bottom:30px; background:#2c2c2e; color:white; border-radius:10px; border:none; outline:none;">
+                <option value="cover">เต็มจอ (ภาพอาจถูกตัดขอบ)</option>
+                <option value="contain">พอดีจอ (เห็นภาพครบ แต่อาจมีขอบดำ)</option>
+            </select>
             
             <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin-bottom: 25px;">
             
