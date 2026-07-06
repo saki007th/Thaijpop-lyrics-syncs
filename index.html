@@ -76,14 +76,18 @@
         </div>
 
         <!-- 🔴 4. หน้าต่าง Admin: เครื่องมือซิงค์ & แก้ไขเนื้อเพลง -->
-        <div id="content-admin-sync" class="wb-content-padding">
-            <div class="button-group" id="lyricControlBtnGroup" style="margin-bottom: 20px;">
-                <button class="btn-secondary" onclick="prevLyric()">⏮ ย้อน (ลบเวลา)</button>
-                <button class="btn-primary" onclick="nextLyric()" style="background: #ffcc00; color: #000;">⏭ ถัดไป (จับจังหวะ)</button>
-            </div>
-            <div id="timestampList" class="timestamp-list"></div>
-            <button id="btnResetSync" class="btn-secondary" onclick="resetSync()" style="margin-top: 15px; width: 100%;">🔄 ล้างเวลาซิงค์เริ่มใหม่</button>
-        </div>
+<div id="content-admin-sync" class="wb-content-padding">
+    
+    <!-- เปลี่ยนจาก button-group เป็น sticky-sync-bar ตรงนี้ครับ -->
+    <div class="sticky-sync-bar" id="lyricControlBtnGroup">
+        <button class="btn-secondary" onclick="prevLyric()">⏮ ย้อน (ลบเวลา)</button>
+        <button class="btn-primary" onclick="nextLyric()" style="background: #ffcc00; color: #000;">⏭ ถัดไป (จับจังหวะ)</button>
+    </div>
+
+    <div id="timestampList" class="timestamp-list"></div>
+    
+    <button id="btnResetSync" class="btn-secondary" onclick="resetSync()" style="margin-top: 15px; width: 100%;">🔄 ล้างเวลาซิงค์เริ่มใหม่</button>
+</div>
 
 <!-- 5. ตั้งค่า -->
         <div id="content-settings" class="wb-content-padding">
