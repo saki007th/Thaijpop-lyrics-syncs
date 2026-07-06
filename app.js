@@ -105,6 +105,9 @@ window.wm = {
                 if (bgEl) bgEl.classList.remove('active');
 
                 window.currentSongId = null;
+                
+                // 🔴 กางแถบสุ่มเพลงอัตโนมัติเมื่อปิดหน้าต่างเพลง
+                if(window.setRandomPanelState) window.setRandomPanelState(true);
             }
         }));
     },
@@ -280,7 +283,6 @@ window.renderSongList = function(query = '', artistFilter = 'All') {
         chipContainer.innerHTML = artists.map(a => `<button class="chip ${artistFilter === a ? 'active' : ''}" onclick="filterByArtist('${a}')">${a === 'All' ? 'ทั้งหมด' : a}</button>`).join('');
     }
 
-    // ... (โค้ดส่วนฟิลเตอร์เพลงด้านล่างปล่อยไว้เหมือนเดิมครับ) ...
     const filtered = window.songs.filter(song => {
         const q = query.toLowerCase(); const artist = song.artist || '';
         return ((song.title && song.title.toLowerCase().includes(q)) || artist.toLowerCase().includes(q)) && (artistFilter === 'All' || artist.includes(artistFilter));
@@ -321,11 +323,11 @@ window.renderLyricsToContainer = function() {
     });
 }
 
-// (แทรกในฟังก์ชัน playSong)
-    // 🔴 โชว์และอัปเดต Live Activity
-
 window.playSong = function(id) {
     window.currentSongId = id; const song = window.songs.find(s => s.id === id); if (!song) return;
+    
+    // 🔴 หุบแถบสุ่มเพลงอัตโนมัติเมื่อเริ่มเล่นเพลง
+    if(window.setRandomPanelState) window.setRandomPanelState(false);
     
     // โชว์และอัปเดต Live Activity
     const liveAct = document.getElementById('liveActivity');
@@ -374,7 +376,6 @@ window.playSong = function(id) {
         const currentTime = window.ytPlayer.getCurrentTime(); 
         if (currentTime === undefined || currentTime === 0) return;
 
-        // 🔴 ระบบค้นหาท่อนเพลงแบบใหม่ (รองรับการกรอไปข้างหน้า และย้อนกลับ)
         let correctIndex = -1;
         for (let i = 0; i < currentSong.timestamps.length; i++) {
             if (currentSong.timestamps[i] != null && currentTime >= currentSong.timestamps[i]) {
@@ -388,6 +389,7 @@ window.playSong = function(id) {
         }
     }, 100); 
 }; 
+
 // 🔴 ระบบ Admin แบบเต็ม (เพิ่มเนื้อ ลบเนื้อ เลือกคนร้อง)
 window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
     if (!window.isAdmin) return;
@@ -518,7 +520,7 @@ window.updateLyricDisplay = function() {
         const activeLine = document.getElementById(`lyric-line-${window.currentLyricIndex}`);
         if (activeLine) { activeLine.classList.add('active'); activeLine.scrollIntoView({ behavior: "smooth", block: "center" }); }
     }
-    window.syncTimestampEditorUI(); // ไฮไลต์กล่องในหน้าต่าง Admin ด้วย
+    window.syncTimestampEditorUI(); 
 }
 
 window.nextLyric = function(isAuto = false) {
@@ -553,6 +555,7 @@ window.toggleLang = function(langIndex) {
     const container = document.getElementById('lyricsContainer'); if (!container) return;
     if (event.target.checked) container.classList.remove(`hide-lang-${langIndex}`); else container.classList.add(`hide-lang-${langIndex}`);
 }
+
 window.onPlayerStateChange = function(event) {
     if (event.data === 0) { // เลข 0 คือสถานะเพลงเล่นจบ
         if (!window.songs || window.songs.length === 0) return;
@@ -568,7 +571,7 @@ window.onPlayerStateChange = function(event) {
             }
             window.playSong(window.songs[randomIndex].id);
         } else {
-            // ➡️ โหมดเล่นเรียงตามปกติ (ตามลำดับในคลัง)
+            // ➡️ โหมดเล่นเรียงตามปกติ 
             const idx = window.songs.findIndex(s => s.id === window.currentSongId);
             if (idx !== -1 && idx + 1 < window.songs.length) {
                 window.playSong(window.songs[idx + 1].id);
@@ -583,6 +586,9 @@ window.onPlayerStateChange = function(event) {
                 if (liveDiv) liveDiv.classList.add('hidden');
                 
                 window.currentSongId = null;
+                
+                // 🔴 กางแถบสุ่มเพลงอัตโนมัติเพื่อรอให้ผู้ใช้เลือกเพลงใหม่
+                if(window.setRandomPanelState) window.setRandomPanelState(true);
             }
         }
     }
@@ -662,16 +668,24 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 // 🎲 ระบบแถบสุ่มเพลงด้านขวา (Widget)
 // ==========================================
-window.toggleRandomPanel = function() {
+// 🔴 ฟังก์ชันใหม่สำหรับสั่งกาง/หุบ แถบแบบเจาะจง
+window.setRandomPanelState = function(isOpen) {
     const panel = document.getElementById('randomPlaylistPanel');
     const icon = document.getElementById('panelToggleIcon');
-    if (panel.classList.contains('open')) {
-        panel.classList.remove('open');
-        icon.innerText = '◀'; 
-    } else {
+    if (!panel || !icon) return;
+    if (isOpen) {
         panel.classList.add('open');
-        icon.innerText = '▶'; 
+        icon.innerText = '▶';
+    } else {
+        panel.classList.remove('open');
+        icon.innerText = '◀';
     }
+}
+
+// อัปเดตปุ่มกดให้เรียกใช้ฟังก์ชันใหม่
+window.toggleRandomPanel = function() {
+    const panel = document.getElementById('randomPlaylistPanel');
+    if (panel) window.setRandomPanelState(!panel.classList.contains('open'));
 }
 
 window.renderRandomPlaylist = function() {
