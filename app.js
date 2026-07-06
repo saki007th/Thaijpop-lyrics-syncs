@@ -557,6 +557,12 @@ window.toggleLang = function(langIndex) {
 }
 
 window.onPlayerStateChange = function(event) {
+    // 🔴 ซิงค์ไอคอนปุ่ม Play/Pause ใน Live Activity
+    const playPauseBtn = document.getElementById('livePlayPauseBtn');
+    if (event.data === 1 && playPauseBtn) playPauseBtn.innerText = '⏸'; // สถานะเล่น
+    if (event.data === 2 && playPauseBtn) playPauseBtn.innerText = '▶'; // สถานะหยุดพัก
+    if (event.data === 0) { // เลข 0 คือสถานะเพลงเล่นจบ
+        // ... (โค้ดเดิมปล่อยไว้เหมือนเดิมครับ) ...
     if (event.data === 0) { // เลข 0 คือสถานะเพลงเล่นจบ
         if (!window.songs || window.songs.length === 0) return;
 
@@ -714,4 +720,45 @@ window.renderRandomPlaylist = function() {
         `;
         container.appendChild(item);
     });
+}
+    // ==========================================
+// 🎵 ระบบควบคุมเพลงใน Live Activity
+// ==========================================
+window.toggleLivePlay = function() {
+    if (!window.ytPlayer || typeof window.ytPlayer.getPlayerState !== 'function') return;
+    const state = window.ytPlayer.getPlayerState();
+    
+    if (state === 1) { // ถ้ากำลังเล่นอยู่
+        window.ytPlayer.pauseVideo();
+    } else { // ถ้าหยุดพักอยู่
+        window.ytPlayer.playVideo();
+    }
+}
+
+window.nextLiveSong = function() {
+    if (!window.songs || window.songs.length === 0 || !window.currentSongId) return;
+    
+    // ถ้าเปิดโหมดสุ่ม ให้สุ่มเพลง
+    if (window.isShuffleEnabled) {
+        let randomIndex = Math.floor(Math.random() * window.songs.length);
+        if (window.songs.length > 1) {
+            const currentIdx = window.songs.findIndex(s => s.id === window.currentSongId);
+            while (randomIndex === currentIdx) randomIndex = Math.floor(Math.random() * window.songs.length);
+        }
+        window.playSong(window.songs[randomIndex].id);
+    } else {
+        // ถ้าโหมดปกติ ให้เล่นเพลงถัดไป (ถ้าหมดจะวนกลับเพลงแรก)
+        const currentIdx = window.songs.findIndex(s => s.id === window.currentSongId);
+        const nextIndex = currentIdx + 1 < window.songs.length ? currentIdx + 1 : 0;
+        window.playSong(window.songs[nextIndex].id);
+    }
+}
+
+window.prevLiveSong = function() {
+    if (!window.songs || window.songs.length === 0 || !window.currentSongId) return;
+    
+    const currentIdx = window.songs.findIndex(s => s.id === window.currentSongId);
+    // ถอยกลับ 1 เพลง (ถ้าอยู่เพลงแรก จะวนไปเพลงสุดท้าย)
+    const prevIndex = currentIdx - 1 >= 0 ? currentIdx - 1 : window.songs.length - 1;
+    window.playSong(window.songs[prevIndex].id);
 }
