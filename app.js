@@ -315,17 +315,36 @@ window.renderLyricsToContainer = function() {
 
     window.currentLyricsArray.forEach((lyric, index) => {
         const lineDiv = document.createElement('div'); lineDiv.className = 'lyric-line'; lineDiv.id = `lyric-line-${index}`;
-        const linesHtml = lyric.split('\n').map((l, i) => `<div class="lang-${i}">${l}</div>`).join('');
+        
+        let linesHtml = "";
+        const cleanLyric = lyric.trim();
+        
+        // 🔴 เช็คว่าถ้าแอดมินพิมพ์คำว่า [ดนตรี] ให้เปลี่ยนเป็นตัวโน้ตกระพริบ
+        if (cleanLyric === '[ดนตรี]') {
+            linesHtml = `
+                <div class="lyric-instrumental">
+                    <span class="note">🎵</span>
+                    <span class="note">🎶</span>
+                    <span class="note">🎵</span>
+                </div>
+            `;
+        } else {
+            // ถ้าเป็นเนื้อร้องปกติ ก็แยกบรรทัดตามปกติ
+            linesHtml = lyric.split('\n').map((l, i) => `<div class="lang-${i}">${l}</div>`).join('');
+        }
+
         const singerString = (song && song.singers && song.singers[index]) ? song.singers[index] : null;
 
-        if (singerString) {
+        if (singerString && cleanLyric !== '[ดนตรี]') { // ซ่อนป้ายชื่อคนร้องถ้าเป็นท่อนดนตรี
             const badgesHtml = singerString.split(',').filter(s=>s.trim()).map(s => `<span class="singer-badge">${s.trim()}</span>`).join('');
             lineDiv.innerHTML = `<div class="singer-badges">${badgesHtml}</div>${linesHtml}`;
-        } else { lineDiv.innerHTML = linesHtml; }
+        } else { 
+            lineDiv.innerHTML = linesHtml; 
+        }
+        
         container.appendChild(lineDiv);
     });
 }
-
 window.playSong = function(id) {
     window.currentSongId = id; const song = window.songs.find(s => s.id === id); if (!song) return;
     
