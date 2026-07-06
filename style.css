@@ -393,3 +393,29 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 .live-btn:active {
     transform: scale(0.9); /* ยุบลงตอนกด */
 }
+/* =========================================
+   เอฟเฟกต์สำหรับท่อนดนตรี [ดนตรี]
+   ========================================= */
+.lyric-instrumental {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    font-size: 1.5em; /* ขนาดตัวโน้ต */
+    height: 60px;
+}
+
+.lyric-instrumental .note {
+    color: #00d2ff;
+    opacity: 0.5;
+    animation: bounceNote 1.2s infinite ease-in-out alternate;
+}
+
+/* ทำให้ตัวโน้ตแต่ละตัวเด้งไม่พร้อมกัน (มีจังหวะ) */
+.lyric-instrumental .note:nth-child(2) { animation-delay: 0.3s; }
+.lyric-instrumental .note:nth-child(3) { animation-delay: 0.6s; }
+
+@keyframes bounceNote {
+    0% { transform: translateY(0) scale(1); opacity: 0.3; }
+    100% { transform: translateY(-10px) scale(1.2); opacity: 1; color: #fff; filter: drop-shadow(0 0 10px #00d2ff); }
+}
