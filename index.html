@@ -143,5 +143,26 @@
     <!-- 🔴 ระบบ PiP  -->
     <script src="pip.js"></script>
     <script type="module" src="app.js"></script>
+
+    <!-- 🔴 แถบสุ่มเพลงด้านขวา (Random Playlist Widget) -->
+    <div id="randomPlaylistPanel" class="right-panel open">
+        <!-- ปุ่มกดพับเก็บ / กางออก -->
+        <button class="panel-toggle-btn" onclick="toggleRandomPanel()">
+            <span id="panelToggleIcon">▶</span>
+        </button>
+        
+        <!-- เนื้อหาด้านใน -->
+        <div class="panel-content">
+            <h3 style="margin-top: 0; font-size: 1.1em; text-align: center; color: #00d2ff; margin-bottom: 15px;">
+                🎲 5 เพลงสุ่มน่าฟัง
+            </h3>
+            <div id="randomSongList" class="random-song-list">
+                <!-- รายชื่อเพลงจะถูกเติมด้วย JavaScript -->
+            </div>
+            <button class="btn-primary" style="width: 100%; margin-top: 15px; font-size: 0.9em;" onclick="renderRandomPlaylist()">
+                🔄 สุ่มเพลงใหม่
+            </button>
+        </div>
+    </div>
 </body>
 </html>
