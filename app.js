@@ -108,6 +108,9 @@ window.wm = {
                 
                 // 🔴 กางแถบสุ่มเพลงอัตโนมัติเมื่อปิดหน้าต่างเพลง
                 if(window.setRandomPanelState) window.setRandomPanelState(true);
+                // 🔴 สั่งปิดหน้าต่างเนื้อร้อง และหน้าต่างซิงค์ (ถ้าเปิดอยู่)
+                if (window.wm.lyricsWin) { window.wm.lyricsWin.close(); }
+                if (window.wm.adminSyncWin) { window.wm.adminSyncWin.close(); }
             }
         }));
     },
