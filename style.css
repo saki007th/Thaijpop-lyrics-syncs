@@ -280,12 +280,9 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
     top: 120px;
     right: 0;
     width: 260px;
-    
-    /* 🔴 เพิ่มค่าสำรอง (0.75 และ 20px) ป้องกันบั๊กตอนตัวแปรว่างเปล่า */
     background: rgba(20, 20, 25, var(--window-opacity, 0.75));
     backdrop-filter: blur(var(--window-blur, 20px)); 
     -webkit-backdrop-filter: blur(var(--window-blur, 20px));
-    
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-right: none;
     border-radius: 20px 0 0 20px;
@@ -293,7 +290,12 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
     box-shadow: -5px 10px 30px rgba(0,0,0,0.5);
     z-index: 9990;
     transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-    transform: translateX(100%);
+    transform: translateX(100%); /* ซ่อนไว้หลังขอบจอ */
+}
+
+/* 🔴 คลาสนี้แหละครับที่หายไป (ตัวสั่งให้กางออก) */
+.right-panel.open {
+    transform: translateX(0); 
 }
 
 .panel-toggle-btn {
@@ -303,12 +305,9 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
     transform: translateY(-50%);
     width: 35px;
     height: 70px;
-    
-    /* 🔴 เพิ่มค่าสำรอง (0.75 และ 20px) เช่นกัน */
     background: rgba(20, 20, 25, var(--window-opacity, 0.75));
     backdrop-filter: blur(var(--window-blur, 20px)); 
     -webkit-backdrop-filter: blur(var(--window-blur, 20px));
-    
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-right: none;
     border-radius: 15px 0 0 15px;
@@ -320,7 +319,11 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
     font-size: 1.1em;
     box-shadow: -5px 0px 15px rgba(0,0,0,0.3);
 }
-.panel-toggle-btn:hover { background: rgba(255, 255, 255, 0.15); color: #00d2ff; }
+
+.panel-toggle-btn:hover { 
+    background: rgba(255, 255, 255, 0.15); 
+    color: #00d2ff; 
+}
 
 .random-song-list {
     display: flex; flex-direction: column; gap: 10px;
