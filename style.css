@@ -280,8 +280,12 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
     top: 120px;
     right: 0;
     width: 260px;
-    background: rgba(20, 20, 25, 0.7);
-    backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+    
+    /* 🔴 เปลี่ยนมาใช้ตัวแปรจากสไลเดอร์ตั้งค่า */
+    background: rgba(20, 20, 25, var(--window-opacity));
+    backdrop-filter: blur(var(--window-blur)); 
+    -webkit-backdrop-filter: blur(var(--window-blur));
+    
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-right: none;
     border-radius: 20px 0 0 20px;
@@ -291,9 +295,6 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
     transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     transform: translateX(100%);
 }
-.right-panel.open {
-    transform: translateX(0);
-}
 
 .panel-toggle-btn {
     position: absolute;
@@ -302,8 +303,12 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
     transform: translateY(-50%);
     width: 35px;
     height: 70px;
-    background: rgba(20, 20, 25, 0.7);
-    backdrop-filter: blur(25px);
+    
+    /* 🔴 เปลี่ยนมาใช้ตัวแปรจากสไลเดอร์ตั้งค่า */
+    background: rgba(20, 20, 25, var(--window-opacity));
+    backdrop-filter: blur(var(--window-blur)); 
+    -webkit-backdrop-filter: blur(var(--window-blur));
+    
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-right: none;
     border-radius: 15px 0 0 15px;
