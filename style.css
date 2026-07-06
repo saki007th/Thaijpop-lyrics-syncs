@@ -72,9 +72,40 @@ body {
 .live-icon { font-size: 1.2em; animation: pulse 2s infinite; }
 @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.15);} 100% {transform: scale(1);} }
 
-.live-info { display: flex; flex-direction: column; line-height: 1.2; white-space: nowrap; }
-.live-title { font-size: 0.85em; font-weight: bold; color: #fff; text-overflow: ellipsis; overflow: hidden; width: 100%; max-width: 150px; }
-.live-artist { font-size: 0.7em; color: #0a84ff; text-overflow: ellipsis; overflow: hidden; width: 100%; max-width: 150px; }
+/* =========================================
+   เอฟเฟกต์ตัวหนังสือวิ่ง (Marquee) สำหรับ Live Activity
+   ========================================= */
+.live-info {
+    flex: 1;            
+    min-width: 0;       
+    margin-right: 15px; /* ระยะห่างก่อนถึงปุ่ม */
+    overflow: hidden;   /* 🔴 สำคัญมาก! ใช้บังสายตา ซ่อนตัวอักษรที่อยู่นอกกรอบ */
+    white-space: nowrap; 
+    display: flex;
+    flex-direction: column;
+}
+
+/* สร้างคำสั่งแอนิเมชันให้วิ่งจากขวาไปซ้าย */
+@keyframes scrollText {
+    0%   { transform: translateX(100%); }   /* เริ่มต้นลอยอยู่ขอบขวา (นอกจอ) */
+    100% { transform: translateX(-100%); }  /* วิ่งทะลุไปจนสุดขอบซ้าย (นอกจอ) */
+}
+
+.live-title {
+    display: inline-block;
+    /* สั่งให้ชื่อเพลงวิ่งวนลูป ใช้เวลา 10 วินาทีต่อ 1 รอบ */
+    animation: scrollText 10s linear infinite; 
+}
+
+.live-artist {
+    display: inline-block;
+    /* สั่งให้ชื่อศิลปินวิ่งช้ากว่านิดนึง (12 วินาที) จะได้ดูมีมิติไม่ทับกัน */
+    animation: scrollText 12s linear infinite; 
+}
+
+.live-controls {
+    flex-shrink: 0; /* 🔴 ล็อกปุ่มควบคุมไว้ ห้ามโดนเบียดเด็ดขาด */
+}
 
 .dock-divider { width: 1px; height: 24px; background: rgba(255, 255, 255, 0.2); transition: all 0.3s; }
 .dock-divider.hidden { width: 0; margin: 0; opacity: 0; }
