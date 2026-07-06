@@ -419,3 +419,23 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
     0% { transform: translateY(0) scale(1); opacity: 0.3; }
     100% { transform: translateY(-10px) scale(1.2); opacity: 1; color: #fff; filter: drop-shadow(0 0 10px #00d2ff); }
 }
+
+/* =========================================
+   แถบปุ่มกดซิงค์เวลา (ลอยติดขอบบนเสมอ)
+   ========================================= */
+.sticky-sync-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;                 /* ดันให้อยู่เลเยอร์บนสุด จะได้ไม่โดนเนื้อเพลงทับ */
+    background: #18181c;          /* 🔴 ใส่สีพื้นหลังให้ทึบ (ปรับให้ตรงกับสีพื้นหลังหน้าต่างของคุณ) */
+    padding: 10px 0 15px 0;       /* เว้นระยะบนล่างให้ดูสวยงาม */
+    margin-top: -5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* เส้นคั่นบางๆ ด้านล่าง */
+    display: flex;
+    gap: 10px;                    /* ระยะห่างระหว่าง 2 ปุ่ม */
+}
+
+/* ถ้าปุ่มเดิมขยายไม่เต็ม ให้บังคับปุ่มกว้างเท่าๆ กัน */
+.sticky-sync-bar button {
+    flex: 1;
+}
