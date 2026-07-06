@@ -208,7 +208,8 @@ async function fetchSongs() {
             window.songs.push({ id: doc.id, title: data.title, artist: data.artist, audioPath: data.audioPath, lyrics: data.lyrics, timestamps: data.timestamps || [], singers: data.singers || [] });
         });
         document.getElementById('loadingOverlay').style.display = 'none';
-        
+        window.renderRandomPlaylist();
+    
         const urlParams = new URLSearchParams(window.location.search);
         const songIdFromUrl = urlParams.get('song');
         if (songIdFromUrl) {
@@ -657,3 +658,46 @@ window.toggleShuffle = function(isEnable) {
 document.addEventListener('DOMContentLoaded', () => {
     window.loadCustomSettings();
 });
+
+// ==========================================
+// 🎲 ระบบแถบสุ่มเพลงด้านขวา (Widget)
+// ==========================================
+window.toggleRandomPanel = function() {
+    const panel = document.getElementById('randomPlaylistPanel');
+    const icon = document.getElementById('panelToggleIcon');
+    if (panel.classList.contains('open')) {
+        panel.classList.remove('open');
+        icon.innerText = '◀'; 
+    } else {
+        panel.classList.add('open');
+        icon.innerText = '▶'; 
+    }
+}
+
+window.renderRandomPlaylist = function() {
+    const container = document.getElementById('randomSongList');
+    if (!container || !window.songs || window.songs.length === 0) return;
+
+    container.innerHTML = '';
+    
+    let shuffled = [...window.songs].sort(() => 0.5 - Math.random());
+    let selected = shuffled.slice(0, 5);
+
+    selected.forEach(song => {
+        const item = document.createElement('div');
+        item.className = 'random-song-item';
+        item.onclick = () => window.playSong(song.id);
+
+        const videoId = window.extractYouTubeID(song.audioPath);
+        const thumbUrl = videoId ? `https://img.youtube.com/vi/${videoId}/default.jpg` : '';
+
+        item.innerHTML = `
+            <img src="${thumbUrl}" onerror="this.style.display='none'">
+            <div class="random-song-info">
+                <div class="random-song-title">${song.title}</div>
+                <div class="random-song-artist">🎤 ${song.artist || '-'}</div>
+            </div>
+        `;
+        container.appendChild(item);
+    });
+}
