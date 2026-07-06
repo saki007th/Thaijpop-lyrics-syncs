@@ -281,10 +281,10 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
     right: 0;
     width: 260px;
     
-    /* 🔴 เปลี่ยนมาใช้ตัวแปรจากสไลเดอร์ตั้งค่า */
-    background: rgba(20, 20, 25, var(--window-opacity));
-    backdrop-filter: blur(var(--window-blur)); 
-    -webkit-backdrop-filter: blur(var(--window-blur));
+    /* 🔴 เพิ่มค่าสำรอง (0.75 และ 20px) ป้องกันบั๊กตอนตัวแปรว่างเปล่า */
+    background: rgba(20, 20, 25, var(--window-opacity, 0.75));
+    backdrop-filter: blur(var(--window-blur, 20px)); 
+    -webkit-backdrop-filter: blur(var(--window-blur, 20px));
     
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-right: none;
@@ -304,10 +304,10 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
     width: 35px;
     height: 70px;
     
-    /* 🔴 เปลี่ยนมาใช้ตัวแปรจากสไลเดอร์ตั้งค่า */
-    background: rgba(20, 20, 25, var(--window-opacity));
-    backdrop-filter: blur(var(--window-blur)); 
-    -webkit-backdrop-filter: blur(var(--window-blur));
+    /* 🔴 เพิ่มค่าสำรอง (0.75 และ 20px) เช่นกัน */
+    background: rgba(20, 20, 25, var(--window-opacity, 0.75));
+    backdrop-filter: blur(var(--window-blur, 20px)); 
+    -webkit-backdrop-filter: blur(var(--window-blur, 20px));
     
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-right: none;
