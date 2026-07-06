@@ -561,8 +561,7 @@ window.onPlayerStateChange = function(event) {
     const playPauseBtn = document.getElementById('livePlayPauseBtn');
     if (event.data === 1 && playPauseBtn) playPauseBtn.innerText = '⏸'; // สถานะเล่น
     if (event.data === 2 && playPauseBtn) playPauseBtn.innerText = '▶'; // สถานะหยุดพัก
-    if (event.data === 0) { // เลข 0 คือสถานะเพลงเล่นจบ
-        // ... (โค้ดเดิมปล่อยไว้เหมือนเดิมครับ) ...
+
     if (event.data === 0) { // เลข 0 คือสถานะเพลงเล่นจบ
         if (!window.songs || window.songs.length === 0) return;
 
