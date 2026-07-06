@@ -19,12 +19,19 @@
    <!-- แถบ Dock (สไตล์ แคปซูลลอย + Live Activity) -->
     <nav class="floating-pill-dock" id="mainDock">
         
-        <!-- 🔴 ส่วน Live Activity(จะโชว์ก็ต่อเมื่อมีเพลงเล่น) -->
+      <!-- 🔴 ส่วน Live Activity(จะโชว์ก็ต่อเมื่อมีเพลงเล่น) -->
         <div id="liveActivity" class="live-activity hidden" onclick="if(window.currentSongId) wm.openPlayer(document.getElementById('liveTitle').innerText)" title="เปิดหน้าต่างเครื่องเล่น">
             <div class="live-icon">🎵</div>
             <div class="live-info">
                 <div id="liveTitle" class="live-title">-</div>
                 <div id="liveArtist" class="live-artist">-</div>
+            </div>
+            
+            <!-- 🔴 เพิ่มกลุ่มปุ่มควบคุมเพลงตรงนี้ -->
+            <div class="live-controls" style="display: flex; gap: 5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 15px; margin-left: 10px;">
+                <button class="live-btn" onclick="event.stopPropagation(); prevLiveSong()" title="ก่อนหน้า">⏮</button>
+                <button id="livePlayPauseBtn" class="live-btn" onclick="event.stopPropagation(); toggleLivePlay()" title="เล่น/พัก">⏸</button>
+                <button class="live-btn" onclick="event.stopPropagation(); nextLiveSong()" title="ถัดไป">⏭</button>
             </div>
         </div>
 
