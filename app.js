@@ -464,7 +464,7 @@ window.renderTimestampEditor = function() {
         if (window.isAdmin) {
             // 2. Dropdown เลือกนักร้อง
             const allSingers = window.getSingersList(song.artist);
-            const dropdown = document.createElement('div'); dropdown.className = 'ts-singer-dropdown';
+            const dropdown = document.createElement('div'); dropdown.className = 'ts-singer-dropdown'; dropdown.style.position = 'relative';
             const toggleBtn = document.createElement('button'); toggleBtn.className = 'ts-dropdown-toggle';
             const currentSingers = (song.singers && song.singers[index]) ? song.singers[index].split(',').map(s=>s.trim()).filter(s=>s) : [];
             toggleBtn.innerText = currentSingers.length > 0 ? currentSingers.join(', ') : '👤 เลือกร้อง';
@@ -481,10 +481,29 @@ window.renderTimestampEditor = function() {
                 };
                 itemLabel.appendChild(checkbox); itemLabel.appendChild(document.createTextNode(' ' + singer)); menu.appendChild(itemLabel);
             });
-            toggleBtn.onclick = (e) => {
-                e.stopPropagation(); const isShowing = menu.classList.contains('show'); document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show'));
-                if (!isShowing) { menu.classList.add('show'); const rect = toggleBtn.getBoundingClientRect(); menu.style.position = 'fixed'; menu.style.left = rect.left + 'px'; menu.style.top = (rect.bottom + 5) + 'px'; }
-            };
+           toggleBtn.onclick = (e) => {
+    e.stopPropagation(); 
+    const isShowing = menu.classList.contains('show'); 
+    document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show'));
+    
+    if (!isShowing) { 
+        menu.classList.add('show'); 
+        const rect = toggleBtn.getBoundingClientRect(); 
+        
+        // เปลี่ยนจาก fixed เป็น absolute เพื่อไม่ให้หลุดกรอบ
+        menu.style.position = 'absolute'; 
+        menu.style.left = '0'; 
+        
+        // 🔴 เช็คว่าพื้นที่ด้านล่างเหลือพอกางเมนูไหม (ถ้าน้อยกว่า 200px ให้เด้งขึ้นบนแทน)
+        if (window.innerHeight - rect.bottom < 200) {
+            menu.style.top = 'auto';
+            menu.style.bottom = 'calc(100% + 5px)'; // เด้งขึ้นบน
+        } else {
+            menu.style.top = 'calc(100% + 5px)';    // กางลงล่างปกติ
+            menu.style.bottom = 'auto';
+        }
+    }
+};
             dropdown.appendChild(toggleBtn); dropdown.appendChild(menu); leftControls.appendChild(dropdown);
 
             // 3. ช่องกรอกเวลาแบบละเอียด
