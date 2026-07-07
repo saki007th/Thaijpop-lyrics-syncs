@@ -256,7 +256,7 @@ window.saveSong = async function() {
 
     try {
         if (window.editingSongId) { await updateDoc(doc(db, "songs", window.editingSongId), { title, artist, audioPath, lyrics }); } 
-        else { await addDoc(songsCollection, { title, artist, audioPath, lyrics, timestamps: [], singers: [] }); }
+        else { await addDoc(songsCollection, { title, artist, audioPath, lyrics, timestamps: [], singers: [], createdAt: Date.now() }); }
         await fetchSongs();
         if(window.wm.addWin) window.wm.addWin.close(); 
         if(window.wm.libWin) window.renderSongList(); 
