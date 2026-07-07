@@ -322,7 +322,18 @@ window.renderLyricsToContainer = function() {
 
     window.currentLyricsArray.forEach((lyric, index) => {
         const lineDiv = document.createElement('div'); lineDiv.className = 'lyric-line'; lineDiv.id = `lyric-line-${index}`;
-        
+        // 🔴 ฟีเจอร์กดเนื้อเพลงแล้ววาร์ป (Seek)
+        lineDiv.onclick = () => {
+            const song = window.songs.find(s => s.id === window.currentSongId);
+            // ตรวจสอบว่าเพลงนี้มีเวลาถูกเซ็ตไว้แล้ว และ Player พร้อมทำงาน
+            if (song && song.timestamps && song.timestamps[index] != null && window.ytPlayer && typeof window.ytPlayer.seekTo === 'function') {
+                window.ytPlayer.seekTo(song.timestamps[index], true);
+                
+                // อัปเดต UI ทันทีให้ผู้ใช้รู้ว่ากดติดแล้ว (ไม่ต้องรอรอบ Sync)
+                window.currentLyricIndex = index;
+                window.updateLyricDisplay();
+            }
+        };
         let linesHtml = "";
         const cleanLyric = lyric.trim();
         
