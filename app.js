@@ -810,3 +810,28 @@ window.prevLiveSong = function() {
     const prevIndex = currentIdx - 1 >= 0 ? currentIdx - 1 : window.songs.length - 1;
     window.playSong(window.songs[prevIndex].id);
 }
+/* =========================================
+   สไตล์ท่อนร้องเสริม / คอรัส (สีรุ้ง)
+   ========================================= */
+.lyric-sub {
+    /* สร้างสีรุ้งโทนสว่างๆ ให้อ่านง่าย */
+    background: linear-gradient(90deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #ff9a9e);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    
+    /* อนิเมชั่นให้สีรุ้งไหลไปเรื่อยๆ (ถ้าไม่อยากให้ขยับ ลบบรรทัดนี้ได้ครับ) */
+    animation: rainbowFlow 4s linear infinite;
+    
+    font-size: 0.85em;       /* ย่อขนาดให้เล็กกว่าท่อนหลักนิดนึง */
+    margin-left: 10px;       /* เว้นวรรคจากท่อนหลักหน่อย */
+    font-style: italic;      /* ทำตัวเอียงให้ดูเป็นเสียงเสริม */
+    font-weight: bold;
+    
+    /* ใส่เงาดำให้ตัวหนังสือ เพื่อให้อ่านออกไม่ว่าฉากหลังจะเป็นสีอะไร */
+    filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.8)); 
+}
+
+@keyframes rainbowFlow {
+    to { background-position: 200% center; }
+}
