@@ -259,7 +259,11 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 }
 .singer-badges { display: flex; gap: 8px; margin-bottom: 8px; justify-content: center; flex-wrap: wrap; }
 .singer-badge { font-size: 0.65em; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; }
-.lyric-line.active .singer-badge { background: #0a84ff; color: #fff; }
+.lyric-line.active .singer-badge { 
+    color: #fff; 
+    border: 1px solid rgba(255,255,255,0.8);
+    box-shadow: 0 0 10px rgba(255,255,255,0.5); /* เพิ่มเงาเรืองแสงตอนกำลังร้อง */
+}
 
 .hide-lang-0 .lang-0, .hide-lang-1 .lang-1, .hide-lang-2 .lang-2 { display: none !important; }
 
