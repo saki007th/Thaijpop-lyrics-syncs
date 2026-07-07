@@ -263,6 +263,14 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 .ts-dropdown-menu.show { display: flex; flex-direction: column; gap: 10px; }
 .ts-dropdown-item { display: flex; align-items: center; gap: 10px; font-size: 0.9em; color: #f5f5f7; cursor: pointer; }
 .ts-dropdown-item input { width: 16px; height: 16px; margin: 0; cursor: pointer; }
+/* ตกแต่ง Scrollbar ด้านในเมนูเลือกร้องให้มองเห็นชัดเจน */
+.ts-dropdown-menu::-webkit-scrollbar { 
+    width: 6px; 
+}
+.ts-dropdown-menu::-webkit-scrollbar-thumb { 
+    background: rgba(255, 255, 255, 0.3); 
+    border-radius: 10px; 
+}
 
 /* =========================================
    แก้ไขปุ่มหน้าต่าง (สไตล์ Mac OS)
