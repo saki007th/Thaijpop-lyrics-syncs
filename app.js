@@ -211,10 +211,17 @@ async function fetchSongs() {
         window.songs = [];
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            window.songs.push({ id: doc.id, title: data.title, artist: data.artist, audioPath: data.audioPath, lyrics: data.lyrics, timestamps: data.timestamps || [], singers: data.singers || [] });
+            // ถ้าเพลงเก่าไม่มี createdAt ให้ข้ามไป (ปล่อยเป็น undefined)
+            window.songs.push({ id: doc.id, title: data.title, artist: data.artist, audioPath: data.audioPath, lyrics: data.lyrics, timestamps: data.timestamps || [], singers: data.singers || [], createdAt: data.createdAt });
         });
         document.getElementById('loadingOverlay').style.display = 'none';
+        
         window.renderRandomPlaylist();
+        
+        // 🔴 ปลุกระบบแจ้งเตือนให้ทำงาน ตรงนี้เลยครับ!
+        if(window.checkNewSongsNotification) {
+            window.checkNewSongsNotification();
+        }
     
         const urlParams = new URLSearchParams(window.location.search);
         const songIdFromUrl = urlParams.get('song');
