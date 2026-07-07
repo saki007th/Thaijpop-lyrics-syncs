@@ -439,3 +439,54 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 .sticky-sync-bar button {
     flex: 1;
 }
+/* =========================================
+   ปุ่มกระดิ่งแจ้งเตือน (ลอยเด่นมุมขวาล่าง)
+   ========================================= */
+.floating-notify-btn {
+    position: fixed;
+    bottom: 30px; /* ระยะห่างจากขอบจอข้างล่าง */
+    right: 30px;  /* ระยะห่างจากขอบจอฝั่งขวา */
+    width: 55px;
+    height: 55px;
+    background: rgba(30, 30, 30, 0.7); /* พื้นหลังสีดำโปร่งแสง */
+    backdrop-filter: blur(10px);       /* เอฟเฟกต์กระจกฝ้า */
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%; /* ทำให้ปุ่มเป็นวงกลม 100% */
+    font-size: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 1000; /* ลอยอยู่เลเยอร์บนสุด ห้ามใครบัง */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    transition: transform 0.2s, background 0.2s;
+    color: white;
+}
+
+/* เอฟเฟกต์ตอนเอาเมาส์ชี้ ปุ่มจะเด้งขยายขึ้นนิดนึง */
+.floating-notify-btn:hover {
+    transform: scale(1.1);
+    background: rgba(50, 50, 50, 0.9);
+}
+
+.notify-badge {
+    position: absolute;
+    top: 10px;    /* ปรับตำแหน่งจุดแดงให้เข้ากับปุ่มวงกลม */
+    right: 10px;
+    width: 12px;
+    height: 12px;
+    background-color: #ff3b30;
+    border-radius: 50%;
+    box-shadow: 0 0 5px rgba(255, 59, 48, 0.8);
+    border: 2px solid #1c1c1e;
+    
+    /* อนิเมชั่นกระพริบดึงดูดสายตา */
+    animation: pulseBadge 2s infinite;
+}
+
+@keyframes pulseBadge {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(255, 59, 48, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
+}
