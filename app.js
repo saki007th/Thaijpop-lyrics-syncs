@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { initializeSingerColors } from './singerColors.js';
+import { initializeSingerColors, openSingerColorManager } from './singerColors.js';
 
 const ALLOWED_EMAILS = ["sashikiwa@gmail.com", "panupong.bb27115@gmail.com"]; 
 
@@ -196,9 +196,27 @@ onAuthStateChanged(auth, async (user) => {  // 🔴 1. เติม async ตร
     document.getElementById('btnHeaderLogin').style.display = window.isLoggedIn ? 'none' : 'block';
     document.getElementById('btnAddSong').style.display = window.isAdmin ? 'block' : 'none';
     
-    // โชว์ปุ่ม Admin Sync เฉพาะตอนที่ล็อกอินแอดมิน
+   // โชว์ปุ่ม Admin Sync เฉพาะตอนที่ล็อกอินแอดมิน
     document.getElementById('btnDockAdminSync').style.display = window.isAdmin ? 'block' : 'none';
     
+    // ==========================================
+    // 🔴 3.2 โค้ดใหม่: สร้างปุ่มตั้งค่าสีให้แอดมิน
+    let btnColor = document.getElementById('btnColorAdmin');
+    if (window.isAdmin) {
+        if (!btnColor) {
+            btnColor = document.createElement('button');
+            btnColor.id = 'btnColorAdmin';
+            btnColor.innerHTML = '🎨 จัดการสีนักร้อง';
+            btnColor.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:100; background:#9370DB; color:#fff; border:none; padding:10px 15px; border-radius:20px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); font-weight:bold;';
+            btnColor.onclick = () => openSingerColorManager(db);
+            document.body.appendChild(btnColor);
+        }
+        btnColor.style.display = 'block';
+    } else {
+        if (btnColor) btnColor.style.display = 'none';
+    }
+    // ==========================================
+
     // 🔴 2. โหลดฐานข้อมูลสีให้เสร็จก่อน แล้วค่อยดึงเพลง
     await initializeSingerColors(db);
     
