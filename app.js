@@ -355,8 +355,9 @@ window.renderLyricsToContainer = function() {
 window.playSong = function(id) {
     window.currentSongId = id; const song = window.songs.find(s => s.id === id); if (!song) return;
     
-    // 🔴 หุบแถบสุ่มเพลงอัตโนมัติเมื่อเริ่มเล่นเพลง
+    // 🔴 ฟังชั่นหุบแถบอัตโนมัติ
     if(window.setRandomPanelState) window.setRandomPanelState(false);
+    if(window.wm && window.wm.notifyWin) window.wm.notifyWin.close();
     
     // โชว์และอัปเดต Live Activity
     const liveAct = document.getElementById('liveActivity');
