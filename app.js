@@ -326,7 +326,7 @@ window.renderLyricsToContainer = function() {
         let linesHtml = "";
         const cleanLyric = lyric.trim();
         
-        // 🔴 เช็คว่าถ้าแอดมินพิมพ์คำว่า [ดนตรี] ให้เปลี่ยนเป็นตัวโน้ตกระพริบ
+       // 🔴 เช็คว่าถ้าแอดมินพิมพ์คำว่า [ดนตรี] ให้เปลี่ยนเป็นตัวโน้ตกระพริบ
         if (cleanLyric === '[ดนตรี]') {
             linesHtml = `
                 <div class="lyric-instrumental">
@@ -335,17 +335,17 @@ window.renderLyricsToContainer = function() {
                     <span class="note">🎵</span>
                 </div>
             `;
-      } else {
-            // ถ้าเป็นเนื้อร้องปกติ ให้เช็คสัญลักษณ์ || เพื่อแยกท่อนเสริมสีรุ้ง
+        } else {
+            // 🔴 ถ้าเป็นเนื้อร้องปกติ ให้เช็คสัญลักษณ์ ||
             linesHtml = lyric.split('\n').map((l, i) => {
                 if (l.includes('||')) {
-                    // ถ้าเจอ || ให้หั่นเป็น 2 ท่อน
+                    // ถ้าเจอ || ให้หั่นเป็น 2 ท่อน แล้วใส่คลาส dual-lyric
                     let parts = l.split('||');
                     let mainText = parts[0].trim();
                     let subText = parts[1].trim();
-                    return `<div class="lang-${i}">${mainText} <span class="lyric-sub">${subText}</span></div>`;
+                    return `<div class="lang-${i} dual-lyric"><span class="lyric-main">${mainText}</span><span class="lyric-sub">${subText}</span></div>`;
                 } else {
-                    // ถ้าไม่มี || ก็แสดงผลปกติ
+                    // ✅ ปลอดภัย 100%: ถ้าไม่มี || ก็แสดงผลด้วยโครงสร้างเก่าเป๊ะๆ
                     return `<div class="lang-${i}">${l}</div>`;
                 }
             }).join('');
