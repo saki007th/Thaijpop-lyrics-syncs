@@ -501,29 +501,32 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 /* =========================================
    สไตล์ท่อนร้องเสริม (คอรัสสีรุ้ง) แบบปลอดภัยไม่พังระบบเก่า
    ========================================= */
-
-/* แบ่งพื้นที่บรรทัดเป็น 3 เลน (ซ้ายว่าง, กลางเนื้อหลัก, ขวาเนื้อรอง) */
+/* =========================================
+   สไตล์ท่อนร้องเสริม (คอรัสสีรุ้ง) - อัปเกรดจัดแถวชิดขอบ
+   ========================================= */
 .dual-lyric {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr; 
-    align-items: center;
+    position: relative;
     width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-/* บังคับเนื้อหลักให้อยู่เลนกลางเสมอ */
 .lyric-main {
-    grid-column: 2; 
     text-align: center;
+    /* บังคับไม่ให้เนื้อหลักยาวเกินไปจนไปทับคอรัส */
+    max-width: 75%; 
 }
 
-/* ดันเนื้อรอง (คอรัส) ไปอยู่เลนขวา */
 .lyric-sub {
-    grid-column: 3; 
-    justify-self: start;
-    margin-left: 15px; /* ระยะห่างจากเนื้อหลัก */
-    text-align: left;
+    /* 🔴 สั่งให้ลอยไปติดขอบขวาเสมอ */
+    position: absolute;
+    right: 15px; 
     
-    /* สไตล์สีรุ้งพาสเทล */
+    /* 🔴 จัดบรรทัดชิดขวา เพื่อแก้ปัญหาฟันหลอ */
+    text-align: right; 
+    
+    /* สไตล์สีรุ้งพาสเทลเดิม */
     background: linear-gradient(90deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #ff9a9e);
     background-size: 200% auto;
     -webkit-background-clip: text;
