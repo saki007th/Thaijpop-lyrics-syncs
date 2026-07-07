@@ -335,9 +335,20 @@ window.renderLyricsToContainer = function() {
                     <span class="note">🎵</span>
                 </div>
             `;
-        } else {
-            // ถ้าเป็นเนื้อร้องปกติ ก็แยกบรรทัดตามปกติ
-            linesHtml = lyric.split('\n').map((l, i) => `<div class="lang-${i}">${l}</div>`).join('');
+      } else {
+            // ถ้าเป็นเนื้อร้องปกติ ให้เช็คสัญลักษณ์ || เพื่อแยกท่อนเสริมสีรุ้ง
+            linesHtml = lyric.split('\n').map((l, i) => {
+                if (l.includes('||')) {
+                    // ถ้าเจอ || ให้หั่นเป็น 2 ท่อน
+                    let parts = l.split('||');
+                    let mainText = parts[0].trim();
+                    let subText = parts[1].trim();
+                    return `<div class="lang-${i}">${mainText} <span class="lyric-sub">${subText}</span></div>`;
+                } else {
+                    // ถ้าไม่มี || ก็แสดงผลปกติ
+                    return `<div class="lang-${i}">${l}</div>`;
+                }
+            }).join('');
         }
 
         const singerString = (song && song.singers && song.singers[index]) ? song.singers[index] : null;
