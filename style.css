@@ -544,7 +544,6 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 
 .lyric-sub {
     display: block;
-    margin-top: 4px;        /* เว้นระยะจากบรรทัดหลัก */
     text-align: center;
     
     /* สไตล์สีรุ้งพาสเทล */
@@ -562,4 +561,25 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
     /* ป้องกันเนื้อยาวเกินหน้าต่าง */
     max-width: 90%; 
     word-wrap: break-word;
+
+    /* 🔴 ส่วนที่เพิ่มใหม่: ซ่อนตัว และเตรียมเอฟเฟคปิดตัว */
+    opacity: 0;                      
+    visibility: hidden;              
+    transform: translateY(-15px) scale(0.9); 
+    max-height: 0;                   
+    margin-top: 0;                   
+    overflow: hidden;                
+    transition: all 0.3s ease-out; 
+}
+
+/* =========================================
+   เอฟเฟคเปิดตัว (ตอนกำลังร้องบรรทัดนี้)
+   ========================================= */
+.lyric-line.active .lyric-sub {
+    opacity: 1;                      
+    visibility: visible;             
+    transform: translateY(0) scale(1); 
+    max-height: 100px;               
+    margin-top: 4px;                 
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); 
 }
