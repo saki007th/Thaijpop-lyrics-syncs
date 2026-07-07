@@ -101,10 +101,10 @@ window.openNotifyWindow = function() {
             mount: mountDiv,
             width: "350px",
             height: "430px",
-            x: "right",
+            x: "left",
             y: "bottom",
             bottom: 100, // ดันให้ลอยอยู่เหนือปุ่มกระดิ่งนิดหน่อย จะได้ไม่บังกัน
-            right: 30,
+            left: 30,
             class: ["wb-dark", "no-min"],
             onclose: () => {
                 window.wm.notifyWin = null;
