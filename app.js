@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeSingerColors } from './singerColors.js';
 
 const ALLOWED_EMAILS = ["sashikiwa@gmail.com", "panupong.bb27115@gmail.com"]; 
 
@@ -187,7 +188,7 @@ const tag = document.createElement('script'); tag.src = "https://www.youtube.com
 // ==========================================
 // การตรวจสิทธิ์ & ดึงข้อมูล
 // ==========================================
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {  // 🔴 1. เติม async ตรงนี้
     window.isLoggedIn = !!user;
     window.isAdmin = user && ALLOWED_EMAILS.includes(user.email);
     
@@ -197,6 +198,9 @@ onAuthStateChanged(auth, (user) => {
     
     // โชว์ปุ่ม Admin Sync เฉพาะตอนที่ล็อกอินแอดมิน
     document.getElementById('btnDockAdminSync').style.display = window.isAdmin ? 'block' : 'none';
+    
+    // 🔴 2. โหลดฐานข้อมูลสีให้เสร็จก่อน แล้วค่อยดึงเพลง
+    await initializeSingerColors(db);
     
     fetchSongs(); 
 });
@@ -364,8 +368,17 @@ window.renderLyricsToContainer = function() {
 
         const singerString = (song && song.singers && song.singers[index]) ? song.singers[index] : null;
 
-        if (singerString && cleanLyric !== '[ดนตรี]') { // ซ่อนป้ายชื่อคนร้องถ้าเป็นท่อนดนตรี
-            const badgesHtml = singerString.split(',').filter(s=>s.trim()).map(s => `<span class="singer-badge">${s.trim()}</span>`).join('');
+    if (singerString && cleanLyric !== '[ดนตรี]') { 
+            const badgesHtml = singerString.split(',').filter(s=>s.trim()).map(s => {
+                const name = s.trim();
+                // 🔴 ดึงสีมาจากฐานข้อมูล (ถ้าไม่เจอใครให้ใช้สีฟ้า default)
+                // เพิ่มเช็คเผื่อ window.SINGER_COLORS ยังโหลดไม่เสร็จ
+                const colorsDict = window.SINGER_COLORS || {};
+                const badgeColor = colorsDict[name] || '#0a84ff';
+                
+                // ใส่สไตล์สีลงไปในป้ายชื่อ
+                return `<span class="singer-badge" style="background-color: ${badgeColor}; color: #fff; border: 1px solid rgba(255,255,255,0.2);">${name}</span>`;
+            }).join('');
             lineDiv.innerHTML = `<div class="singer-badges">${badgesHtml}</div>${linesHtml}`;
         } else { 
             lineDiv.innerHTML = linesHtml; 
