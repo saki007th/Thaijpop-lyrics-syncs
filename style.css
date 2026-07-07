@@ -522,37 +522,28 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
     100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
 }
 /* =========================================
-   สไตล์ท่อนร้องเสริม (คอรัสสีรุ้ง) แบบปลอดภัยไม่พังระบบเก่า
-   ========================================= */
-/* =========================================
-   สไตล์ท่อนร้องเสริม (คอรัสสีรุ้ง) - อัปเกรดจัดแถวชิดขอบ
+   สไตล์ใหม่: โครงสร้างแนวตั้ง (คอรัสอยู่ใต้เนื้อหลัก) 
+   วิธีนี้ชัวร์ที่สุดและไม่เบียดเนื้อเพลงหลักครับ
    ========================================= */
 .dual-lyric {
-    position: relative;
-    width: 100%;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    
-    /* 🔴 พระเอกของเรา: บังคับความสูงขั้นต่ำ ป้องกันกล่องแฟบทับกัน */
-    min-height: 1.5em; 
+    flex-direction: column; /* เรียงเป็นแนวตั้ง */
+    align-items: center;    /* จัดให้อยู่กึ่งกลางหน้าจอเสมอ */
+    width: 100%;
+    margin-bottom: 10px;    /* เว้นระยะห่างแต่ละบรรทัด */
 }
 
 .lyric-main {
     text-align: center;
-    /* บังคับไม่ให้เนื้อหลักยาวเกินไปจนไปทับคอรัส */
-    max-width: 75%; 
+    width: 100%;
 }
 
 .lyric-sub {
-    /* 🔴 สั่งให้ลอยไปติดขอบขวาเสมอ */
-    position: absolute;
-    right: 15px; 
+    display: block;
+    margin-top: 4px;        /* เว้นระยะจากบรรทัดหลัก */
+    text-align: center;
     
-    /* 🔴 จัดบรรทัดชิดขวา เพื่อแก้ปัญหาฟันหลอ */
-    text-align: right; 
-    
-    /* สไตล์สีรุ้งพาสเทลเดิม */
+    /* สไตล์สีรุ้งพาสเทล */
     background: linear-gradient(90deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #ff9a9e);
     background-size: 200% auto;
     -webkit-background-clip: text;
@@ -563,4 +554,8 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
     font-style: italic;
     font-weight: bold;
     filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.8));
+    
+    /* ป้องกันเนื้อยาวเกินหน้าต่าง */
+    max-width: 90%; 
+    word-wrap: break-word;
 }
