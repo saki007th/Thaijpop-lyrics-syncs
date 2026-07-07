@@ -232,8 +232,31 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 
 /* เนื้อเพลง */
 .lyrics-container { padding: 20px 10px; text-align: center; }
-.lyric-line { font-size: var(--lyric-font-size); font-weight: 600; color: rgba(255,255,255,0.3); transition: all 0.3s; margin-bottom: 15px; }
-.lyric-line.active { font-size: calc(var(--lyric-font-size) + 0.35em); color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); transform: scale(1.05); margin: 30px 0; }
+/* เนื้อเพลงปกติ (เพิ่ม cursor: pointer เพื่อให้รู้ว่ากดได้) */
+.lyric-line { 
+    font-size: var(--lyric-font-size); 
+    font-weight: 600; 
+    color: rgba(255,255,255,0.3); 
+    transition: all 0.3s; 
+    margin-bottom: 15px; 
+    cursor: pointer; 
+}
+
+/* เอฟเฟกต์ตอนเอาเมาส์ไปชี้ ให้สว่างขึ้นนิดนึง (กระตุ้นให้กด) */
+.lyric-line:hover {
+    color: rgba(255,255,255,0.6);
+    transform: scale(1.02);
+}
+
+/* เนื้อเพลงท่อนที่กำลังร้องอยู่ (Active) */
+.lyric-line.active { 
+    font-size: calc(var(--lyric-font-size) + 0.35em); 
+    color: #fff; 
+    text-shadow: 0 0 15px rgba(255,255,255,0.5); 
+    transform: scale(1.05); 
+    margin: 30px 0; 
+    cursor: default; 
+}
 .singer-badges { display: flex; gap: 8px; margin-bottom: 8px; justify-content: center; flex-wrap: wrap; }
 .singer-badge { font-size: 0.65em; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; }
 .lyric-line.active .singer-badge { background: #0a84ff; color: #fff; }
