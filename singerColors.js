@@ -30,70 +30,135 @@ export async function initializeSingerColors(db) {
 }
 
 // ==========================================
-// 2. ฟังก์ชันเปิดหน้าต่างแอดมิน (เวอร์ชันล่าสุด มีปุ่มเพิ่มเอง)
+// 2. ฟังก์ชันเปิดหน้าต่างแอดมิน (ลากได้ + โปร่งแสง + แสดงสีทันที)
 // ==========================================
 export async function openSingerColorManager(db) {
     const allSingers = new Set();
     
-    // 1. ดึงชื่อนักร้องจากฐานข้อมูลสีที่มีอยู่แล้วมาโชว์
+    // ดึงรายชื่อนักร้อง
     if (window.SINGER_COLORS) {
         Object.keys(window.SINGER_COLORS).forEach(s => allSingers.add(s));
     }
-
-    // 2. พยายามดึงชื่อจากข้อมูลศิลปินในเพลงเผื่อไว้ด้วย
     if (window.songs) {
         window.songs.forEach(song => {
             if (song.artist) song.artist.split(',').forEach(s => allSingers.add(s.trim()));
         });
     }
 
-    // 3. สร้างหน้าต่าง Modal 
+    // สร้างหน้าต่าง UI
     const modal = document.createElement('div');
-    modal.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#222; padding:20px; border-radius:10px; z-index:9999; width:380px; box-shadow:0 0 20px rgba(0,0,0,0.8); border: 1px solid #444; color:#fff;';
+    modal.style.cssText = `
+        position: fixed;
+        top: 15vh;
+        left: calc(50% - 200px);
+        width: 400px;
+        background: rgba(25, 25, 25, 0.65); /* ความทึบแสง */
+        backdrop-filter: blur(15px); /* ความเบลอ */
+        -webkit-backdrop-filter: blur(15px);
+        border-radius: 16px;
+        z-index: 9999;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        border: 1px solid rgba(255,255,255,0.15);
+        color: #fff;
+        font-family: inherit;
+    `;
     
-    let html = '<h3 style="margin-top:0; border-bottom:1px solid #444; padding-bottom:10px;">🎨 ตั้งค่าสีนักร้อง</h3>';
+    let html = `
+        <div id="modalDragHandle" style="cursor: grab; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); border-radius: 16px 16px 0 0;">
+            <h3 style="margin: 0; text-align: center; font-size: 1.2em; pointer-events: none;">🎨 ตั้งค่าสีนักร้อง</h3>
+        </div>
+        <div style="padding: 20px;">
+    `;
     
-    // ✨ ฟีเจอร์ใหม่: ช่องให้แอดมินพิมพ์เพิ่มชื่อนักร้องเองได้เลย!
+    // ช่องเพิ่มนักร้องใหม่
     html += `
-        <div style="margin-bottom: 15px; background: #333; padding: 10px; border-radius: 6px;">
-            <div style="font-size: 0.8em; margin-bottom: 5px; color: #aaa;">➕ เพิ่มนักร้องใหม่ / หาไม่เจอพิมพ์เองเลย:</div>
+        <div style="margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="font-size: 0.85em; margin-bottom: 10px; color: #ccc;">➕ เพิ่มนักร้องใหม่ / หาไม่เจอพิมพ์เองเลย:</div>
             <div style="display:flex; gap:10px;">
-                <input type="text" id="newSingerName" placeholder="พิมพ์ชื่อ..." style="flex:1; padding:5px; border-radius:3px; border:none; outline:none; font-family: inherit;">
-                <input type="color" id="newSingerColor" value="#ff0000" style="cursor:pointer; background:none; border:none; height:25px; width:30px;">
-                <button id="btnAddManualSinger" style="background:#28a745; color:white; border:none; padding:5px 15px; border-radius:3px; cursor:pointer;">เพิ่ม</button>
+                <input type="text" id="newSingerName" placeholder="พิมพ์ชื่อศิลปิน..." style="flex:1; padding:10px 12px; border-radius:8px; border:none; outline:none; background: rgba(255,255,255,0.1); color: #fff;">
+                <input type="color" id="newSingerColor" value="#0a84ff" style="cursor:pointer; background:none; border:none; height:36px; width:36px; padding:0; border-radius:6px;">
+                <button id="btnAddManualSinger" style="background:#0a84ff; color:white; border:none; padding:0 18px; border-radius:8px; cursor:pointer; font-weight:bold;">เพิ่ม</button>
             </div>
         </div>
-        <div id="singerListContainer" style="max-height:50vh; overflow-y:auto; padding-right:5px;">
+        <div id="singerListContainer" style="max-height:45vh; overflow-y:auto; padding-right:8px; margin-bottom: 10px;">
     `;
     
     // สร้างรายการนักร้องทั้งหมด (เรียงตามตัวอักษร)
     Array.from(allSingers).sort().forEach(singer => {
         if(!singer || singer === 'ดนตรี') return;
-        const currentColor = window.SINGER_COLORS[singer] || '#0a84ff';
+        const currentColor = window.SINGER_COLORS[singer] || '#ffffff';
         html += `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; background:#333; padding:8px; border-radius:6px;">
-                <span style="font-size:0.9em;">${singer}</span>
-                <input type="color" class="color-input" data-name="${singer}" value="${currentColor}" style="cursor:pointer; background:none; border:none; height:30px; width:40px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; background:rgba(0,0,0,0.2); padding:10px 15px; border-radius:10px;">
+                <span id="preview_${singer}" style="font-size:1em; font-weight:bold; color:${currentColor}; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">${singer}</span>
+                <div style="display:flex; align-items:center; gap: 10px;">
+                    <span id="hex_${singer}" style="font-size:0.75em; color:#aaa; font-family:monospace;">${currentColor}</span>
+                    <input type="color" class="color-input" data-name="${singer}" value="${currentColor}" style="cursor:pointer; background:none; border:none; height:30px; width:34px; padding:0;">
+                </div>
             </div>
         `;
     });
 
     html += `
         </div>
-        <div style="display:flex; gap:10px; margin-top:20px;">
-            <button id="btnSaveColors" style="flex:1; background:#0a84ff; border:none; padding:10px; color:#fff; border-radius:5px; cursor:pointer;">💾 บันทึกทั้งหมด</button>
-            <button id="btnCloseColors" style="flex:1; background:#555; border:none; padding:10px; color:#fff; border-radius:5px; cursor:pointer;">❌ ปิด</button>
+        <div style="display:flex; gap:12px; margin-top:20px;">
+            <button id="btnSaveColors" style="flex:1; background:#0a84ff; border:none; padding:12px; color:#fff; border-radius:10px; cursor:pointer; font-weight:bold; transition:0.2s;">💾 บันทึกทั้งหมด</button>
+            <button id="btnCloseColors" style="flex:1; background:rgba(255,255,255,0.15); border:none; padding:12px; color:#fff; border-radius:10px; cursor:pointer; font-weight:bold; transition:0.2s;">❌ ปิด</button>
+        </div>
         </div>
     `;
     modal.innerHTML = html;
     document.body.appendChild(modal);
 
     // ==========================================
+    // 🖱️ ระบบลากหน้าต่าง
+    // ==========================================
+    const dragHandle = document.getElementById('modalDragHandle');
+    let isDragging = false;
+    let startX, startY, initialLeft, initialTop;
+
+    dragHandle.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        dragHandle.style.cursor = 'grabbing';
+        startX = e.clientX;
+        startY = e.clientY;
+        const rect = modal.getBoundingClientRect();
+        initialLeft = rect.left;
+        initialTop = rect.top;
+        e.preventDefault(); 
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        modal.style.left = `${initialLeft + dx}px`;
+        modal.style.top = `${initialTop + dy}px`;
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+        dragHandle.style.cursor = 'grab';
+    });
+
+    // ==========================================
+    // 👁️ ระบบ Live Preview อัปเดตสีทันทีที่กดเลือก
+    // ==========================================
+    document.querySelectorAll('.color-input').forEach(input => {
+        input.addEventListener('input', (e) => {
+            const singerName = e.target.getAttribute('data-name');
+            const newColor = e.target.value;
+            const previewEl = document.getElementById(`preview_${singerName}`);
+            const hexEl = document.getElementById(`hex_${singerName}`);
+            if (previewEl) previewEl.style.color = newColor;
+            if (hexEl) hexEl.innerText = newColor;
+        });
+    });
+
+    // ==========================================
     // จัดการปุ่มกดต่างๆ
     // ==========================================
     document.getElementById('btnCloseColors').onclick = () => document.body.removeChild(modal);
     
-    // โค้ดทำงานของปุ่ม ➕ เพิ่มนักร้องเอง
     document.getElementById('btnAddManualSinger').onclick = () => {
         const name = document.getElementById('newSingerName').value.trim();
         const color = document.getElementById('newSingerColor').value;
@@ -103,10 +168,9 @@ export async function openSingerColorManager(db) {
         window.SINGER_COLORS[name] = color; 
         
         document.body.removeChild(modal);
-        openSingerColorManager(db); // ปิดแล้วเปิดใหม่เพื่อรีเฟรชรายการ
+        openSingerColorManager(db); 
     };
 
-    // โค้ดทำงานของปุ่ม 💾 บันทึกลงฐานข้อมูล
     document.getElementById('btnSaveColors').onclick = async () => {
         document.getElementById('btnSaveColors').innerText = 'กำลังบันทึก...';
         const newColors = { ...window.SINGER_COLORS };
@@ -118,7 +182,6 @@ export async function openSingerColorManager(db) {
 
         try {
             const colorDocRef = doc(db, 'settings', 'singerColors');
-            // ใช้ setDoc แบบ merge เพื่อความปลอดภัยสูงสุด
             await setDoc(colorDocRef, newColors, { merge: true }); 
             
             window.SINGER_COLORS = newColors;
