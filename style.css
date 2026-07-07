@@ -445,7 +445,7 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 .floating-notify-btn {
     position: fixed;
     bottom: 30px; /* ระยะห่างจากขอบจอข้างล่าง */
-    right: 30px;  /* ระยะห่างจากขอบจอฝั่งขวา */
+    left: 30px;  /* ระยะห่างจากขอบจอฝั่งขวา */
     width: 55px;
     height: 55px;
     background: rgba(30, 30, 30, 0.7); /* พื้นหลังสีดำโปร่งแสง */
