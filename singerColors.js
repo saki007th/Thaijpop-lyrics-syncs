@@ -30,9 +30,13 @@ export async function initializeSingerColors(db) {
 }
 
 // ==========================================
-// 2. ฟังก์ชันเปิดหน้าต่างแอดมิน (ลากได้ + โปร่งแสง + แสดงสีทันที)
+// 2. ฟังก์ชันเปิดหน้าต่างแอดมิน (ลากได้ + โปร่งแสง + Auto-Save)
 // ==========================================
 export async function openSingerColorManager(db) {
+    // 🔴 1. ป้องกันหน้าต่างซ้อน: เช็คว่ามีหน้าต่างเดิมไหม ถ้ามีให้ลบทิ้งก่อน
+    const existingModal = document.getElementById('singerColorModal');
+    if (existingModal) existingModal.remove();
+
     const allSingers = new Set();
     
     // ดึงรายชื่อนักร้อง
@@ -47,13 +51,14 @@ export async function openSingerColorManager(db) {
 
     // สร้างหน้าต่าง UI
     const modal = document.createElement('div');
+    modal.id = 'singerColorModal'; // ตั้ง ID ให้หน้าต่างเพื่อเอาไว้เช็ค
     modal.style.cssText = `
         position: fixed;
         top: 15vh;
         left: calc(50% - 200px);
         width: 400px;
-        background: rgba(25, 25, 25, 0.65); /* ความทึบแสง */
-        backdrop-filter: blur(15px); /* ความเบลอ */
+        background: rgba(25, 25, 25, 0.65);
+        backdrop-filter: blur(15px);
         -webkit-backdrop-filter: blur(15px);
         border-radius: 16px;
         z-index: 9999;
@@ -83,7 +88,7 @@ export async function openSingerColorManager(db) {
         <div id="singerListContainer" style="max-height:45vh; overflow-y:auto; padding-right:8px; margin-bottom: 10px;">
     `;
     
-    // สร้างรายการนักร้องทั้งหมด (เรียงตามตัวอักษร)
+    // สร้างรายการนักร้องทั้งหมด
     Array.from(allSingers).sort().forEach(singer => {
         if(!singer || singer === 'ดนตรี') return;
         const currentColor = window.SINGER_COLORS[singer] || '#ffffff';
@@ -98,16 +103,31 @@ export async function openSingerColorManager(db) {
         `;
     });
 
+    // 🔴 2. ตัดปุ่มบันทึกออก เหลือแค่ปุ่มปิด
     html += `
         </div>
-        <div style="display:flex; gap:12px; margin-top:20px;">
-            <button id="btnSaveColors" style="flex:1; background:#0a84ff; border:none; padding:12px; color:#fff; border-radius:10px; cursor:pointer; font-weight:bold; transition:0.2s;">💾 บันทึกทั้งหมด</button>
-            <button id="btnCloseColors" style="flex:1; background:rgba(255,255,255,0.15); border:none; padding:12px; color:#fff; border-radius:10px; cursor:pointer; font-weight:bold; transition:0.2s;">❌ ปิด</button>
+        <div style="display:flex; margin-top:20px;">
+            <button id="btnCloseColors" style="width:100%; background:rgba(255,255,255,0.15); border:none; padding:12px; color:#fff; border-radius:10px; cursor:pointer; font-weight:bold; transition:0.2s;">❌ ปิด</button>
         </div>
         </div>
     `;
     modal.innerHTML = html;
     document.body.appendChild(modal);
+
+    // ==========================================
+    // ฟังก์ชันย่อยสำหรับเซฟลง Firebase
+    // ==========================================
+    const saveColorToDatabase = async (newColorsDict) => {
+        try {
+            const colorDocRef = doc(db, 'settings', 'singerColors');
+            await setDoc(colorDocRef, newColorsDict, { merge: true }); 
+            window.SINGER_COLORS = newColorsDict;
+            if (window.renderLyricsToContainer) window.renderLyricsToContainer();
+        } catch (error) {
+            console.error(error);
+            alert('❌ เกิดข้อผิดพลาดในการบันทึก: ' + error.message);
+        }
+    };
 
     // ==========================================
     // 🖱️ ระบบลากหน้าต่าง
@@ -141,9 +161,10 @@ export async function openSingerColorManager(db) {
     });
 
     // ==========================================
-    // 👁️ ระบบ Live Preview อัปเดตสีทันทีที่กดเลือก
+    // 👁️ ระบบ Live Preview และ 💾 Auto-Save 
     // ==========================================
     document.querySelectorAll('.color-input').forEach(input => {
+        // 1. แค่เลื่อนสี -> พรีวิวหน้าจอเปลี่ยนทันที (ยังไม่เซฟ กันฐานข้อมูลทำงานหนัก)
         input.addEventListener('input', (e) => {
             const singerName = e.target.getAttribute('data-name');
             const newColor = e.target.value;
@@ -152,6 +173,17 @@ export async function openSingerColorManager(db) {
             if (previewEl) previewEl.style.color = newColor;
             if (hexEl) hexEl.innerText = newColor;
         });
+
+        // 2. ปล่อยเมาส์จากการเลือกสี -> เซฟลงฐานข้อมูลอัตโนมัติ!
+        input.addEventListener('change', async (e) => {
+            const singerName = e.target.getAttribute('data-name');
+            const newColor = e.target.value;
+            const newColors = { ...window.SINGER_COLORS };
+            newColors[singerName] = newColor;
+            
+            // เรียกฟังก์ชันเซฟเงียบๆ
+            await saveColorToDatabase(newColors);
+        });
     });
 
     // ==========================================
@@ -159,39 +191,19 @@ export async function openSingerColorManager(db) {
     // ==========================================
     document.getElementById('btnCloseColors').onclick = () => document.body.removeChild(modal);
     
-    document.getElementById('btnAddManualSinger').onclick = () => {
+    // ปุ่มเพิ่มนักร้องเอง (เซฟอัตโนมัติเช่นกัน)
+    document.getElementById('btnAddManualSinger').onclick = async () => {
         const name = document.getElementById('newSingerName').value.trim();
         const color = document.getElementById('newSingerColor').value;
         if (!name) return alert('กรุณาพิมพ์ชื่อนักร้องก่อนครับ 😅');
         
-        window.SINGER_COLORS = window.SINGER_COLORS || {};
-        window.SINGER_COLORS[name] = color; 
+        const newColors = { ...window.SINGER_COLORS };
+        newColors[name] = color; 
         
+        await saveColorToDatabase(newColors);
+        
+        // โหลดหน้าต่างใหม่เพื่อโชว์ชื่อที่เพิ่งแอด
         document.body.removeChild(modal);
         openSingerColorManager(db); 
-    };
-
-    document.getElementById('btnSaveColors').onclick = async () => {
-        document.getElementById('btnSaveColors').innerText = 'กำลังบันทึก...';
-        const newColors = { ...window.SINGER_COLORS };
-        
-        document.querySelectorAll('.color-input').forEach(input => {
-            const singerName = input.getAttribute('data-name');
-            newColors[singerName] = input.value;
-        });
-
-        try {
-            const colorDocRef = doc(db, 'settings', 'singerColors');
-            await setDoc(colorDocRef, newColors, { merge: true }); 
-            
-            window.SINGER_COLORS = newColors;
-            document.body.removeChild(modal);
-            alert('บันทึกสีสำเร็จ! 🎉');
-            if (window.renderLyricsToContainer) window.renderLyricsToContainer();
-        } catch (error) {
-            console.error(error);
-            alert('❌ เกิดข้อผิดพลาด: ' + error.message);
-            document.getElementById('btnSaveColors').innerText = '💾 บันทึกทั้งหมด';
-        }
     };
 }
