@@ -149,10 +149,10 @@
         </div>
         
     </div>
-
-    <script type="module" src="app.js"></script>
-    <!-- 🔴 ระบบ PiP  -->
+    
+    <!-- 🔴 ระบบ เชื่อมไฟล์  -->
     <script src="pip.js"></script>
+    <script src="notify.js"></script> <script type="module" src="app.js"></script>
     <script type="module" src="app.js"></script>
 
     <!-- 🔴 แถบสุ่มเพลงด้านขวา (Random Playlist Widget) -->
@@ -173,7 +173,10 @@
             <button class="btn-primary" style="width: 100%; margin-top: 15px; font-size: 0.9em;" onclick="renderRandomPlaylist()">
                 🔄 สุ่มเพลงใหม่
             </button>
-        </div>
-    </div>
+         </div>
+    </div> <button id="btnDockNotify" class="floating-notify-btn" onclick="window.openNotifyWindow()" title="เพลงใหม่ล่าสุด">
+        🔔<span id="notifyBadge" class="notify-badge" style="display: none;"></span>
+    </button>
+
 </body>
 </html>
