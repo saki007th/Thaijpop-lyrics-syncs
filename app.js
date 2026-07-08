@@ -26,6 +26,38 @@ window.editingSongId = null; window.currentSongId = null; window.ytPlayer = null
 window.syncInterval = null; window.isLoggedIn = false; window.isAdmin = false;
 window.isYTApiReady = false; window.currentFilter = 'All'; 
 
+// ฟังก์ชันสำหรับดึงชื่อศิลปินทั้งหมดมาใส่ใน Datalist
+window.updateArtistSuggestions = function() {
+    const datalist = document.getElementById('artistList');
+    if (!datalist) return; // ถ้าหาไม่เจอให้ข้ามไป
+
+    const allSingers = new Set();
+    
+    // 1. ดึงรายชื่อจากที่เคยตั้งสีไว้
+    if (window.SINGER_COLORS) {
+        Object.keys(window.SINGER_COLORS).forEach(s => allSingers.add(s));
+    }
+    
+    // 2. ดึงรายชื่อจากเพลงทั้งหมดที่มีในระบบ
+    if (window.songs) {
+        window.songs.forEach(song => {
+            if (song.artist) song.artist.split(',').forEach(s => allSingers.add(s.trim()));
+        });
+    }
+
+    // ล้างค่าเก่าทิ้งก่อน
+    datalist.innerHTML = '';
+    
+    // สร้างตัวเลือก (Option) ใหม่ใส่เข้าไปเรียงตามตัวอักษร
+    Array.from(allSingers).sort().forEach(singer => {
+        if (singer && singer !== 'ดนตรี') {
+            const option = document.createElement('option');
+            option.value = singer;
+            datalist.appendChild(option);
+        }
+    });
+};
+
 // ==========================================
 // 🪟 Window Manager  (เพิ่มระบบบันทึกตำแหน่งและขนาด)
 // ==========================================
