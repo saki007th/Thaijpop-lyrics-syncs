@@ -64,7 +64,7 @@ window.updateArtistSuggestions = function() {
 window.wm = {
     libWin: null, playerWin: null, lyricsWin: null, settingsWin: null, addWin: null, adminSyncWin: null,
 
-    // 🧠 ระบบจำค่าและป้องกันหน้าต่างหาย
+// 🧠 ระบบจำค่าและป้องกันหน้าต่างหาย (อัปเกรดเพิ่มระบบแอนิเมชันตอนปิด)
     applyMemory: function(winId, options) {
         try {
             const saved = JSON.parse(localStorage.getItem('winbox_memory_' + winId));
@@ -88,9 +88,28 @@ window.wm = {
             window.wm.saveMemory(winId, this);
         };
 
+        // ==========================================
+        // ✨ ส่วนที่เพิ่มใหม่: ระบบรอแอนิเมชันจบก่อนปิด
+        // ==========================================
+        const originalOnClose = options.onclose;
+        options.onclose = function(force) {
+            if (!force) {
+                // 1. เติมคลาส .closing ให้หน้าต่างเริ่มเล่นแอนิเมชันหดตัว
+                this.addClass('closing'); 
+                
+                // 2. ตั้งเวลาให้รอ 300ms (0.3 วินาที) แล้วค่อยสั่งลบหน้าต่างจริงๆ
+                setTimeout(() => this.close(true), 300); 
+                
+                // 3. สั่งระงับการลบหน้าต่างทันทีไปก่อน
+                return true; 
+            }
+            // ถ้า force = true แสดงว่ารอจบแล้ว ให้รันคำสั่ง onclose เดิมได้เลย
+            if (originalOnClose) return originalOnClose.call(this, force);
+        };
+
         return options;
     },
-
+    
     // 💾 เซฟค่าพิกัด
     saveMemory: function(winId, wbInstance) {
         const state = {
