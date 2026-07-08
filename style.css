@@ -556,7 +556,6 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
     font-size: 0.75em;
     font-style: italic;
     font-weight: bold;
-    filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.8));
     
     /* ป้องกันเนื้อยาวเกินหน้าต่าง */
     max-width: 90%; 
