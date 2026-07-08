@@ -718,10 +718,25 @@ window.updateLyricDisplay = function() {
 
 window.nextLyric = function(isAuto = false) {
     if (window.currentLyricIndex < window.currentLyricsArray.length) {
-        window.currentLyricIndex++; window.updateLyricDisplay();
+        window.currentLyricIndex++; 
+        window.updateLyricDisplay();
+        
         if (!isAuto && window.isAdmin && window.currentSongId && window.ytPlayer) {
             const song = window.songs.find(s => s.id === window.currentSongId);
-            if (song) { if (!song.timestamps) song.timestamps = []; song.timestamps[window.currentLyricIndex] = window.ytPlayer.getCurrentTime(); window.saveTimestampsToFirebase(); }
+            if (song) { 
+                if (!song.timestamps) song.timestamps = []; 
+                const currentTime = window.ytPlayer.getCurrentTime();
+                song.timestamps[window.currentLyricIndex] = currentTime; 
+                
+                // ✨ ส่วนที่เพิ่ม: อัปเดตตัวเลขในกล่องเวลาบนหน้าจอทันที ✨
+                const activeRow = document.getElementById(`ts-row-${window.currentLyricIndex}`);
+                if (activeRow) {
+                    const timeInput = activeRow.querySelector('input[type="number"]');
+                    if (timeInput) timeInput.value = currentTime.toFixed(1);
+                }
+                
+                window.saveTimestampsToFirebase(); 
+            }
         }
     }
 }
@@ -730,9 +745,21 @@ window.prevLyric = function() {
     if (window.currentLyricIndex > -1) {
         if (window.isAdmin && window.currentSongId) {
             const song = window.songs.find(s => s.id === window.currentSongId);
-            if (song && song.timestamps) { song.timestamps[window.currentLyricIndex] = null; window.saveTimestampsToFirebase(); }
+            if (song && song.timestamps) { 
+                song.timestamps[window.currentLyricIndex] = null; 
+                
+                // ✨ ส่วนที่เพิ่ม: เคลียร์ตัวเลขในกล่องเวลาเมื่อกดถอยหลัง ✨
+                const activeRow = document.getElementById(`ts-row-${window.currentLyricIndex}`);
+                if (activeRow) {
+                    const timeInput = activeRow.querySelector('input[type="number"]');
+                    if (timeInput) timeInput.value = '';
+                }
+                
+                window.saveTimestampsToFirebase(); 
+            }
         }
-        window.currentLyricIndex--; window.updateLyricDisplay();
+        window.currentLyricIndex--; 
+        window.updateLyricDisplay();
     }
 }
 
