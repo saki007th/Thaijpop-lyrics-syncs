@@ -438,15 +438,13 @@ window.renderLyricsToContainer = function() {
         // 🔴 ฟีเจอร์กดเนื้อเพลงแล้ววาร์ป (Seek)
         lineDiv.onclick = () => {
             const song = window.songs.find(s => s.id === window.currentSongId);
-            // ตรวจสอบว่าเพลงนี้มีเวลาถูกเซ็ตไว้แล้ว และ Player พร้อมทำงาน
             if (song && song.timestamps && song.timestamps[index] != null && window.ytPlayer && typeof window.ytPlayer.seekTo === 'function') {
                 window.ytPlayer.seekTo(song.timestamps[index], true);
-                
-                // อัปเดต UI ทันทีให้ผู้ใช้รู้ว่ากดติดแล้ว (ไม่ต้องรอรอบ Sync)
                 window.currentLyricIndex = index;
                 window.updateLyricDisplay();
             }
         };
+        
         let linesHtml = "";
         const cleanLyric = lyric.trim();
         
@@ -460,32 +458,34 @@ window.renderLyricsToContainer = function() {
                 </div>
             `;
         } else {
-            // 🔴 ถ้าเป็นเนื้อร้องปกติ ให้เช็คสัญลักษณ์ ||
-            linesHtml = lyric.split('\n').map((l, i) => {
+            // ✨ โค้ดใหม่: กรองบรรทัดว่าง และคำนวณหา "บรรทัดคำอ่าน" อัตโนมัติ ✨
+            const validLines = cleanLyric.split('\n').filter(l => l.trim() !== '');
+            
+            linesHtml = validLines.map((l, i) => {
+                // ลอจิกคนเก่ง: ถ้าไม่ใช่บรรทัดแรก (0) และไม่ใช่บรรทัดสุดท้าย ให้ถือว่าเป็น "คำอ่าน"
+                const isMiddle = (i > 0 && i < validLines.length - 1);
+                const highlightClass = isMiddle ? ' reading-text' : ''; // แปะป้ายบอก CSS ให้ระบายสี
+
                 if (l.includes('||')) {
-                    // ถ้าเจอ || ให้หั่นเป็น 2 ท่อน แล้วใส่คลาส dual-lyric
                     let parts = l.split('||');
                     let mainText = parts[0].trim();
                     let subText = parts[1].trim();
-                    return `<div class="lang-${i} dual-lyric"><span class="lyric-main">${mainText}</span><span class="lyric-sub">${subText}</span></div>`;
+                    return `<div class="lang-${i} dual-lyric${highlightClass}"><span class="lyric-main">${mainText}</span><span class="lyric-sub">${subText}</span></div>`;
                 } else {
-                    // ✅ ปลอดภัย 100%: ถ้าไม่มี || ก็แสดงผลด้วยโครงสร้างเก่าเป๊ะๆ
-                    return `<div class="lang-${i}">${l}</div>`;
+                    // ปลอดภัย 100%: แสดงผลด้วยโครงสร้างเดิม เพิ่มเติมคือคลาสสีเหลือง
+                    return `<div class="lang-${i}${highlightClass}">${l}</div>`;
                 }
             }).join('');
         }
 
         const singerString = (song && song.singers && song.singers[index]) ? song.singers[index] : null;
 
-    if (singerString && cleanLyric !== '[ดนตรี]') { 
+        if (singerString && cleanLyric !== '[ดนตรี]') { 
             const badgesHtml = singerString.split(',').filter(s=>s.trim()).map(s => {
                 const name = s.trim();
-                // 🔴 ดึงสีมาจากฐานข้อมูล (ถ้าไม่เจอใครให้ใช้สีฟ้า default)
-                // เพิ่มเช็คเผื่อ window.SINGER_COLORS ยังโหลดไม่เสร็จ
                 const colorsDict = window.SINGER_COLORS || {};
                 const badgeColor = colorsDict[name] || '#0a84ff';
                 
-                // ใส่สไตล์สีลงไปในป้ายชื่อ
                 return `<span class="singer-badge" style="background-color: ${badgeColor}; color: #fff; border: 1px solid rgba(255,255,255,0.2);">${name}</span>`;
             }).join('');
             lineDiv.innerHTML = `<div class="singer-badges">${badgesHtml}</div>${linesHtml}`;
