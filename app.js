@@ -258,33 +258,73 @@ onAuthStateChanged(auth, async (user) => {  // 🔴 1. เติม async ตร
 window.loginWithGoogle = async function() { try { await signInWithPopup(auth, provider); } catch (e) { alert("เข้าสู่ระบบไม่สำเร็จ"); } }
 window.logout = async function() { if(confirm('ต้องการออกจากระบบใช่หรือไม่?')) { await signOut(auth); } }
 
+// ==========================================
+// 🎵 ฟังก์ชันดึงข้อมูลเพลงทั้งหมดจากฐานข้อมูล (Firebase)
+// ทำหน้าที่: โหลดเพลง, อัปเดตหน้าจอ, เช็คลิงก์, และจัดเตรียมข้อมูลต่างๆ
+// ==========================================
 async function fetchSongs() {
+    // 1. เปิดหน้าจอโหลดดิ้ง (หมุนๆ) เพื่อให้ผู้ใช้รู้ว่าระบบกำลังทำงาน
     document.getElementById('loadingOverlay').style.display = 'flex';
+    
     try {
+        // 2. ดึงข้อมูลทั้งหมดที่อยู่ในแฟ้ม 'songs' จากฐานข้อมูล
         const querySnapshot = await getDocs(songsCollection);
+        
+        // 3. เคลียร์คลังเพลงในระบบให้ว่างเปล่าก่อนเพื่อเตรียมรับข้อมูลใหม่
         window.songs = [];
+        
+        // 4. วนลูปเอาข้อมูลเพลงที่ดึงมาได้ ยัดใส่เข้าไปในคลังเพลง (window.songs)
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            // ถ้าเพลงเก่าไม่มี createdAt ให้ข้ามไป (ปล่อยเป็น undefined)
-            window.songs.push({ id: doc.id, title: data.title, artist: data.artist, audioPath: data.audioPath, lyrics: data.lyrics, timestamps: data.timestamps || [], singers: data.singers || [], createdAt: data.createdAt });
+            window.songs.push({ 
+                id: doc.id, 
+                title: data.title, 
+                artist: data.artist, 
+                audioPath: data.audioPath, 
+                lyrics: data.lyrics, 
+                timestamps: data.timestamps || [], 
+                singers: data.singers || [], 
+                createdAt: data.createdAt 
+            });
         });
+        
+        // 5. โหลดเสร็จแล้ว ปิดหน้าจอโหลดดิ้งได้
         document.getElementById('loadingOverlay').style.display = 'none';
         
+        // 6. สั่งให้ระบบสร้าง "แถบสุ่มเพลงน่าฟัง" (Widget ด้านขวา)
         window.renderRandomPlaylist();
         
-        // 🔴 ปลุกระบบแจ้งเตือนให้ทำงาน ตรงนี้เลยครับ!
+        // 7. ปลุกระบบเช็คการแจ้งเตือนเพลงใหม่
         if(window.checkNewSongsNotification) {
             window.checkNewSongsNotification();
         }
+
+        // 8. อัปเดตรายชื่อศิลปินอัตโนมัติ สำหรับใช้ตอนพิมพ์ค้นหาหรือเพิ่มเพลง
+        if (window.updateArtistSuggestions) {
+            window.updateArtistSuggestions();
+        }
     
+        // 9. เช็คว่าผู้ใช้เข้าเว็บผ่านลิงก์แชร์เพลงเฉพาะเจาะจงหรือไม่ (เช่น ?song=1234)
         const urlParams = new URLSearchParams(window.location.search);
         const songIdFromUrl = urlParams.get('song');
+        
         if (songIdFromUrl) {
+            // ถ้ามีลิงก์แชร์แนบมา ให้หาเพลงนั้นแล้วกดเล่นให้ทันที
             const foundSong = window.songs.find(s => s.id === songIdFromUrl);
-            if (foundSong) { window.playSong(foundSong.id); return; }
+            if (foundSong) { 
+                window.playSong(foundSong.id); 
+                return; // จบการทำงานตรงนี้เลย ไม่ต้องเปิดหน้าต่างคลังเพลง
+            }
         }
+        
+        // 10. ถ้าเข้ามาแบบปกติ (ไม่มีลิงก์แชร์) ให้เปิดหน้าต่าง "คลังเพลง" ขึ้นมา
         window.wm.openLibrary(); 
-    } catch (error) { document.getElementById('loadingOverlay').style.display = 'none'; }
+        
+    } catch (error) { 
+        // กรณีดึงข้อมูลพัง (เช่น เน็ตหลุด) ให้ปิดหน้าจอโหลดดิ้ง เพื่อไม่ให้เว็บค้าง
+        document.getElementById('loadingOverlay').style.display = 'none'; 
+        console.error("Error fetching songs: ", error); // พิมพ์บอก Error ไว้ใน Console เผื่อแอดมินมาเช็ค
+    }
 }
 
 window.extractYouTubeID = function(url) {
