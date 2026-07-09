@@ -71,9 +71,18 @@ window.openNotifyWindow = function() {
                     <div style="font-weight: bold; color: #ffcc00; margin-bottom: 10px; font-size: 0.9em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">${dayLabel}</div>
             `;
             
-            songs.forEach(song => {
+        songs.forEach(song => {
+                // ==========================================
+                // ✨ เพิ่มระบบดึงรูปปกจาก YouTube
+                // ==========================================
+                const videoId = window.extractYouTubeID ? window.extractYouTubeID(song.audioPath) : '';
+                const thumbUrl = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : '';
+
                 htmlContent += `
                     <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.06); padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.02);">
+                        
+                        <img src="${thumbUrl}" onerror="this.style.display='none'" style="width: 45px; height: 45px; object-fit: cover; border-radius: 8px; margin-right: 12px; flex-shrink: 0; background: #222; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
+                        
                         <div style="flex: 1; min-width: 0; margin-right: 10px;">
                             <div style="font-weight: bold; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff;">${song.title}</div>
                             <div style="font-size: 0.75em; color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;">🎤 ${song.artist || 'ไม่ระบุศิลปิน'}</div>
