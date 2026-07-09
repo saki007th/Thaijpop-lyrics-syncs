@@ -625,29 +625,25 @@ window.renderTimestampEditor = function() {
                 };
                 itemLabel.appendChild(checkbox); itemLabel.appendChild(document.createTextNode(' ' + singer)); menu.appendChild(itemLabel);
             });
-           toggleBtn.onclick = (e) => {
-    e.stopPropagation(); 
-    const isShowing = menu.classList.contains('show'); 
-    document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show'));
-    
-    if (!isShowing) { 
-        menu.classList.add('show'); 
-        const rect = toggleBtn.getBoundingClientRect(); 
-        
-        // เปลี่ยนจาก fixed เป็น absolute เพื่อไม่ให้หลุดกรอบ
-        menu.style.position = 'absolute'; 
-        menu.style.left = '0'; 
-        
-        // 🔴 เช็คว่าพื้นที่ด้านล่างเหลือพอกางเมนูไหม (ถ้าน้อยกว่า 200px ให้เด้งขึ้นบนแทน)
-        if (window.innerHeight - rect.bottom < 200) {
-            menu.style.top = 'auto';
-            menu.style.bottom = 'calc(100% + 5px)'; // เด้งขึ้นบน
-        } else {
-            menu.style.top = 'calc(100% + 5px)';    // กางลงล่างปกติ
-            menu.style.bottom = 'auto';
-        }
-    }
-};
+            toggleBtn.onclick = (e) => {
+                e.stopPropagation(); 
+                const isShowing = menu.classList.contains('show'); 
+                document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show'));
+                
+                if (!isShowing) { 
+                    menu.classList.add('show'); 
+                    const rect = toggleBtn.getBoundingClientRect(); 
+                    menu.style.position = 'absolute'; 
+                    menu.style.left = '0'; 
+                    if (window.innerHeight - rect.bottom < 200) {
+                        menu.style.top = 'auto';
+                        menu.style.bottom = 'calc(100% + 5px)'; 
+                    } else {
+                        menu.style.top = 'calc(100% + 5px)';    
+                        menu.style.bottom = 'auto';
+                    }
+                }
+            };
             dropdown.appendChild(toggleBtn); dropdown.appendChild(menu); leftControls.appendChild(dropdown);
 
             // 3. ช่องกรอกเวลาแบบละเอียด
@@ -660,10 +656,31 @@ window.renderTimestampEditor = function() {
 
         const rightControls = document.createElement('div'); rightControls.style.display = 'flex'; rightControls.style.gap = '8px';
         if (window.isAdmin) {
-            // 4. ปุ่ม แทรก / ลบ 
+            // ==========================================
+            // ✨ ปุ่มเสกแฮชแท็ก [ดนตรี] อัตโนมัติ 
+            // ==========================================
+            const btnMusic = document.createElement('button'); 
+            btnMusic.innerText = '🎵 ดนตรี'; 
+            btnMusic.style.background = 'rgba(255, 159, 10, 0.2)'; 
+            btnMusic.style.color = '#ff9f0a'; 
+            btnMusic.style.border = '1px solid rgba(255, 159, 10, 0.4)'; 
+            btnMusic.style.padding = '4px 10px';
+            btnMusic.style.borderRadius = '6px';
+            btnMusic.style.cursor = 'pointer';
+            btnMusic.onclick = () => {
+                lyricEditor.value = '[ดนตรี]'; // เปลี่ยนตัวหนังสือในกล่องเป็น [ดนตรี]
+                window.currentLyricsArray[index] = '[ดนตรี]'; // อัปเดตตัวแปรในระบบ
+                window.saveTimestampsToFirebase(true); // เซฟลงฐานข้อมูลเงียบๆ ทันที
+            };
+
+            // 4. ปุ่ม แทรก / ลบ เดิม
             const btnAdd = document.createElement('button'); btnAdd.innerText = '➕'; btnAdd.style.background = 'rgba(52, 199, 89, 0.2)'; btnAdd.style.color = '#34c759'; btnAdd.style.border = '1px solid rgba(52, 199, 89, 0.4)'; btnAdd.style.padding = '4px 10px'; btnAdd.onclick = () => window.addLyricLine(index);
             const btnDel = document.createElement('button'); btnDel.innerText = '🗑️'; btnDel.style.background = 'rgba(255, 59, 48, 0.2)'; btnDel.style.color = '#ff3b30'; btnDel.style.border = '1px solid rgba(255, 59, 48, 0.4)'; btnDel.style.padding = '4px 10px'; btnDel.onclick = () => window.deleteLyricLine(index);
-            rightControls.appendChild(btnAdd); rightControls.appendChild(btnDel);
+            
+            // ใส่ปุ่มดนตรีเข้าไปในกลุ่มควบคุมขวา
+            rightControls.appendChild(btnMusic); 
+            rightControls.appendChild(btnAdd); 
+            rightControls.appendChild(btnDel);
         }
         
         controlsDiv.appendChild(leftControls); controlsDiv.appendChild(rightControls);
