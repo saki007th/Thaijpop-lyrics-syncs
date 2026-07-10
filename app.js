@@ -303,6 +303,7 @@ async function fetchSongs() {
                 lyrics: data.lyrics, 
                 timestamps: data.timestamps || [], 
                 singers: data.singers || [], 
+                covers: data.covers || [],
                 createdAt: data.createdAt 
             });
         });
