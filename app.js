@@ -352,10 +352,45 @@ window.extractYouTubeID = function(url) {
     return (match && match[2].length === 11) ? match[2] : null;
 }
 
+// ==========================================
+// 🎧 ระบบจัดการข้อมูล Cover ในหน้าเพิ่ม/แก้ไข
+// ==========================================
+window.currentCoversDraft = [];
+
+window.renderCoverInputs = function() {
+    const container = document.getElementById('coverInputsContainer'); if (!container) return;
+    container.innerHTML = '';
+
+    window.currentCoversDraft.forEach((cover, index) => {
+        const div = document.createElement('div');
+        div.style.background = 'rgba(0, 0, 0, 0.2)'; div.style.padding = '10px'; div.style.borderRadius = '8px'; div.style.marginBottom = '10px'; div.style.border = '1px solid rgba(255, 255, 255, 0.05)';
+        
+        div.innerHTML = `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span style="font-size: 0.85em; font-weight: bold; color: #ccc;">Cover #${index + 1}</span>
+                <button onclick="removeCoverInput(${index})" style="background: none; border: none; color: #ff3b30; cursor: pointer; font-size: 0.85em;">🗑 ลบ</button>
+            </div>
+            <input type="text" placeholder="ชื่อคนร้อง (เช่น Gawr Gura)" value="${cover.coverArtist || ''}" style="margin-bottom: 8px; padding: 8px; font-size: 0.9em;" onchange="window.currentCoversDraft[${index}].coverArtist = this.value.trim()">
+            <input type="text" placeholder="ลิงก์ YouTube" value="${cover.audioPath || ''}" style="margin-bottom: 0; padding: 8px; font-size: 0.9em;" onchange="window.currentCoversDraft[${index}].audioPath = this.value.trim()">
+        `;
+        container.appendChild(div);
+    });
+}
+
+window.addCoverInput = function() {
+    window.currentCoversDraft.push({ coverId: 'c_' + Date.now(), coverArtist: '', audioPath: '', timestamps: null, singers: null });
+    window.renderCoverInputs();
+}
+window.removeCoverInput = function(index) {
+    if(confirm('ต้องการลบ Cover นี้ใช่หรือไม่? (ลบแล้วต้องกดบันทึกเพลงด้วยนะ)')) { window.currentCoversDraft.splice(index, 1); window.renderCoverInputs(); }
+}
+
+// ✨ อัปเดต 3 ฟังก์ชันหลักให้รองรับการเซฟ Cover
 window.openAddView = function() {
     if (!window.isAdmin) return;
     window.editingSongId = null;
     document.getElementById('inputTitle').value = ''; document.getElementById('inputArtist').value = ''; document.getElementById('inputAudio').value = ''; document.getElementById('inputLyrics').value = '';
+    window.currentCoversDraft = []; window.renderCoverInputs(); // รีเซ็ตกล่อง Cover
     window.wm.openAdd('✨ เพิ่มเพลงใหม่');
 }
 
@@ -364,6 +399,7 @@ window.editSong = function(id) {
     const song = window.songs.find(s => s.id === id); if (!song) return;
     window.editingSongId = id;
     document.getElementById('inputTitle').value = song.title; document.getElementById('inputArtist').value = song.artist || ''; document.getElementById('inputAudio').value = song.audioPath; document.getElementById('inputLyrics').value = song.lyrics;
+    window.currentCoversDraft = song.covers ? JSON.parse(JSON.stringify(song.covers)) : []; window.renderCoverInputs(); // ดึง Cover เก่ามาแสดง
     window.wm.openAdd('✏️ แก้ไขเพลง');
 }
 
@@ -375,9 +411,15 @@ window.saveSong = async function() {
     if (!title || !lyrics || !window.extractYouTubeID(audioPath)) { alert("ข้อมูลไม่ครบ หรือลิงก์ผิด"); return; }
     btnSave.disabled = true; btnSave.innerText = "กำลังบันทึก...";
 
+    // ✨ กรองเอาเฉพาะกล่อง Cover ที่แอดมินกรอกชื่อคนร้องและลิงก์ครบถ้วน
+    const validCovers = (window.currentCoversDraft || []).filter(c => c.coverArtist && window.extractYouTubeID(c.audioPath));
+
     try {
-        if (window.editingSongId) { await updateDoc(doc(db, "songs", window.editingSongId), { title, artist, audioPath, lyrics }); } 
-        else { await addDoc(songsCollection, { title, artist, audioPath, lyrics, timestamps: [], singers: [], createdAt: Date.now() }); }
+        if (window.editingSongId) { 
+            await updateDoc(doc(db, "songs", window.editingSongId), { title, artist, audioPath, lyrics, covers: validCovers }); 
+        } else { 
+            await addDoc(songsCollection, { title, artist, audioPath, lyrics, timestamps: [], singers: [], covers: validCovers, createdAt: Date.now() }); 
+        }
         await fetchSongs();
         if(window.wm.addWin) window.wm.addWin.close(); 
         if(window.wm.libWin) window.renderSongList(); 
@@ -550,15 +592,31 @@ function createBadgeElement(label, artistName, index) {
         badge.style.boxShadow = `0 0 12px ${badgeColor}80`; 
     }
 
-    // กดปุ่มสลับเวอร์ชัน
+   // กดปุ่มสลับเวอร์ชัน
     badge.onclick = () => {
-        if (window.currentCoverIndex === index) return;
+        if (window.currentCoverIndex === index) return; 
+        
         window.currentCoverIndex = index;
-        window.renderVersionBadges();
-        alert(`เดี๋ยวเราจะมาเขียนระบบเปลี่ยนวิดีโอ YouTube ของ ${artistName} ตรงนี้ครับ!`);
+        window.renderVersionBadges(); // รีเฟรชสีปุ่ม
+        
+        // 🔴 สั่งงานให้โหลดวิดีโอใหม่
+        const song = window.songs.find(s => s.id === window.currentSongId);
+        let targetVideoPath = song.audioPath; // ค่าเริ่มต้นคือ ต้นฉบับ
+        
+        if (index >= 0 && song.covers && song.covers[index]) {
+            targetVideoPath = song.covers[index].audioPath; // ถ้ากด Cover ให้ใช้ลิงก์ Cover
+        }
+        
+        // โหลดวิดีโอใหม่ใส่ Player ทันที
+        const videoId = window.extractYouTubeID(targetVideoPath);
+        if (window.ytPlayer && typeof window.ytPlayer.loadVideoById === 'function') {
+            window.ytPlayer.loadVideoById(videoId);
+        }
+        
+        // รีเซ็ตเนื้อเพลงให้กลับไปเริ่มบรรทัดแรกใหม่
+        window.currentLyricIndex = -1;
+        window.updateLyricDisplay();
     };
-    return badge;
-}
 
 window.playSong = function(id) {
     window.currentSongId = id; const song = window.songs.find(s => s.id === id); if (!song) return;
