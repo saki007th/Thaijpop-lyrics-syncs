@@ -423,6 +423,27 @@ window.renderSongList = function(query = '', artistFilter = 'All') {
 // ==========================================
 // ระบบเล่นเพลง & จัดการเวลา (Full Admin Controls)
 // ==========================================
+
+// ✨ Helper: ดึงเวลาที่ถูกต้อง (รองรับ Fallback ต้นฉบับ)
+window.getActiveTimestamps = function(song) {
+    if (!song) return [];
+    if (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]) {
+        const coverTs = song.covers[window.currentCoverIndex].timestamps;
+        if (coverTs && coverTs.some(t => t != null)) return coverTs; // ถ้า Cover มีเวลา ใช้เวลา Cover
+    }
+    return song.timestamps || []; // Fallback ถ้ายังไม่ได้ซิงค์ให้ใช้เวลาต้นฉบับ
+};
+
+// ✨ Helper: ดึงคนร้องที่ถูกต้อง
+window.getActiveSingers = function(song) {
+    if (!song) return [];
+    if (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]) {
+        const coverSg = song.covers[window.currentCoverIndex].singers;
+        if (coverSg && coverSg.some(s => s !== "")) return coverSg;
+    }
+    return song.singers || [];
+};
+
 window.renderLyricsToContainer = function() {
     const container = document.getElementById('lyricsContainer'); if(!container) return;
     container.innerHTML = ''; if (window.currentLyricsArray.length === 0) { container.innerHTML = 'ไม่มีเนื้อเพลง'; return; }
@@ -433,10 +454,13 @@ window.renderLyricsToContainer = function() {
         
         lineDiv.onclick = () => {
             const song = window.songs.find(s => s.id === window.currentSongId);
-            if (song && song.timestamps && song.timestamps[index] != null && window.ytPlayer && typeof window.ytPlayer.seekTo === 'function') {
-                window.ytPlayer.seekTo(song.timestamps[index], true);
-                window.currentLyricIndex = index;
-                window.updateLyricDisplay();
+            if (song && window.ytPlayer && typeof window.ytPlayer.seekTo === 'function') {
+                const activeTimestamps = window.getActiveTimestamps(song);
+                if (activeTimestamps[index] != null) {
+                    window.ytPlayer.seekTo(activeTimestamps[index], true);
+                    window.currentLyricIndex = index;
+                    window.updateLyricDisplay();
+                }
             }
         };
         
@@ -446,37 +470,30 @@ window.renderLyricsToContainer = function() {
         if (cleanLyric === '[ดนตรี]') {
             linesHtml = `
                 <div class="lyric-instrumental">
-                    <span class="note">🎵</span>
-                    <span class="note">🎶</span>
-                    <span class="note">🎵</span>
+                    <span class="note">🎵</span><span class="note">🎶</span><span class="note">🎵</span>
                 </div>
             `;
         } else {
             const validLines = cleanLyric.split('\n').filter(l => l.trim() !== '');
-            
             linesHtml = validLines.map((l, i) => {
                 const isMiddle = (i > 0 && i < validLines.length - 1);
                 const highlightClass = isMiddle ? ' reading-text' : ''; 
-
                 if (l.includes('||')) {
                     let parts = l.split('||');
-                    let mainText = parts[0].trim();
-                    let subText = parts[1].trim();
-                    return `<div class="lang-${i} dual-lyric${highlightClass}"><span class="lyric-main">${mainText}</span><span class="lyric-sub">${subText}</span></div>`;
+                    return `<div class="lang-${i} dual-lyric${highlightClass}"><span class="lyric-main">${parts[0].trim()}</span><span class="lyric-sub">${parts[1].trim()}</span></div>`;
                 } else {
                     return `<div class="lang-${i}${highlightClass}">${l}</div>`;
                 }
             }).join('');
         }
 
-        const singerString = (song && song.singers && song.singers[index]) ? song.singers[index] : null;
+        const activeSingers = window.getActiveSingers(song);
+        const singerString = activeSingers[index] || null;
 
         if (singerString && cleanLyric !== '[ดนตรี]') { 
             const badgesHtml = singerString.split(',').filter(s=>s.trim()).map(s => {
                 const name = s.trim();
-                const colorsDict = window.SINGER_COLORS || {};
-                const badgeColor = colorsDict[name] || '#0a84ff';
-                
+                const badgeColor = (window.SINGER_COLORS && window.SINGER_COLORS[name]) ? window.SINGER_COLORS[name] : '#0a84ff';
                 return `<span class="singer-badge" style="background-color: ${badgeColor}; color: #fff; border: 1px solid rgba(255,255,255,0.2);">${name}</span>`;
             }).join('');
             lineDiv.innerHTML = `<div class="singer-badges">${badgesHtml}</div>${linesHtml}`;
@@ -496,33 +513,20 @@ window.currentCoverIndex = -1;
 window.renderVersionBadges = function() {
     const container = document.getElementById('versionContainer'); 
     if (!container) return;
-    
     const song = window.songs.find(s => s.id === window.currentSongId);
     if (!song || !song.covers || song.covers.length === 0) {
-        container.style.display = 'none'; 
-        return;
+        container.style.display = 'none'; return;
     }
-
-    container.style.display = 'flex';
-    container.className = 'version-badges-container';
-    container.innerHTML = '';
-
+    container.style.display = 'flex'; container.className = 'version-badges-container'; container.innerHTML = '';
     container.appendChild(createBadgeElement('🌟 Original', song.artist, -1));
-
-    song.covers.forEach((cover, index) => {
-        container.appendChild(createBadgeElement(`🎧 Cover`, cover.coverArtist, index));
-    });
+    song.covers.forEach((cover, index) => { container.appendChild(createBadgeElement(`🎧 Cover`, cover.coverArtist, index)); });
 };
 
 function createBadgeElement(label, artistName, index) {
-    const badge = document.createElement('div');
-    badge.className = 'version-badge';
-    badge.innerText = `${label} : ${artistName}`;
-
+    const badge = document.createElement('div'); badge.className = 'version-badge'; badge.innerText = `${label} : ${artistName}`;
     if (window.currentCoverIndex === index) {
         badge.classList.add('active');
         const badgeColor = (window.SINGER_COLORS && window.SINGER_COLORS[artistName]) ? window.SINGER_COLORS[artistName] : '#0a84ff';
-        
         let textColor = '#ffffff';
         if (badgeColor.startsWith('#')) {
             let hex = badgeColor.replace('#', '');
@@ -531,31 +535,25 @@ function createBadgeElement(label, artistName, index) {
             let yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
             textColor = (yiq >= 140) ? '#000000' : '#ffffff';
         }
-
-        badge.style.background = badgeColor;
-        badge.style.color = textColor;
-        badge.style.boxShadow = `0 0 12px ${badgeColor}80`; 
+        badge.style.background = badgeColor; badge.style.color = textColor; badge.style.boxShadow = `0 0 12px ${badgeColor}80`; 
     }
 
     badge.onclick = () => {
         if (window.currentCoverIndex === index) return; 
-        
         window.currentCoverIndex = index;
         window.renderVersionBadges(); 
         
         const song = window.songs.find(s => s.id === window.currentSongId);
         let targetVideoPath = song.audioPath; 
-        
-        if (index >= 0 && song.covers && song.covers[index]) {
-            targetVideoPath = song.covers[index].audioPath; 
-        }
+        if (index >= 0 && song.covers && song.covers[index]) targetVideoPath = song.covers[index].audioPath; 
         
         const videoId = window.extractYouTubeID(targetVideoPath);
-        if (window.ytPlayer && typeof window.ytPlayer.loadVideoById === 'function') {
-            window.ytPlayer.loadVideoById(videoId);
-        }
+        if (window.ytPlayer && typeof window.ytPlayer.loadVideoById === 'function') window.ytPlayer.loadVideoById(videoId);
         
         window.currentLyricIndex = -1;
+        // 🔴 สั่งให้หน้าต่าง Admin Sync โหลดเวลาของเวอร์ชันใหม่
+        window.renderTimestampEditor(); 
+        window.renderLyricsToContainer();
         window.updateLyricDisplay();
     };
     return badge;
@@ -570,13 +568,11 @@ window.playSong = function(id) {
     if(window.setRandomPanelState) window.setRandomPanelState(false);
     if(window.wm && window.wm.notifyWin) window.wm.notifyWin.close();
     
-    const liveAct = document.getElementById('liveActivity');
-    const liveDiv = document.getElementById('dockDivider');
+    const liveAct = document.getElementById('liveActivity'); const liveDiv = document.getElementById('dockDivider');
     if (liveAct && liveDiv) {
         document.getElementById('liveTitle').innerText = song.title;
         document.getElementById('liveArtist').innerText = '🎤 ' + (song.artist || '-');
-        liveAct.classList.remove('hidden');
-        liveDiv.classList.remove('hidden');
+        liveAct.classList.remove('hidden'); liveDiv.classList.remove('hidden');
     }
 
     window.currentLyricsArray = song.lyrics.split(/\n\s*\n/); window.currentLyricIndex = -1;
@@ -586,23 +582,18 @@ window.playSong = function(id) {
 
     window.renderTimestampEditor(); window.renderLyricsToContainer(); window.updateLyricDisplay();
 
-    const videoId = window.extractYouTubeID(song.audioPath);
-    const bgEl = document.getElementById('dynamic-bg');
+    const videoId = window.extractYouTubeID(song.audioPath); const bgEl = document.getElementById('dynamic-bg');
     if (bgEl && videoId) { bgEl.style.backgroundImage = `url('https://img.youtube.com/vi/${videoId}/hqdefault.jpg')`; bgEl.classList.add('active'); }
     
     let playerDiv = document.getElementById('youtubePlayer');
-    if (!playerDiv) {
-        document.getElementById('content-player').innerHTML = '<div id="youtubePlayer" style="width: 100%; height: 100%;"></div>';
-    }
+    if (!playerDiv) document.getElementById('content-player').innerHTML = '<div id="youtubePlayer" style="width: 100%; height: 100%;"></div>';
 
     if (window.ytPlayer && typeof window.ytPlayer.loadVideoById === 'function') { 
         window.ytPlayer.loadVideoById(videoId); 
     } else {
         if (window.isYTApiReady || (window.YT && window.YT.Player)) {
             window.ytPlayer = new YT.Player('youtubePlayer', { 
-                height: '100%', width: '100%', videoId: videoId, 
-                playerVars: { 'playsinline': 1, 'controls': 1 }, 
-                events: { 'onStateChange': window.onPlayerStateChange } 
+                height: '100%', width: '100%', videoId: videoId, playerVars: { 'playsinline': 1, 'controls': 1 }, events: { 'onStateChange': window.onPlayerStateChange } 
             });
         }
     }
@@ -610,47 +601,65 @@ window.playSong = function(id) {
     clearInterval(window.syncInterval);
     window.syncInterval = setInterval(() => {
         if (!window.ytPlayer || typeof window.ytPlayer.getCurrentTime !== 'function') return;
-        const currentSong = window.songs.find(s => s.id === window.currentSongId); 
-        if (!currentSong || !currentSong.timestamps) return;
+        const currentSong = window.songs.find(s => s.id === window.currentSongId); if (!currentSong) return;
+        
+        const activeTimestamps = window.getActiveTimestamps(currentSong);
         const currentTime = window.ytPlayer.getCurrentTime(); 
         if (currentTime === undefined || currentTime === 0) return;
 
         let correctIndex = -1;
-        for (let i = 0; i < currentSong.timestamps.length; i++) {
-            if (currentSong.timestamps[i] != null && currentTime >= currentSong.timestamps[i]) {
-                correctIndex = i;
-            }
+        for (let i = 0; i < activeTimestamps.length; i++) {
+            if (activeTimestamps[i] != null && currentTime >= activeTimestamps[i]) correctIndex = i;
         }
-        
         if (window.currentLyricIndex !== correctIndex) {
-            window.currentLyricIndex = correctIndex;
-            window.updateLyricDisplay();
+            window.currentLyricIndex = correctIndex; window.updateLyricDisplay();
         }
     }, 100); 
 }; 
 
+// ==========================================
+// 🔴 อัปเกรด: ฟังก์ชันบันทึกเวลาให้เซฟแยกลง Cover 
+// ==========================================
 window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
     if (!window.isAdmin) return;
     const song = window.songs.find(s => s.id === window.currentSongId);
-    if (song) {
-        if (updateLyricsText) song.lyrics = window.currentLyricsArray.join('\n\n');
-        const count = window.currentLyricsArray.length;
-        const safeTs = Array.from({length: count}, (_, i) => (song.timestamps && song.timestamps[i] != null) ? song.timestamps[i] : null);
-        const safeSg = Array.from({length: count}, (_, i) => (song.singers && song.singers[i] != null) ? song.singers[i] : "");
+    if (!song) return;
 
-        const payload = { timestamps: safeTs, singers: safeSg };
-        if (updateLyricsText) payload.lyrics = song.lyrics; 
+    if (updateLyricsText) song.lyrics = window.currentLyricsArray.join('\n\n');
+    const count = window.currentLyricsArray.length;
+    
+    let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
+    let currentTs = isCover ? (song.covers[window.currentCoverIndex].timestamps || []) : (song.timestamps || []);
+    let currentSg = isCover ? (song.covers[window.currentCoverIndex].singers || []) : (song.singers || []);
 
-        await updateDoc(doc(db, "songs", window.currentSongId), payload);
+    const safeTs = Array.from({length: count}, (_, i) => currentTs[i] != null ? currentTs[i] : null);
+    const safeSg = Array.from({length: count}, (_, i) => currentSg[i] != null ? currentSg[i] : "");
+
+    const payload = {};
+    if (updateLyricsText) payload.lyrics = song.lyrics; 
+
+    if (isCover) {
+        song.covers[window.currentCoverIndex].timestamps = safeTs;
+        song.covers[window.currentCoverIndex].singers = safeSg;
+        payload.covers = song.covers;
+    } else {
         song.timestamps = safeTs; song.singers = safeSg;
-        if (updateLyricsText) { window.renderLyricsToContainer(); window.updateLyricDisplay(); }
+        payload.timestamps = safeTs; payload.singers = safeSg;
     }
+
+    await updateDoc(doc(db, "songs", window.currentSongId), payload);
+    if (updateLyricsText) { window.renderLyricsToContainer(); window.updateLyricDisplay(); }
 }
 
 window.renderTimestampEditor = function() {
     const container = document.getElementById('timestampList'); if(!container) return;
     container.innerHTML = '';
     const song = window.songs.find(s => s.id === window.currentSongId); if (!song) return;
+
+    // 🔴 โหลดเวลาให้ตรงเวอร์ชัน
+    let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
+    let activeTimestamps = isCover ? (song.covers[window.currentCoverIndex].timestamps || []) : (song.timestamps || []);
+    let activeSingers = isCover ? (song.covers[window.currentCoverIndex].singers || []) : (song.singers || []);
 
     window.currentLyricsArray.forEach((lyric, index) => {
         const row = document.createElement('div'); row.className = 'ts-row'; row.id = `ts-row-${index}`;
@@ -671,7 +680,7 @@ window.renderTimestampEditor = function() {
             const allSingers = window.getSingersList(song.artist);
             const dropdown = document.createElement('div'); dropdown.className = 'ts-singer-dropdown'; dropdown.style.position = 'relative';
             const toggleBtn = document.createElement('button'); toggleBtn.className = 'ts-dropdown-toggle';
-            const currentSingers = (song.singers && song.singers[index]) ? song.singers[index].split(',').map(s=>s.trim()).filter(s=>s) : [];
+            const currentSingers = activeSingers[index] ? activeSingers[index].split(',').map(s=>s.trim()).filter(s=>s) : [];
             toggleBtn.innerText = currentSingers.length > 0 ? currentSingers.join(', ') : '👤 เลือกร้อง';
             
             const menu = document.createElement('div'); menu.className = 'ts-dropdown-menu';
@@ -681,7 +690,12 @@ window.renderTimestampEditor = function() {
                 checkbox.onchange = () => {
                     const selected = Array.from(menu.querySelectorAll('input:checked')).map(cb => cb.value);
                     toggleBtn.innerText = selected.length > 0 ? selected.join(', ') : '👤 เลือกร้อง';
-                    if (!song.singers) song.singers = []; song.singers[index] = selected.length > 0 ? selected.join(', ') : "";
+                    if (isCover) {
+                        if (!song.covers[window.currentCoverIndex].singers) song.covers[window.currentCoverIndex].singers = [];
+                        song.covers[window.currentCoverIndex].singers[index] = selected.length > 0 ? selected.join(', ') : "";
+                    } else {
+                        if (!song.singers) song.singers = []; song.singers[index] = selected.length > 0 ? selected.join(', ') : "";
+                    }
                     window.saveTimestampsToFirebase(true); 
                 };
                 itemLabel.appendChild(checkbox); itemLabel.appendChild(document.createTextNode(' ' + singer)); menu.appendChild(itemLabel);
@@ -690,52 +704,43 @@ window.renderTimestampEditor = function() {
                 e.stopPropagation(); 
                 const isShowing = menu.classList.contains('show'); 
                 document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show'));
-                
                 if (!isShowing) { 
                     menu.classList.add('show'); 
                     const rect = toggleBtn.getBoundingClientRect(); 
-                    menu.style.position = 'absolute'; 
-                    menu.style.left = '0'; 
-                    if (window.innerHeight - rect.bottom < 200) {
-                        menu.style.top = 'auto';
-                        menu.style.bottom = 'calc(100% + 5px)'; 
-                    } else {
-                        menu.style.top = 'calc(100% + 5px)';    
-                        menu.style.bottom = 'auto';
-                    }
+                    menu.style.position = 'absolute'; menu.style.left = '0'; 
+                    if (window.innerHeight - rect.bottom < 200) { menu.style.top = 'auto'; menu.style.bottom = 'calc(100% + 5px)'; } 
+                    else { menu.style.top = 'calc(100% + 5px)'; menu.style.bottom = 'auto'; }
                 }
             };
             dropdown.appendChild(toggleBtn); dropdown.appendChild(menu); leftControls.appendChild(dropdown);
 
             const timeInput = document.createElement('input'); timeInput.type = 'number'; timeInput.step = '0.1'; timeInput.min = '0';
             timeInput.style.width = '70px'; timeInput.style.margin = '0'; timeInput.style.padding = '4px 6px'; timeInput.style.textAlign = 'center';
-            timeInput.value = (song.timestamps && song.timestamps[index] != null) ? song.timestamps[index].toFixed(1) : '';
-            timeInput.onchange = (e) => { const val = parseFloat(e.target.value); if (!song.timestamps) song.timestamps = []; song.timestamps[index] = isNaN(val) ? null : val; window.saveTimestampsToFirebase(); };
+            timeInput.value = (activeTimestamps[index] != null) ? activeTimestamps[index].toFixed(1) : '';
+            timeInput.onchange = (e) => { 
+                const val = parseFloat(e.target.value); 
+                const finalVal = isNaN(val) ? null : val;
+                if (isCover) {
+                    if (!song.covers[window.currentCoverIndex].timestamps) song.covers[window.currentCoverIndex].timestamps = [];
+                    song.covers[window.currentCoverIndex].timestamps[index] = finalVal;
+                } else {
+                    if (!song.timestamps) song.timestamps = []; 
+                    song.timestamps[index] = finalVal;
+                }
+                window.saveTimestampsToFirebase(); 
+            };
             leftControls.appendChild(timeInput);
         }
 
         const rightControls = document.createElement('div'); rightControls.style.display = 'flex'; rightControls.style.gap = '8px';
         if (window.isAdmin) {
-            const btnMusic = document.createElement('button'); 
-            btnMusic.innerText = '🎵 ดนตรี'; 
-            btnMusic.style.background = 'rgba(255, 159, 10, 0.2)'; 
-            btnMusic.style.color = '#ff9f0a'; 
-            btnMusic.style.border = '1px solid rgba(255, 159, 10, 0.4)'; 
-            btnMusic.style.padding = '4px 10px';
-            btnMusic.style.borderRadius = '6px';
-            btnMusic.style.cursor = 'pointer';
-            btnMusic.onclick = () => {
-                lyricEditor.value = '[ดนตรี]'; 
-                window.currentLyricsArray[index] = '[ดนตรี]'; 
-                window.saveTimestampsToFirebase(true); 
-            };
+            const btnMusic = document.createElement('button'); btnMusic.innerText = '🎵 ดนตรี'; btnMusic.style.background = 'rgba(255, 159, 10, 0.2)'; btnMusic.style.color = '#ff9f0a'; btnMusic.style.border = '1px solid rgba(255, 159, 10, 0.4)'; btnMusic.style.padding = '4px 10px'; btnMusic.style.borderRadius = '6px'; btnMusic.style.cursor = 'pointer';
+            btnMusic.onclick = () => { lyricEditor.value = '[ดนตรี]'; window.currentLyricsArray[index] = '[ดนตรี]'; window.saveTimestampsToFirebase(true); };
 
             const btnAdd = document.createElement('button'); btnAdd.innerText = '➕'; btnAdd.style.background = 'rgba(52, 199, 89, 0.2)'; btnAdd.style.color = '#34c759'; btnAdd.style.border = '1px solid rgba(52, 199, 89, 0.4)'; btnAdd.style.padding = '4px 10px'; btnAdd.onclick = () => window.addLyricLine(index);
             const btnDel = document.createElement('button'); btnDel.innerText = '🗑️'; btnDel.style.background = 'rgba(255, 59, 48, 0.2)'; btnDel.style.color = '#ff3b30'; btnDel.style.border = '1px solid rgba(255, 59, 48, 0.4)'; btnDel.style.padding = '4px 10px'; btnDel.onclick = () => window.deleteLyricLine(index);
             
-            rightControls.appendChild(btnMusic); 
-            rightControls.appendChild(btnAdd); 
-            rightControls.appendChild(btnDel);
+            rightControls.appendChild(btnMusic); rightControls.appendChild(btnAdd); rightControls.appendChild(btnDel);
         }
         
         controlsDiv.appendChild(leftControls); controlsDiv.appendChild(rightControls);
@@ -755,15 +760,29 @@ window.addLyricLine = function(index) {
     window.currentLyricsArray.splice(insertAt, 0, "ท่อนใหม่...");
     if(!song.timestamps) song.timestamps = []; song.timestamps.splice(insertAt, 0, null);
     if(!song.singers) song.singers = []; song.singers.splice(insertAt, 0, "");
+    
+    if (song.covers) {
+        song.covers.forEach(c => {
+            if(c.timestamps) c.timestamps.splice(insertAt, 0, null);
+            if(c.singers) c.singers.splice(insertAt, 0, "");
+        });
+    }
     window.saveTimestampsToFirebase(true).then(() => { window.renderTimestampEditor(); });
 }
 
 window.deleteLyricLine = function(index) {
-    if (!confirm('ลบท่อนนี้ใช่หรือไม่?\nเนื้อเพลงและเวลาที่เกี่ยวข้องจะหายไปทั้งหมด')) return;
+    if (!confirm('ลบท่อนนี้ใช่หรือไม่?\\nเนื้อเพลงและเวลาที่เกี่ยวข้องจะหายไปทั้งหมด')) return;
     const song = window.songs.find(s => s.id === window.currentSongId); if(!song) return;
     window.currentLyricsArray.splice(index, 1);
     if(song.timestamps) song.timestamps.splice(index, 1);
     if(song.singers) song.singers.splice(index, 1);
+    
+    if (song.covers) {
+        song.covers.forEach(c => {
+            if(c.timestamps) c.timestamps.splice(index, 1);
+            if(c.singers) c.singers.splice(index, 1);
+        });
+    }
     window.saveTimestampsToFirebase(true).then(() => { window.renderTimestampEditor(); });
 }
 
@@ -796,16 +815,22 @@ window.nextLyric = function(isAuto = false) {
         if (!isAuto && window.isAdmin && window.currentSongId && window.ytPlayer) {
             const song = window.songs.find(s => s.id === window.currentSongId);
             if (song) { 
-                if (!song.timestamps) song.timestamps = []; 
                 const currentTime = window.ytPlayer.getCurrentTime();
-                song.timestamps[window.currentLyricIndex] = currentTime; 
+                let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
+
+                if (isCover) {
+                    if (!song.covers[window.currentCoverIndex].timestamps) song.covers[window.currentCoverIndex].timestamps = [];
+                    song.covers[window.currentCoverIndex].timestamps[window.currentLyricIndex] = currentTime;
+                } else {
+                    if (!song.timestamps) song.timestamps = []; 
+                    song.timestamps[window.currentLyricIndex] = currentTime; 
+                }
                 
                 const activeRow = document.getElementById(`ts-row-${window.currentLyricIndex}`);
                 if (activeRow) {
                     const timeInput = activeRow.querySelector('input[type="number"]');
                     if (timeInput) timeInput.value = currentTime.toFixed(1);
                 }
-                
                 window.saveTimestampsToFirebase(); 
             }
         }
@@ -816,15 +841,19 @@ window.prevLyric = function() {
     if (window.currentLyricIndex > -1) {
         if (window.isAdmin && window.currentSongId) {
             const song = window.songs.find(s => s.id === window.currentSongId);
-            if (song && song.timestamps) { 
-                song.timestamps[window.currentLyricIndex] = null; 
+            if (song) { 
+                let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
+                if (isCover) {
+                    if (song.covers[window.currentCoverIndex].timestamps) song.covers[window.currentCoverIndex].timestamps[window.currentLyricIndex] = null;
+                } else {
+                    if (song.timestamps) song.timestamps[window.currentLyricIndex] = null; 
+                }
                 
                 const activeRow = document.getElementById(`ts-row-${window.currentLyricIndex}`);
                 if (activeRow) {
                     const timeInput = activeRow.querySelector('input[type="number"]');
                     if (timeInput) timeInput.value = '';
                 }
-                
                 window.saveTimestampsToFirebase(); 
             }
         }
@@ -835,54 +864,24 @@ window.prevLyric = function() {
 
 window.resetSync = function() {
     if (!window.isAdmin) return;
-    if(confirm('ล้างเวลาทั้งหมด?')) {
+    if(confirm('ล้างเวลาทั้งหมดของเวอร์ชันที่กำลังเล่นอยู่?')) {
         const song = window.songs.find(s => s.id === window.currentSongId);
-        if (song) { song.timestamps = []; song.singers = []; window.saveTimestampsToFirebase(); window.currentLyricIndex = -1; window.renderTimestampEditor(); window.updateLyricDisplay(); }
-    }
-}
-
-window.toggleLang = function(langIndex) {
-    const container = document.getElementById('lyricsContainer'); if (!container) return;
-    if (event.target.checked) container.classList.remove(`hide-lang-${langIndex}`); else container.classList.add(`hide-lang-${langIndex}`);
-}
-
-window.onPlayerStateChange = function(event) {
-    const playPauseBtn = document.getElementById('livePlayPauseBtn');
-    if (event.data === 1 && playPauseBtn) playPauseBtn.innerText = '⏸'; 
-    if (event.data === 2 && playPauseBtn) playPauseBtn.innerText = '▶'; 
-
-    if (event.data === 0) { 
-        if (!window.songs || window.songs.length === 0) return;
-
-        if (window.isShuffleEnabled) {
-            let randomIndex = Math.floor(Math.random() * window.songs.length);
-            if (window.songs.length > 1) {
-                const currentIdx = window.songs.findIndex(s => s.id === window.currentSongId);
-                while (randomIndex === currentIdx) {
-                    randomIndex = Math.floor(Math.random() * window.songs.length);
-                }
-            }
-            window.playSong(window.songs[randomIndex].id);
-        } else {
-            const idx = window.songs.findIndex(s => s.id === window.currentSongId);
-            if (idx !== -1 && idx + 1 < window.songs.length) {
-                window.playSong(window.songs[idx + 1].id);
+        if (song) { 
+            let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
+            if (isCover) {
+                song.covers[window.currentCoverIndex].timestamps = [];
+                song.covers[window.currentCoverIndex].singers = [];
             } else {
-                const bgEl = document.getElementById('dynamic-bg');
-                if (bgEl) bgEl.classList.remove('active');
-                
-                const liveAct = document.getElementById('liveActivity');
-                const liveDiv = document.getElementById('dockDivider');
-                if (liveAct) liveAct.classList.add('hidden');
-                if (liveDiv) liveDiv.classList.add('hidden');
-                
-                window.currentSongId = null;
-                
-                if(window.setRandomPanelState) window.setRandomPanelState(true);
+                song.timestamps = []; 
+                song.singers = []; 
             }
+            window.saveTimestampsToFirebase(); 
+            window.currentLyricIndex = -1; 
+            window.renderTimestampEditor(); 
+            window.updateLyricDisplay(); 
         }
     }
-};
+}
 
 // ==========================================
 // ⚙️ ระบบ Custom Theme & Personalization
