@@ -29,26 +29,22 @@ window.isYTApiReady = false; window.currentFilter = 'All';
 // ฟังก์ชันสำหรับดึงชื่อศิลปินทั้งหมดมาใส่ใน Datalist
 window.updateArtistSuggestions = function() {
     const datalist = document.getElementById('artistList');
-    if (!datalist) return; // ถ้าหาไม่เจอให้ข้ามไป
+    if (!datalist) return; 
 
     const allSingers = new Set();
     
-    // 1. ดึงรายชื่อจากที่เคยตั้งสีไว้
     if (window.SINGER_COLORS) {
         Object.keys(window.SINGER_COLORS).forEach(s => allSingers.add(s));
     }
     
-    // 2. ดึงรายชื่อจากเพลงทั้งหมดที่มีในระบบ
     if (window.songs) {
         window.songs.forEach(song => {
             if (song.artist) song.artist.split(',').forEach(s => allSingers.add(s.trim()));
         });
     }
 
-    // ล้างค่าเก่าทิ้งก่อน
     datalist.innerHTML = '';
     
-    // สร้างตัวเลือก (Option) ใหม่ใส่เข้าไปเรียงตามตัวอักษร
     Array.from(allSingers).sort().forEach(singer => {
         if (singer && singer !== 'ดนตรี') {
             const option = document.createElement('option');
@@ -59,12 +55,11 @@ window.updateArtistSuggestions = function() {
 };
 
 // ==========================================
-// 🪟 Window Manager  (เพิ่มระบบบันทึกตำแหน่งและขนาด)
+// 🪟 Window Manager  
 // ==========================================
 window.wm = {
     libWin: null, playerWin: null, lyricsWin: null, settingsWin: null, addWin: null, adminSyncWin: null,
 
-// 🧠 ระบบจำค่าและป้องกันหน้าต่างหาย (อัปเกรดเพิ่มระบบแอนิเมชันตอนปิด)
     applyMemory: function(winId, options) {
         try {
             const saved = JSON.parse(localStorage.getItem('winbox_memory_' + winId));
@@ -88,29 +83,19 @@ window.wm = {
             window.wm.saveMemory(winId, this);
         };
 
-        // ==========================================
-        // ✨ ส่วนที่เพิ่มใหม่: ระบบรอแอนิเมชันจบก่อนปิด
-        // ==========================================
         const originalOnClose = options.onclose;
         options.onclose = function(force) {
             if (!force) {
-                // 1. เติมคลาส .closing ให้หน้าต่างเริ่มเล่นแอนิเมชันหดตัว
                 this.addClass('closing'); 
-                
-                // 2. ตั้งเวลาให้รอ 300ms (0.3 วินาที) แล้วค่อยสั่งลบหน้าต่างจริงๆ
                 setTimeout(() => this.close(true), 300); 
-                
-                // 3. สั่งระงับการลบหน้าต่างทันทีไปก่อน
                 return true; 
             }
-            // ถ้า force = true แสดงว่ารอจบแล้ว ให้รันคำสั่ง onclose เดิมได้เลย
             if (originalOnClose) return originalOnClose.call(this, force);
         };
 
         return options;
     },
     
-    // 💾 เซฟค่าพิกัด
     saveMemory: function(winId, wbInstance) {
         const state = {
             x: wbInstance.x, y: wbInstance.y,
@@ -146,21 +131,17 @@ window.wm = {
                 }
                 document.getElementById("content-player").innerHTML = '<div id="youtubePlayer" style="width: 100%; height: 100%;"></div>';
                 
-                // หดพับ Live Activity เก็บ
                 const liveAct = document.getElementById('liveActivity');
                 const liveDiv = document.getElementById('dockDivider');
                 if (liveAct) liveAct.classList.add('hidden');
                 if (liveDiv) liveDiv.classList.add('hidden');
                 
-                // 🔴 ปิดภาพพื้นหลังปกเพลงให้จางหายไป
                 const bgEl = document.getElementById('dynamic-bg');
                 if (bgEl) bgEl.classList.remove('active');
 
                 window.currentSongId = null;
                 
-                // 🔴 กางแถบสุ่มเพลงอัตโนมัติเมื่อปิดหน้าต่างเพลง
                 if(window.setRandomPanelState) window.setRandomPanelState(true);
-                // 🔴 สั่งปิดหน้าต่างเนื้อร้อง และหน้าต่างซิงค์ (ถ้าเปิดอยู่)
                 if (window.wm.lyricsWin) { window.wm.lyricsWin.close(); }
                 if (window.wm.adminSyncWin) { window.wm.adminSyncWin.close(); }
             }
@@ -193,7 +174,6 @@ window.wm = {
     }
 };
 
-// ปิด Dropdown ครอบคลุมเมื่อคลิกที่อื่น
 document.addEventListener('click', function(e) {
     if (!e.target.closest('.ts-singer-dropdown')) {
         document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show'));
@@ -229,7 +209,6 @@ window.setWallpaper = function(url) {
         if (input && input.value !== url) input.value = url;
     }
 }
-// โหลด Wallpaper ตอนเปิดเว็บ
 const savedWp = localStorage.getItem('customWallpaper');
 if (savedWp) window.setWallpaper(savedWp);
 
@@ -239,19 +218,15 @@ const tag = document.createElement('script'); tag.src = "https://www.youtube.com
 // ==========================================
 // การตรวจสิทธิ์ & ดึงข้อมูล
 // ==========================================
-onAuthStateChanged(auth, async (user) => {  // 🔴 1. เติม async ตรงนี้
+onAuthStateChanged(auth, async (user) => {  
     window.isLoggedIn = !!user;
     window.isAdmin = user && ALLOWED_EMAILS.includes(user.email);
     
     document.getElementById('btnHeaderLogout').style.display = window.isLoggedIn ? 'block' : 'none';
     document.getElementById('btnHeaderLogin').style.display = window.isLoggedIn ? 'none' : 'block';
     document.getElementById('btnAddSong').style.display = window.isAdmin ? 'block' : 'none';
-    
-   // โชว์ปุ่ม Admin Sync เฉพาะตอนที่ล็อกอินแอดมิน
     document.getElementById('btnDockAdminSync').style.display = window.isAdmin ? 'block' : 'none';
     
-    // ==========================================
-    // 🔴 3.2 โค้ดใหม่: สร้างปุ่มตั้งค่าสีให้แอดมิน
     let btnColor = document.getElementById('btnColorAdmin');
     if (window.isAdmin) {
         if (!btnColor) {
@@ -266,33 +241,21 @@ onAuthStateChanged(auth, async (user) => {  // 🔴 1. เติม async ตร
     } else {
         if (btnColor) btnColor.style.display = 'none';
     }
-    // ==========================================
 
-    // 🔴 2. โหลดฐานข้อมูลสีให้เสร็จก่อน แล้วค่อยดึงเพลง
     await initializeSingerColors(db);
-    
     fetchSongs(); 
 });
 
 window.loginWithGoogle = async function() { try { await signInWithPopup(auth, provider); } catch (e) { alert("เข้าสู่ระบบไม่สำเร็จ"); } }
 window.logout = async function() { if(confirm('ต้องการออกจากระบบใช่หรือไม่?')) { await signOut(auth); } }
 
-// ==========================================
-// 🎵 ฟังก์ชันดึงข้อมูลเพลงทั้งหมดจากฐานข้อมูล (Firebase)
-// ทำหน้าที่: โหลดเพลง, อัปเดตหน้าจอ, เช็คลิงก์, และจัดเตรียมข้อมูลต่างๆ
-// ==========================================
 async function fetchSongs() {
-    // 1. เปิดหน้าจอโหลดดิ้ง (หมุนๆ) เพื่อให้ผู้ใช้รู้ว่าระบบกำลังทำงาน
     document.getElementById('loadingOverlay').style.display = 'flex';
     
     try {
-        // 2. ดึงข้อมูลทั้งหมดที่อยู่ในแฟ้ม 'songs' จากฐานข้อมูล
         const querySnapshot = await getDocs(songsCollection);
-        
-        // 3. เคลียร์คลังเพลงในระบบให้ว่างเปล่าก่อนเพื่อเตรียมรับข้อมูลใหม่
         window.songs = [];
         
-        // 4. วนลูปเอาข้อมูลเพลงที่ดึงมาได้ ยัดใส่เข้าไปในคลังเพลง (window.songs)
         querySnapshot.forEach((doc) => {
             const data = doc.data();
             window.songs.push({ 
@@ -303,47 +266,39 @@ async function fetchSongs() {
                 lyrics: data.lyrics, 
                 timestamps: data.timestamps || [], 
                 singers: data.singers || [], 
-                covers: data.covers || [],
+                covers: data.covers || [], // ดึงข้อมูล Cover
                 createdAt: data.createdAt 
             });
         });
         
-        // 5. โหลดเสร็จแล้ว ปิดหน้าจอโหลดดิ้งได้
         document.getElementById('loadingOverlay').style.display = 'none';
         
-        // 6. สั่งให้ระบบสร้าง "แถบสุ่มเพลงน่าฟัง" (Widget ด้านขวา)
         window.renderRandomPlaylist();
         
-        // 7. ปลุกระบบเช็คการแจ้งเตือนเพลงใหม่
         if(window.checkNewSongsNotification) {
             window.checkNewSongsNotification();
         }
 
-        // 8. อัปเดตรายชื่อศิลปินอัตโนมัติ สำหรับใช้ตอนพิมพ์ค้นหาหรือเพิ่มเพลง
         if (window.updateArtistSuggestions) {
             window.updateArtistSuggestions();
         }
     
-        // 9. เช็คว่าผู้ใช้เข้าเว็บผ่านลิงก์แชร์เพลงเฉพาะเจาะจงหรือไม่ (เช่น ?song=1234)
         const urlParams = new URLSearchParams(window.location.search);
         const songIdFromUrl = urlParams.get('song');
         
         if (songIdFromUrl) {
-            // ถ้ามีลิงก์แชร์แนบมา ให้หาเพลงนั้นแล้วกดเล่นให้ทันที
             const foundSong = window.songs.find(s => s.id === songIdFromUrl);
             if (foundSong) { 
                 window.playSong(foundSong.id); 
-                return; // จบการทำงานตรงนี้เลย ไม่ต้องเปิดหน้าต่างคลังเพลง
+                return; 
             }
         }
         
-        // 10. ถ้าเข้ามาแบบปกติ (ไม่มีลิงก์แชร์) ให้เปิดหน้าต่าง "คลังเพลง" ขึ้นมา
         window.wm.openLibrary(); 
         
     } catch (error) { 
-        // กรณีดึงข้อมูลพัง (เช่น เน็ตหลุด) ให้ปิดหน้าจอโหลดดิ้ง เพื่อไม่ให้เว็บค้าง
         document.getElementById('loadingOverlay').style.display = 'none'; 
-        console.error("Error fetching songs: ", error); // พิมพ์บอก Error ไว้ใน Console เผื่อแอดมินมาเช็ค
+        console.error("Error fetching songs: ", error); 
     }
 }
 
@@ -385,12 +340,11 @@ window.removeCoverInput = function(index) {
     if(confirm('ต้องการลบ Cover นี้ใช่หรือไม่? (ลบแล้วต้องกดบันทึกเพลงด้วยนะ)')) { window.currentCoversDraft.splice(index, 1); window.renderCoverInputs(); }
 }
 
-// ✨ อัปเดต 3 ฟังก์ชันหลักให้รองรับการเซฟ Cover
 window.openAddView = function() {
     if (!window.isAdmin) return;
     window.editingSongId = null;
     document.getElementById('inputTitle').value = ''; document.getElementById('inputArtist').value = ''; document.getElementById('inputAudio').value = ''; document.getElementById('inputLyrics').value = '';
-    window.currentCoversDraft = []; window.renderCoverInputs(); // รีเซ็ตกล่อง Cover
+    window.currentCoversDraft = []; window.renderCoverInputs(); 
     window.wm.openAdd('✨ เพิ่มเพลงใหม่');
 }
 
@@ -399,7 +353,7 @@ window.editSong = function(id) {
     const song = window.songs.find(s => s.id === id); if (!song) return;
     window.editingSongId = id;
     document.getElementById('inputTitle').value = song.title; document.getElementById('inputArtist').value = song.artist || ''; document.getElementById('inputAudio').value = song.audioPath; document.getElementById('inputLyrics').value = song.lyrics;
-    window.currentCoversDraft = song.covers ? JSON.parse(JSON.stringify(song.covers)) : []; window.renderCoverInputs(); // ดึง Cover เก่ามาแสดง
+    window.currentCoversDraft = song.covers ? JSON.parse(JSON.stringify(song.covers)) : []; window.renderCoverInputs(); 
     window.wm.openAdd('✏️ แก้ไขเพลง');
 }
 
@@ -411,7 +365,6 @@ window.saveSong = async function() {
     if (!title || !lyrics || !window.extractYouTubeID(audioPath)) { alert("ข้อมูลไม่ครบ หรือลิงก์ผิด"); return; }
     btnSave.disabled = true; btnSave.innerText = "กำลังบันทึก...";
 
-    // ✨ กรองเอาเฉพาะกล่อง Cover ที่แอดมินกรอกชื่อคนร้องและลิงก์ครบถ้วน
     const validCovers = (window.currentCoversDraft || []).filter(c => c.coverArtist && window.extractYouTubeID(c.audioPath));
 
     try {
@@ -442,7 +395,6 @@ window.renderSongList = function(query = '', artistFilter = 'All') {
         let artistSet = new Set();
         window.songs.forEach(s => window.getSingersList(s.artist).forEach(n => artistSet.add(n)));
         
-        // 🔴 เพิ่มการเรียงลำดับตัวอักษร (A-Z, ก-ฮ) ตรงนี้
         const sortedArtists = Array.from(artistSet).sort((a, b) => a.localeCompare(b, 'th')); 
         const artists = ['All', ...sortedArtists];
         
@@ -478,7 +430,7 @@ window.renderLyricsToContainer = function() {
 
     window.currentLyricsArray.forEach((lyric, index) => {
         const lineDiv = document.createElement('div'); lineDiv.className = 'lyric-line'; lineDiv.id = `lyric-line-${index}`;
-        // 🔴 ฟีเจอร์กดเนื้อเพลงแล้ววาร์ป (Seek)
+        
         lineDiv.onclick = () => {
             const song = window.songs.find(s => s.id === window.currentSongId);
             if (song && song.timestamps && song.timestamps[index] != null && window.ytPlayer && typeof window.ytPlayer.seekTo === 'function') {
@@ -491,7 +443,6 @@ window.renderLyricsToContainer = function() {
         let linesHtml = "";
         const cleanLyric = lyric.trim();
         
-       // 🔴 เช็คว่าถ้าแอดมินพิมพ์คำว่า [ดนตรี] ให้เปลี่ยนเป็นตัวโน้ตกระพริบ
         if (cleanLyric === '[ดนตรี]') {
             linesHtml = `
                 <div class="lyric-instrumental">
@@ -501,13 +452,11 @@ window.renderLyricsToContainer = function() {
                 </div>
             `;
         } else {
-            // ✨ โค้ดใหม่: กรองบรรทัดว่าง และคำนวณหา "บรรทัดคำอ่าน" อัตโนมัติ ✨
             const validLines = cleanLyric.split('\n').filter(l => l.trim() !== '');
             
             linesHtml = validLines.map((l, i) => {
-                // ลอจิกคนเก่ง: ถ้าไม่ใช่บรรทัดแรก (0) และไม่ใช่บรรทัดสุดท้าย ให้ถือว่าเป็น "คำอ่าน"
                 const isMiddle = (i > 0 && i < validLines.length - 1);
-                const highlightClass = isMiddle ? ' reading-text' : ''; // แปะป้ายบอก CSS ให้ระบายสี
+                const highlightClass = isMiddle ? ' reading-text' : ''; 
 
                 if (l.includes('||')) {
                     let parts = l.split('||');
@@ -515,7 +464,6 @@ window.renderLyricsToContainer = function() {
                     let subText = parts[1].trim();
                     return `<div class="lang-${i} dual-lyric${highlightClass}"><span class="lyric-main">${mainText}</span><span class="lyric-sub">${subText}</span></div>`;
                 } else {
-                    // ปลอดภัย 100%: แสดงผลด้วยโครงสร้างเดิม เพิ่มเติมคือคลาสสีเหลือง
                     return `<div class="lang-${i}${highlightClass}">${l}</div>`;
                 }
             }).join('');
@@ -543,7 +491,7 @@ window.renderLyricsToContainer = function() {
 // ==========================================
 // 🎧 ระบบเพลง Cover (Alternative Versions)
 // ==========================================
-window.currentCoverIndex = -1; // -1 คือเล่นต้นฉบับอยู่
+window.currentCoverIndex = -1; 
 
 window.renderVersionBadges = function() {
     const container = document.getElementById('versionContainer'); 
@@ -551,7 +499,7 @@ window.renderVersionBadges = function() {
     
     const song = window.songs.find(s => s.id === window.currentSongId);
     if (!song || !song.covers || song.covers.length === 0) {
-        container.style.display = 'none'; // ไม่มีปก ให้ซ่อน
+        container.style.display = 'none'; 
         return;
     }
 
@@ -559,10 +507,8 @@ window.renderVersionBadges = function() {
     container.className = 'version-badges-container';
     container.innerHTML = '';
 
-    // สร้างปุ่ม ต้นฉบับ
     container.appendChild(createBadgeElement('🌟 Original', song.artist, -1));
 
-    // สร้างปุ่ม Cover ทั้งหมดที่มี
     song.covers.forEach((cover, index) => {
         container.appendChild(createBadgeElement(`🎧 Cover`, cover.coverArtist, index));
     });
@@ -573,7 +519,6 @@ function createBadgeElement(label, artistName, index) {
     badge.className = 'version-badge';
     badge.innerText = `${label} : ${artistName}`;
 
-    // ถ้าเวอร์ชันนี้กำลังเล่นอยู่ ให้สาดสีนักร้องใส่ปุ่ม
     if (window.currentCoverIndex === index) {
         badge.classList.add('active');
         const badgeColor = (window.SINGER_COLORS && window.SINGER_COLORS[artistName]) ? window.SINGER_COLORS[artistName] : '#0a84ff';
@@ -592,31 +537,29 @@ function createBadgeElement(label, artistName, index) {
         badge.style.boxShadow = `0 0 12px ${badgeColor}80`; 
     }
 
-   // กดปุ่มสลับเวอร์ชัน
     badge.onclick = () => {
         if (window.currentCoverIndex === index) return; 
         
         window.currentCoverIndex = index;
-        window.renderVersionBadges(); // รีเฟรชสีปุ่ม
+        window.renderVersionBadges(); 
         
-        // 🔴 สั่งงานให้โหลดวิดีโอใหม่
         const song = window.songs.find(s => s.id === window.currentSongId);
-        let targetVideoPath = song.audioPath; // ค่าเริ่มต้นคือ ต้นฉบับ
+        let targetVideoPath = song.audioPath; 
         
         if (index >= 0 && song.covers && song.covers[index]) {
-            targetVideoPath = song.covers[index].audioPath; // ถ้ากด Cover ให้ใช้ลิงก์ Cover
+            targetVideoPath = song.covers[index].audioPath; 
         }
         
-        // โหลดวิดีโอใหม่ใส่ Player ทันที
         const videoId = window.extractYouTubeID(targetVideoPath);
         if (window.ytPlayer && typeof window.ytPlayer.loadVideoById === 'function') {
             window.ytPlayer.loadVideoById(videoId);
         }
         
-        // รีเซ็ตเนื้อเพลงให้กลับไปเริ่มบรรทัดแรกใหม่
         window.currentLyricIndex = -1;
         window.updateLyricDisplay();
     };
+    return badge;
+}
 
 window.playSong = function(id) {
     window.currentSongId = id; const song = window.songs.find(s => s.id === id); if (!song) return;
@@ -624,11 +567,9 @@ window.playSong = function(id) {
     window.currentCoverIndex = -1;
     window.renderVersionBadges();
     
-    // 🔴 ฟังชั่นหุบแถบอัตโนมัติ
     if(window.setRandomPanelState) window.setRandomPanelState(false);
     if(window.wm && window.wm.notifyWin) window.wm.notifyWin.close();
     
-    // โชว์และอัปเดต Live Activity
     const liveAct = document.getElementById('liveActivity');
     const liveDiv = document.getElementById('dockDivider');
     if (liveAct && liveDiv) {
@@ -649,7 +590,6 @@ window.playSong = function(id) {
     const bgEl = document.getElementById('dynamic-bg');
     if (bgEl && videoId) { bgEl.style.backgroundImage = `url('https://img.youtube.com/vi/${videoId}/hqdefault.jpg')`; bgEl.classList.add('active'); }
     
-    // เช็คและสร้างกล่อง YouTube ใหม่
     let playerDiv = document.getElementById('youtubePlayer');
     if (!playerDiv) {
         document.getElementById('content-player').innerHTML = '<div id="youtubePlayer" style="width: 100%; height: 100%;"></div>';
@@ -689,7 +629,6 @@ window.playSong = function(id) {
     }, 100); 
 }; 
 
-// 🔴 ระบบ Admin แบบเต็ม (เพิ่มเนื้อ ลบเนื้อ เลือกคนร้อง)
 window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
     if (!window.isAdmin) return;
     const song = window.songs.find(s => s.id === window.currentSongId);
@@ -717,7 +656,6 @@ window.renderTimestampEditor = function() {
         const row = document.createElement('div'); row.className = 'ts-row'; row.id = `ts-row-${index}`;
         row.style.background = 'rgba(255, 255, 255, 0.05)'; row.style.padding = '12px 10px'; row.style.borderRadius = '8px'; row.style.marginBottom = '12px'; row.style.border = '1px solid rgba(255, 255, 255, 0.1)';
 
-        // 1. ช่องเขียนเนื้อเพลง
         const lyricEditor = document.createElement('textarea');
         lyricEditor.value = lyric; lyricEditor.style.width = '100%'; lyricEditor.style.minHeight = '55px'; lyricEditor.style.marginBottom = '10px';
         if (!window.isAdmin) { lyricEditor.readOnly = true; lyricEditor.style.border = 'none'; lyricEditor.style.background = 'transparent'; } 
@@ -727,11 +665,9 @@ window.renderTimestampEditor = function() {
         const controlsDiv = document.createElement('div'); controlsDiv.style.display = 'flex'; controlsDiv.style.justifyContent = 'space-between'; controlsDiv.style.alignItems = 'center'; controlsDiv.style.flexWrap = 'wrap'; controlsDiv.style.gap = '8px';
         const leftControls = document.createElement('div'); leftControls.style.display = 'flex'; leftControls.style.gap = '8px'; leftControls.style.alignItems = 'center';
         
-        // แบทจ์ลำดับ
         const badge = document.createElement('span'); badge.innerText = `#${index + 1}`; badge.style.color = '#0a84ff'; badge.style.fontWeight = 'bold'; leftControls.appendChild(badge);
 
         if (window.isAdmin) {
-            // 2. Dropdown เลือกนักร้อง
             const allSingers = window.getSingersList(song.artist);
             const dropdown = document.createElement('div'); dropdown.className = 'ts-singer-dropdown'; dropdown.style.position = 'relative';
             const toggleBtn = document.createElement('button'); toggleBtn.className = 'ts-dropdown-toggle';
@@ -771,7 +707,6 @@ window.renderTimestampEditor = function() {
             };
             dropdown.appendChild(toggleBtn); dropdown.appendChild(menu); leftControls.appendChild(dropdown);
 
-            // 3. ช่องกรอกเวลาแบบละเอียด
             const timeInput = document.createElement('input'); timeInput.type = 'number'; timeInput.step = '0.1'; timeInput.min = '0';
             timeInput.style.width = '70px'; timeInput.style.margin = '0'; timeInput.style.padding = '4px 6px'; timeInput.style.textAlign = 'center';
             timeInput.value = (song.timestamps && song.timestamps[index] != null) ? song.timestamps[index].toFixed(1) : '';
@@ -781,9 +716,6 @@ window.renderTimestampEditor = function() {
 
         const rightControls = document.createElement('div'); rightControls.style.display = 'flex'; rightControls.style.gap = '8px';
         if (window.isAdmin) {
-            // ==========================================
-            // ✨ ปุ่มเสกแฮชแท็ก [ดนตรี] อัตโนมัติ 
-            // ==========================================
             const btnMusic = document.createElement('button'); 
             btnMusic.innerText = '🎵 ดนตรี'; 
             btnMusic.style.background = 'rgba(255, 159, 10, 0.2)'; 
@@ -793,16 +725,14 @@ window.renderTimestampEditor = function() {
             btnMusic.style.borderRadius = '6px';
             btnMusic.style.cursor = 'pointer';
             btnMusic.onclick = () => {
-                lyricEditor.value = '[ดนตรี]'; // เปลี่ยนตัวหนังสือในกล่องเป็น [ดนตรี]
-                window.currentLyricsArray[index] = '[ดนตรี]'; // อัปเดตตัวแปรในระบบ
-                window.saveTimestampsToFirebase(true); // เซฟลงฐานข้อมูลเงียบๆ ทันที
+                lyricEditor.value = '[ดนตรี]'; 
+                window.currentLyricsArray[index] = '[ดนตรี]'; 
+                window.saveTimestampsToFirebase(true); 
             };
 
-            // 4. ปุ่ม แทรก / ลบ เดิม
             const btnAdd = document.createElement('button'); btnAdd.innerText = '➕'; btnAdd.style.background = 'rgba(52, 199, 89, 0.2)'; btnAdd.style.color = '#34c759'; btnAdd.style.border = '1px solid rgba(52, 199, 89, 0.4)'; btnAdd.style.padding = '4px 10px'; btnAdd.onclick = () => window.addLyricLine(index);
             const btnDel = document.createElement('button'); btnDel.innerText = '🗑️'; btnDel.style.background = 'rgba(255, 59, 48, 0.2)'; btnDel.style.color = '#ff3b30'; btnDel.style.border = '1px solid rgba(255, 59, 48, 0.4)'; btnDel.style.padding = '4px 10px'; btnDel.onclick = () => window.deleteLyricLine(index);
             
-            // ใส่ปุ่มดนตรีเข้าไปในกลุ่มควบคุมขวา
             rightControls.appendChild(btnMusic); 
             rightControls.appendChild(btnAdd); 
             rightControls.appendChild(btnDel);
@@ -870,7 +800,6 @@ window.nextLyric = function(isAuto = false) {
                 const currentTime = window.ytPlayer.getCurrentTime();
                 song.timestamps[window.currentLyricIndex] = currentTime; 
                 
-                // ✨ ส่วนที่เพิ่ม: อัปเดตตัวเลขในกล่องเวลาบนหน้าจอทันที ✨
                 const activeRow = document.getElementById(`ts-row-${window.currentLyricIndex}`);
                 if (activeRow) {
                     const timeInput = activeRow.querySelector('input[type="number"]');
@@ -890,7 +819,6 @@ window.prevLyric = function() {
             if (song && song.timestamps) { 
                 song.timestamps[window.currentLyricIndex] = null; 
                 
-                // ✨ ส่วนที่เพิ่ม: เคลียร์ตัวเลขในกล่องเวลาเมื่อกดถอยหลัง ✨
                 const activeRow = document.getElementById(`ts-row-${window.currentLyricIndex}`);
                 if (activeRow) {
                     const timeInput = activeRow.querySelector('input[type="number"]');
@@ -919,16 +847,14 @@ window.toggleLang = function(langIndex) {
 }
 
 window.onPlayerStateChange = function(event) {
-    // 🔴 ซิงค์ไอคอนปุ่ม Play/Pause ใน Live Activity
     const playPauseBtn = document.getElementById('livePlayPauseBtn');
-    if (event.data === 1 && playPauseBtn) playPauseBtn.innerText = '⏸'; // สถานะเล่น
-    if (event.data === 2 && playPauseBtn) playPauseBtn.innerText = '▶'; // สถานะหยุดพัก
+    if (event.data === 1 && playPauseBtn) playPauseBtn.innerText = '⏸'; 
+    if (event.data === 2 && playPauseBtn) playPauseBtn.innerText = '▶'; 
 
-    if (event.data === 0) { // เลข 0 คือสถานะเพลงเล่นจบ
+    if (event.data === 0) { 
         if (!window.songs || window.songs.length === 0) return;
 
         if (window.isShuffleEnabled) {
-            // 🔀 โหมดสุ่มเพลง (สุ่มให้ไม่ซ้ำเพลงเดิม)
             let randomIndex = Math.floor(Math.random() * window.songs.length);
             if (window.songs.length > 1) {
                 const currentIdx = window.songs.findIndex(s => s.id === window.currentSongId);
@@ -938,12 +864,10 @@ window.onPlayerStateChange = function(event) {
             }
             window.playSong(window.songs[randomIndex].id);
         } else {
-            // ➡️ โหมดเล่นเรียงตามปกติ 
             const idx = window.songs.findIndex(s => s.id === window.currentSongId);
             if (idx !== -1 && idx + 1 < window.songs.length) {
                 window.playSong(window.songs[idx + 1].id);
             } else {
-                // 🛑 ถ้าไม่มีเพลงต่อให้ซ่อน UI
                 const bgEl = document.getElementById('dynamic-bg');
                 if (bgEl) bgEl.classList.remove('active');
                 
@@ -954,7 +878,6 @@ window.onPlayerStateChange = function(event) {
                 
                 window.currentSongId = null;
                 
-                // 🔴 กางแถบสุ่มเพลงอัตโนมัติเพื่อรอให้ผู้ใช้เลือกเพลงใหม่
                 if(window.setRandomPanelState) window.setRandomPanelState(true);
             }
         }
@@ -986,7 +909,6 @@ window.setBgSize = function(size) {
     localStorage.setItem('ws_bgsize', size);
 }
 
-// โหลดค่า Custom ทั้งหมดตอนเปิดแอป
 window.loadCustomSettings = function() {
     const op = localStorage.getItem('ws_opacity');
     const bl = localStorage.getItem('ws_blur');
@@ -1019,7 +941,6 @@ window.loadCustomSettings = function() {
     }
 }
 
-// 🔴 ฟังก์ชันเปิด/ปิดโหมดสุ่มเพลง
 window.isShuffleEnabled = false;
 
 window.toggleShuffle = function(isEnable) {
@@ -1027,7 +948,6 @@ window.toggleShuffle = function(isEnable) {
     localStorage.setItem('ws_shuffle', isEnable ? '1' : '0');
 }
 
-// สั่งให้โหลดค่าทันทีเมื่อเปิดเว็บ
 document.addEventListener('DOMContentLoaded', () => {
     window.loadCustomSettings();
 });
@@ -1035,7 +955,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 // 🎲 ระบบแถบสุ่มเพลงด้านขวา (Widget)
 // ==========================================
-// 🔴 ฟังก์ชันใหม่สำหรับสั่งกาง/หุบ แถบแบบเจาะจง
 window.setRandomPanelState = function(isOpen) {
     const panel = document.getElementById('randomPlaylistPanel');
     const icon = document.getElementById('panelToggleIcon');
@@ -1049,7 +968,6 @@ window.setRandomPanelState = function(isOpen) {
     }
 }
 
-// อัปเดตปุ่มกดให้เรียกใช้ฟังก์ชันใหม่
 window.toggleRandomPanel = function() {
     const panel = document.getElementById('randomPlaylistPanel');
     if (panel) window.setRandomPanelState(!panel.classList.contains('open'));
@@ -1082,16 +1000,17 @@ window.renderRandomPlaylist = function() {
         container.appendChild(item);
     });
 }
-    // ==========================================
+
+// ==========================================
 // 🎵 ระบบควบคุมเพลงใน Live Activity
 // ==========================================
 window.toggleLivePlay = function() {
     if (!window.ytPlayer || typeof window.ytPlayer.getPlayerState !== 'function') return;
     const state = window.ytPlayer.getPlayerState();
     
-    if (state === 1) { // ถ้ากำลังเล่นอยู่
+    if (state === 1) { 
         window.ytPlayer.pauseVideo();
-    } else { // ถ้าหยุดพักอยู่
+    } else { 
         window.ytPlayer.playVideo();
     }
 }
@@ -1099,7 +1018,6 @@ window.toggleLivePlay = function() {
 window.nextLiveSong = function() {
     if (!window.songs || window.songs.length === 0 || !window.currentSongId) return;
     
-    // ถ้าเปิดโหมดสุ่ม ให้สุ่มเพลง
     if (window.isShuffleEnabled) {
         let randomIndex = Math.floor(Math.random() * window.songs.length);
         if (window.songs.length > 1) {
@@ -1108,7 +1026,6 @@ window.nextLiveSong = function() {
         }
         window.playSong(window.songs[randomIndex].id);
     } else {
-        // ถ้าโหมดปกติ ให้เล่นเพลงถัดไป (ถ้าหมดจะวนกลับเพลงแรก)
         const currentIdx = window.songs.findIndex(s => s.id === window.currentSongId);
         const nextIndex = currentIdx + 1 < window.songs.length ? currentIdx + 1 : 0;
         window.playSong(window.songs[nextIndex].id);
@@ -1119,8 +1036,6 @@ window.prevLiveSong = function() {
     if (!window.songs || window.songs.length === 0 || !window.currentSongId) return;
     
     const currentIdx = window.songs.findIndex(s => s.id === window.currentSongId);
-    // ถอยกลับ 1 เพลง (ถ้าอยู่เพลงแรก จะวนไปเพลงสุดท้าย)
     const prevIndex = currentIdx - 1 >= 0 ? currentIdx - 1 : window.songs.length - 1;
     window.playSong(window.songs[prevIndex].id);
 }
-
