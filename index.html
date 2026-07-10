@@ -146,6 +146,14 @@
             <input type="text" id="inputAudio" placeholder="วางลิงก์วิดีโอ YouTube ที่นี่">
             <label>เนื้อเพลง:</label>
             <textarea id="inputLyrics" placeholder="ท่อนที่ 1 ญี่ปุ่น&#10;ท่อนที่ 1 โรมาจิ&#10;ท่อนที่ 1 ไทย&#10;&#10;ท่อนที่ 2..."></textarea>
+            
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0 10px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <label style="margin: 0; color: #ffcc00; font-size: 0.9em;">🎧 เวอร์ชัน Cover (ถ้ามี)</label>
+                <button class="btn-secondary" onclick="addCoverInput()" style="padding: 4px 10px; font-size: 0.8em; background: rgba(255, 204, 0, 0.2); color: #ffcc00; border: 1px solid rgba(255, 204, 0, 0.4);">➕ เพิ่ม Cover</button>
+            </div>
+            <div id="coverInputsContainer"></div>
+            
             <button id="btnSave" class="btn-primary" onclick="saveSong()" style="width: 100%; margin-top: 15px;">💾 บันทึกเพลง</button>
         </div>
         
