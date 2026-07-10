@@ -496,8 +496,74 @@ window.renderLyricsToContainer = function() {
         container.appendChild(lineDiv);
     });
 }
+
+// ==========================================
+// 🎧 ระบบเพลง Cover (Alternative Versions)
+// ==========================================
+window.currentCoverIndex = -1; // -1 คือเล่นต้นฉบับอยู่
+
+window.renderVersionBadges = function() {
+    const container = document.getElementById('versionContainer'); 
+    if (!container) return;
+    
+    const song = window.songs.find(s => s.id === window.currentSongId);
+    if (!song || !song.covers || song.covers.length === 0) {
+        container.style.display = 'none'; // ไม่มีปก ให้ซ่อน
+        return;
+    }
+
+    container.style.display = 'flex';
+    container.className = 'version-badges-container';
+    container.innerHTML = '';
+
+    // สร้างปุ่ม ต้นฉบับ
+    container.appendChild(createBadgeElement('🌟 Original', song.artist, -1));
+
+    // สร้างปุ่ม Cover ทั้งหมดที่มี
+    song.covers.forEach((cover, index) => {
+        container.appendChild(createBadgeElement(`🎧 Cover`, cover.coverArtist, index));
+    });
+};
+
+function createBadgeElement(label, artistName, index) {
+    const badge = document.createElement('div');
+    badge.className = 'version-badge';
+    badge.innerText = `${label} : ${artistName}`;
+
+    // ถ้าเวอร์ชันนี้กำลังเล่นอยู่ ให้สาดสีนักร้องใส่ปุ่ม
+    if (window.currentCoverIndex === index) {
+        badge.classList.add('active');
+        const badgeColor = (window.SINGER_COLORS && window.SINGER_COLORS[artistName]) ? window.SINGER_COLORS[artistName] : '#0a84ff';
+        
+        let textColor = '#ffffff';
+        if (badgeColor.startsWith('#')) {
+            let hex = badgeColor.replace('#', '');
+            if (hex.length === 3) hex = hex.split('').map(x=>x+x).join(''); 
+            let r = parseInt(hex.substring(0,2), 16), g = parseInt(hex.substring(2,4), 16), b = parseInt(hex.substring(4,6), 16);
+            let yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            textColor = (yiq >= 140) ? '#000000' : '#ffffff';
+        }
+
+        badge.style.background = badgeColor;
+        badge.style.color = textColor;
+        badge.style.boxShadow = `0 0 12px ${badgeColor}80`; 
+    }
+
+    // กดปุ่มสลับเวอร์ชัน
+    badge.onclick = () => {
+        if (window.currentCoverIndex === index) return;
+        window.currentCoverIndex = index;
+        window.renderVersionBadges();
+        alert(`เดี๋ยวเราจะมาเขียนระบบเปลี่ยนวิดีโอ YouTube ของ ${artistName} ตรงนี้ครับ!`);
+    };
+    return badge;
+}
+
 window.playSong = function(id) {
     window.currentSongId = id; const song = window.songs.find(s => s.id === id); if (!song) return;
+
+    window.currentCoverIndex = -1;
+    window.renderVersionBadges();
     
     // 🔴 ฟังชั่นหุบแถบอัตโนมัติ
     if(window.setRandomPanelState) window.setRandomPanelState(false);
