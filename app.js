@@ -914,6 +914,53 @@ window.resetSync = function() {
     }
 }
 
+window.toggleLang = function(langIndex) {
+    const container = document.getElementById('lyricsContainer'); if (!container) return;
+    if (event.target.checked) container.classList.remove(`hide-lang-${langIndex}`); else container.classList.add(`hide-lang-${langIndex}`);
+}
+
+window.onPlayerStateChange = function(event) {
+    // 🔴 ซิงค์ไอคอนปุ่ม Play/Pause ใน Live Activity
+    const playPauseBtn = document.getElementById('livePlayPauseBtn');
+    if (event.data === 1 && playPauseBtn) playPauseBtn.innerText = '⏸'; // สถานะเล่น
+    if (event.data === 2 && playPauseBtn) playPauseBtn.innerText = '▶'; // สถานะหยุดพัก
+
+    if (event.data === 0) { // เลข 0 คือสถานะเพลงเล่นจบ
+        if (!window.songs || window.songs.length === 0) return;
+
+        if (window.isShuffleEnabled) {
+            // 🔀 โหมดสุ่มเพลง (สุ่มให้ไม่ซ้ำเพลงเดิม)
+            let randomIndex = Math.floor(Math.random() * window.songs.length);
+            if (window.songs.length > 1) {
+                const currentIdx = window.songs.findIndex(s => s.id === window.currentSongId);
+                while (randomIndex === currentIdx) {
+                    randomIndex = Math.floor(Math.random() * window.songs.length);
+                }
+            }
+            window.playSong(window.songs[randomIndex].id);
+        } else {
+            // ➡️ โหมดเล่นเรียงตามปกติ 
+            const idx = window.songs.findIndex(s => s.id === window.currentSongId);
+            if (idx !== -1 && idx + 1 < window.songs.length) {
+                window.playSong(window.songs[idx + 1].id);
+            } else {
+                // 🛑 ถ้าไม่มีเพลงต่อให้ซ่อน UI
+                const bgEl = document.getElementById('dynamic-bg');
+                if (bgEl) bgEl.classList.remove('active');
+                
+                const liveAct = document.getElementById('liveActivity');
+                const liveDiv = document.getElementById('dockDivider');
+                if (liveAct) liveAct.classList.add('hidden');
+                if (liveDiv) liveDiv.classList.add('hidden');
+                
+                window.currentSongId = null;
+                
+                if(window.setRandomPanelState) window.setRandomPanelState(true);
+            }
+        }
+    }
+};
+
 // ==========================================
 // ⚙️ ระบบ Custom Theme & Personalization
 // ==========================================
