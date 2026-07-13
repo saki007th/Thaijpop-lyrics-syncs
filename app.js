@@ -755,11 +755,11 @@ window.renderTimestampEditor = function() {
 }
 
 // ==========================================
-// 🚀 ฟังก์ชันกระดานรูดปาดสี (รองรับ ซับคำอ่าน + แปลไทย)
+// 🚀 ฟังก์ชันกระดานรูดปาดสี (ซิงค์แค่เนื้อเพลงหลัก สีฟ้า)
 // ==========================================
 window.renderKaraokeEditorUI = function(container, song) {
     const info = document.createElement('div');
-    info.innerHTML = '<div style="background: rgba(255, 55, 95, 0.2); color: #ff375f; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.5;"><b>💡 วิธีใช้งานโหมดรูดระบายสี (มีซับ):</b><br>1. พิมพ์เนื้อให้จำนวนคำตรงกัน เช่น <code>僕|は||Bo|ku||ฉันคือ</code><br>2. <b>รูดเมาส์ที่คำหลัก</b> ระบบจะจับเวลาซับด้านบนให้พร้อมกันอัตโนมัติ! (ท่อนแปลไทยด้านล่างจะไม่ถูกระบายสี)</div>';
+    info.innerHTML = '<div style="background: rgba(10, 132, 255, 0.2); color: #0a84ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.5;"><b>💡 วิธีใช้งานโหมดรูดระบายสี:</b><br>1. ในโหมด Classic ให้พิมพ์เครื่องหมาย <b>|</b> เพื่อแบ่งคำ เช่น <code>โยว|มี่|โค|มี่</code><br>2. กดเล่นเพลง<br>3. <b>คลิกเมาส์ค้างไว้ แล้วลากรูดทับคำ</b> ไปตามจังหวะที่นักร้องเปล่งเสียง!</div>';
     container.appendChild(info);
 
     let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
@@ -771,84 +771,100 @@ window.renderKaraokeEditorUI = function(container, song) {
 
     window.currentLyricsArray.forEach((lyricLine, lineIndex) => {
         const lineDiv = document.createElement('div');
-        lineDiv.style.background = 'rgba(255, 255, 255, 0.05)'; lineDiv.style.padding = '15px'; lineDiv.style.borderRadius = '8px'; lineDiv.style.marginBottom = '10px';
+        lineDiv.style.background = 'rgba(255, 255, 255, 0.05)'; lineDiv.style.padding = '15px'; lineDiv.style.borderRadius = '8px'; lineDiv.style.marginBottom = '10px'; lineDiv.style.lineHeight = '2.5em';
 
         if (lyricLine.trim() === '[ดนตรี]') {
             lineDiv.innerHTML = '<span style="color: #8e8e93; font-style: italic;">🎵 ท่อนดนตรี (ข้ามได้ไม่ต้องระบาย) 🎵</span>';
-            kContainer.appendChild(lineDiv); return;
+            kContainer.appendChild(lineDiv);
+            return;
         }
 
-        let wordIndexCounter = 0;
-        let lines = lyricLine.split('\n').filter(l => l.trim() !== '');
+        let words = lyricLine.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|');
 
-        lines.forEach(l => {
-            const parts = l.split('||');
-            const mainWords = parts[0].split(/(\s+|\|)/).filter(w => w !== '' && w !== '|');
-            const subWords = parts.length > 1 ? parts[1].split(/(\s+|\|)/).filter(w => w !== '' && w !== '|') : [];
-            const transStr = parts.length > 2 ? parts[2] : null; // ท่อนแปลไทย (อันที่ 3)
-
-            const rowDiv = document.createElement('div');
-            rowDiv.style.marginBottom = '8px'; rowDiv.style.textAlign = 'center';
-
-            mainWords.forEach((word, idx) => {
-                if (word.trim() === '') { rowDiv.appendChild(document.createTextNode(' ')); return; }
-
-                const currentWordIdx = wordIndexCounter++;
-                const wordGroup = document.createElement('div');
-                wordGroup.style.display = 'inline-flex'; wordGroup.style.flexDirection = 'column'; wordGroup.style.alignItems = 'center'; wordGroup.style.margin = '2px'; wordGroup.style.padding = '4px 8px'; wordGroup.style.borderRadius = '6px'; wordGroup.style.cursor = 'crosshair'; wordGroup.style.border = '1px solid rgba(255,255,255,0.2)'; wordGroup.style.verticalAlign = 'bottom';
-
-                // โชว์ซับคำอ่าน (ถ้ามี)
-                let subWordText = '';
-                if (subWords[idx] && subWords[idx].trim() !== '') {
-                    subWordText = subWords[idx];
-                    const spanSub = document.createElement('span'); spanSub.innerText = subWordText; spanSub.style.fontSize = '0.7em'; spanSub.style.color = '#aaa'; spanSub.style.marginBottom = '2px';
-                    wordGroup.appendChild(spanSub);
-                }
-
-                // โชว์คำหลัก
-                const spanMain = document.createElement('span'); spanMain.innerText = word; spanMain.style.fontSize = '1.2em';
-                wordGroup.appendChild(spanMain);
-
-                if (activeKaraokeData[lineIndex] && activeKaraokeData[lineIndex][currentWordIdx]) {
-                    wordGroup.style.background = 'rgba(255, 55, 95, 0.8)'; wordGroup.style.borderColor = '#ff375f';
-                }
-
-                const syncWord = () => {
-                    if (!window.ytPlayer || typeof window.ytPlayer.getCurrentTime !== 'function') return;
-                    const cTime = window.ytPlayer.getCurrentTime();
-                    wordGroup.style.background = '#32d74b'; wordGroup.style.borderColor = '#32d74b';
-                    
-                    if (!activeKaraokeData[lineIndex]) activeKaraokeData[lineIndex] = [];
-                    activeKaraokeData[lineIndex][currentWordIdx] = { w: word.trim(), sub: subWordText.trim(), t: cTime };
-                    
-                    if (isCover) {
-                        if (!song.covers[window.currentCoverIndex].karaokeData) song.covers[window.currentCoverIndex].karaokeData = [];
-                        song.covers[window.currentCoverIndex].karaokeData[lineIndex] = activeKaraokeData[lineIndex];
-                    } else { song.karaokeData = activeKaraokeData; }
-                };
-
-                wordGroup.onmousedown = (e) => { e.preventDefault(); window.isDraggingKaraoke = true; syncWord(); };
-                wordGroup.onmouseenter = () => { if (window.isDraggingKaraoke) syncWord(); };
-
-                rowDiv.appendChild(wordGroup);
-            });
-
-            // โชว์ท่อนแปลไทยด้านล่างสุด (กดรูดไม่ได้)
-            if (transStr) {
-                const transDiv = document.createElement('div'); transDiv.innerText = transStr; transDiv.style.fontSize = '0.9em'; transDiv.style.color = '#888'; transDiv.style.marginTop = '4px';
-                rowDiv.appendChild(transDiv);
+        words.forEach((word, wordIndex) => {
+            if (word.trim() === '') {
+                lineDiv.appendChild(document.createTextNode(' ')); 
+                return;
             }
-            lineDiv.appendChild(rowDiv);
+
+            const wordSpan = document.createElement('span');
+            wordSpan.innerText = word;
+            wordSpan.style.display = 'inline-block';
+            wordSpan.style.padding = '4px 8px';
+            wordSpan.style.margin = '2px';
+            wordSpan.style.borderRadius = '6px';
+            wordSpan.style.cursor = 'crosshair'; 
+            wordSpan.style.border = '1px solid rgba(255,255,255,0.2)';
+            wordSpan.style.transition = 'background 0.1s, transform 0.1s';
+            wordSpan.style.fontSize = '1.1em';
+
+            // โชว์สีฟ้าเมื่อเคยถูกระบายสีไปแล้ว
+            if (activeKaraokeData[lineIndex] && activeKaraokeData[lineIndex][wordIndex]) {
+                wordSpan.style.background = 'rgba(10, 132, 255, 0.8)'; 
+                wordSpan.style.borderColor = '#0a84ff';
+            }
+
+            const syncWord = () => {
+                if (!window.ytPlayer || typeof window.ytPlayer.getCurrentTime !== 'function') return;
+                const cTime = window.ytPlayer.getCurrentTime();
+                
+                // สีฟ้าสว่างตอนรูดโดน
+                wordSpan.style.background = '#0a84ff'; 
+                wordSpan.style.borderColor = '#0a84ff';
+                wordSpan.style.transform = 'scale(1.1)';
+                setTimeout(() => wordSpan.style.transform = 'scale(1)', 150);
+                
+                if (!activeKaraokeData[lineIndex]) activeKaraokeData[lineIndex] = [];
+                activeKaraokeData[lineIndex][wordIndex] = { w: word.trim(), t: cTime };
+                
+                if (isCover) {
+                    if (!song.covers[window.currentCoverIndex].karaokeData) song.covers[window.currentCoverIndex].karaokeData = [];
+                    song.covers[window.currentCoverIndex].karaokeData[lineIndex] = activeKaraokeData[lineIndex];
+                } else {
+                    song.karaokeData = activeKaraokeData;
+                }
+            };
+
+            wordSpan.onmousedown = (e) => {
+                e.preventDefault(); 
+                window.isDraggingKaraoke = true;
+                syncWord();
+            };
+
+            wordSpan.onmouseenter = () => {
+                if (window.isDraggingKaraoke) {
+                    syncWord();
+                }
+            };
+
+            lineDiv.appendChild(wordSpan);
         });
+
         kContainer.appendChild(lineDiv);
     });
 
-    const btnControls = document.createElement('div'); btnControls.style.display = 'flex'; btnControls.style.gap = '10px'; btnControls.style.marginTop = '20px';
-    const saveBtn = document.createElement('button'); saveBtn.innerText = '💾 บันทึกเวลาคาราโอเกะ'; saveBtn.style.flex = '2'; saveBtn.style.padding = '12px'; saveBtn.style.background = '#32d74b'; saveBtn.style.color = '#fff'; saveBtn.style.border = 'none'; saveBtn.style.borderRadius = '8px'; saveBtn.style.fontWeight = 'bold'; saveBtn.style.cursor = 'pointer';
+    const btnControls = document.createElement('div');
+    btnControls.style.display = 'flex'; btnControls.style.gap = '10px'; btnControls.style.marginTop = '20px';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.innerText = '💾 บันทึกเวลาคาราโอเกะ';
+    saveBtn.style.flex = '2'; saveBtn.style.padding = '12px'; saveBtn.style.background = '#0a84ff'; saveBtn.style.color = '#fff'; saveBtn.style.border = 'none'; saveBtn.style.borderRadius = '8px'; saveBtn.style.fontWeight = 'bold'; saveBtn.style.cursor = 'pointer';
     saveBtn.onclick = () => { window.saveKaraokeToFirebase(); saveBtn.innerText = '✅ บันทึกเสร็จสมบูรณ์!'; setTimeout(() => saveBtn.innerText = '💾 บันทึกเวลาคาราโอเกะ', 2000); };
-    const clearBtn = document.createElement('button'); clearBtn.innerText = '🗑️ ล้างเวลาทั้งหมด'; clearBtn.style.flex = '1'; clearBtn.style.padding = '12px'; clearBtn.style.background = 'rgba(255, 59, 48, 0.2)'; clearBtn.style.color = '#ff3b30'; clearBtn.style.border = '1px solid rgba(255, 59, 48, 0.5)'; clearBtn.style.borderRadius = '8px'; clearBtn.style.cursor = 'pointer';
-    clearBtn.onclick = () => { if(confirm('ล้างเวลาคาราโอเกะที่รูดไว้ทั้งหมดเลยไหม?')) { if (isCover) song.covers[window.currentCoverIndex].karaokeData = []; else song.karaokeData = []; window.saveKaraokeToFirebase(); window.renderKaraokeEditorUI(container, song); } };
-    btnControls.appendChild(saveBtn); btnControls.appendChild(clearBtn); container.appendChild(kContainer); container.appendChild(btnControls);
+
+    const clearBtn = document.createElement('button');
+    clearBtn.innerText = '🗑️ ล้างเวลาทั้งหมด';
+    clearBtn.style.flex = '1'; clearBtn.style.padding = '12px'; clearBtn.style.background = 'rgba(255, 59, 48, 0.2)'; clearBtn.style.color = '#ff3b30'; clearBtn.style.border = '1px solid rgba(255, 59, 48, 0.5)'; clearBtn.style.borderRadius = '8px'; clearBtn.style.cursor = 'pointer';
+    clearBtn.onclick = () => {
+        if(confirm('ล้างเวลาคาราโอเกะที่รูดไว้ทั้งหมดเลยไหม? (เฉพาะเวอร์ชันนี้)')) {
+            if (isCover) song.covers[window.currentCoverIndex].karaokeData = [];
+            else song.karaokeData = [];
+            window.saveKaraokeToFirebase();
+            window.renderKaraokeEditorUI(container, song); 
+        }
+    };
+
+    btnControls.appendChild(saveBtn); btnControls.appendChild(clearBtn);
+    container.appendChild(kContainer); container.appendChild(btnControls);
 };
 
 window.saveKaraokeToFirebase = async function() {
@@ -859,7 +875,7 @@ window.saveKaraokeToFirebase = async function() {
     let targetKData = isCover ? song.covers[window.currentCoverIndex].karaokeData : song.karaokeData;
     let targetTs = isCover ? song.covers[window.currentCoverIndex].timestamps : song.timestamps;
     
-    // 🟢 Trick สำคัญ: ก๊อปปี้เวลาคำแรก ไปใส่ในระบบ Classic ให้อัตโนมัติ! (เพื่อให้โหมด Hybrid ทำงานได้)
+    // 🟢 Trick: ก๊อปปี้เวลาคำแรก ไปใส่ในระบบ Classic ให้อัตโนมัติ!
     if (targetKData) {
         targetKData.forEach((lineWords, idx) => {
             if (lineWords && lineWords[0]) {
