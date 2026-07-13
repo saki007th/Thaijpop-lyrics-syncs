@@ -445,66 +445,13 @@ window.getActiveSingers = function(song) {
 };
 
 window.renderLyricsToContainer = function() {
-    const container = document.getElementById('lyricsContainer'); if(!container) return;
-    container.innerHTML = ''; if (window.currentLyricsArray.length === 0) { container.innerHTML = 'ไม่มีเนื้อเพลง'; return; }
-    const song = window.songs.find(s => s.id === window.currentSongId);
-
-    window.currentLyricsArray.forEach((lyric, index) => {
-        const lineDiv = document.createElement('div'); lineDiv.className = 'lyric-line'; lineDiv.id = `lyric-line-${index}`;
-        
-        lineDiv.onclick = () => {
-            const song = window.songs.find(s => s.id === window.currentSongId);
-            if (song && window.ytPlayer && typeof window.ytPlayer.seekTo === 'function') {
-                const activeTimestamps = window.getActiveTimestamps(song);
-                if (activeTimestamps[index] != null) {
-                    window.ytPlayer.seekTo(activeTimestamps[index], true);
-                    window.currentLyricIndex = index;
-                    window.updateLyricDisplay();
-                }
-            }
-        };
-        
-        let linesHtml = "";
-        const cleanLyric = lyric.trim();
-        
-        if (cleanLyric === '[ดนตรี]') {
-            linesHtml = `
-                <div class="lyric-instrumental">
-                    <span class="note">🎵</span><span class="note">🎶</span><span class="note">🎵</span>
-                </div>
-            `;
-        } else {
-            const validLines = cleanLyric.split('\n').filter(l => l.trim() !== '');
-            linesHtml = validLines.map((l, i) => {
-                const isMiddle = (i > 0 && i < validLines.length - 1);
-                const highlightClass = isMiddle ? ' reading-text' : ''; 
-                if (l.includes('||')) {
-                    let parts = l.split('||');
-                    return `<div class="lang-${i} dual-lyric${highlightClass}"><span class="lyric-main">${parts[0].trim()}</span><span class="lyric-sub">${parts[1].trim()}</span></div>`;
-                } else {
-                    return `<div class="lang-${i}${highlightClass}">${l}</div>`;
-                }
-            }).join('');
-        }
-
-        const activeSingers = window.getActiveSingers(song);
-        const singerString = activeSingers[index] || null;
-
-        if (singerString && cleanLyric !== '[ดนตรี]') { 
-            const badgesHtml = singerString.split(',').filter(s=>s.trim()).map(s => {
-                const name = s.trim();
-                const badgeColor = (window.SINGER_COLORS && window.SINGER_COLORS[name]) ? window.SINGER_COLORS[name] : '#0a84ff';
-                return `<span class="singer-badge" style="background-color: ${badgeColor}; color: #fff; border: 1px solid rgba(255,255,255,0.2);">${name}</span>`;
-            }).join('');
-            lineDiv.innerHTML = `<div class="singer-badges">${badgesHtml}</div>${linesHtml}`;
-        } else { 
-            lineDiv.innerHTML = linesHtml; 
-        }
-        
-        container.appendChild(lineDiv);
-    });
+    // โยนหน้าที่ให้ Engine ตัวใหม่ (ในไฟล์ lyrics-engine.js) จัดการแทน
+    if (window.LyricsEngine) {
+        window.LyricsEngine.render();
+    } else {
+        console.error("หาไฟล์ lyrics-engine.js ไม่เจอ! ตรวจสอบการ import ใน HTML");
+    }
 }
-
 // ==========================================
 // 🎧 ระบบเพลง Cover (Alternative Versions)
 // ==========================================
