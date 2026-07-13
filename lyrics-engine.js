@@ -1,5 +1,5 @@
 // ==========================================
-// 🎤 Lyrics Engine (ระบบลูกผสม Hybrid & Wiping Animation สีฟ้า)
+// 🎤 Lyrics Engine (ระบบลูกผสม Hybrid - คงดีไซน์ดั้งเดิม 100%)
 // ==========================================
 
 window.LyricsEngine = {
@@ -25,7 +25,7 @@ window.LyricsEngine = {
                 }
             };
             
-            // 🔀 ตรวจสอบทีละบรรทัด (Hybrid Check)
+            // 🔀 ถ้าบรรทัดนี้เคยรูดสีไว้ ให้ใช้ระบบ Wiping
             if (karaokeData[index] && karaokeData[index].length > 0) {
                 this.buildKaraokeLine(lineDiv, lyric, karaokeData[index], song, index);
             } else {
@@ -46,8 +46,12 @@ window.LyricsEngine = {
             linesHtml = validLines.map((l, i) => {
                 const isMiddle = (i > 0 && i < validLines.length - 1);
                 const hlClass = isMiddle ? ' reading-text' : ''; 
-                // ถึงไม่มีระบบซับแล้ว แต่ยังคงเคลียร์เครื่องหมาย | เผื่อแอดมินพิมพ์ทิ้งไว้
-                return `<div class="lang-${i}${hlClass}">${l.replace(/\|/g, '')}</div>`;
+                if (l.includes('||')) {
+                    let parts = l.split('||');
+                    return `<div class="lang-${i} dual-lyric${hlClass}"><span class="lyric-main">${parts[0].replace(/\|/g, '').trim()}</span><span class="lyric-sub">${parts[1]?parts[1].replace(/\|/g, '').trim():''}</span></div>`;
+                } else { 
+                    return `<div class="lang-${i}${hlClass}">${l.replace(/\|/g, '')}</div>`; 
+                }
             }).join('');
         }
         this.appendSingers(lineDiv, linesHtml, cleanLyric, song, index);
@@ -57,30 +61,49 @@ window.LyricsEngine = {
         let linesHtml = ""; let wordIdx = 0;
         let lines = lyric.split('\n').filter(l => l.trim() !== '');
         
-        lines.forEach(l => {
-            let mainWords = l.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|');
+        lines.forEach((l, i) => {
+            const isMiddle = (i > 0 && i < lines.length - 1);
+            const hlClass = isMiddle ? ' reading-text' : ''; 
 
-            let rowHtml = `<div class="k-row" style="display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-end; gap:6px; margin-bottom:8px;">`;
+            let parts = l.split('||');
+            let mainStr = parts[0];
+            let subStr = parts[1] ? parts[1].replace(/\|/g, '').trim() : '';
+            let transStr = parts[2] ? parts[2].replace(/\|/g, '').trim() : '';
+            
+            let mainWords = mainStr.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|');
+
+            // 🟢 แทรกโค้ดปาดสี เฉพาะในกล่อง <span class="lyric-main"> ของคุณ
+            let mainWipeHtml = `<span class="lyric-main" style="display:inline-flex; flex-wrap:wrap; justify-content:center;">`;
             
             mainWords.forEach((word) => {
-                if (word.trim() === '') { rowHtml += `<span>&nbsp;</span>`; return; }
+                if (word.trim() === '') { mainWipeHtml += `<span>&nbsp;</span>`; return; }
                 
                 let wData = wordDataArray[wordIdx] || { t: 0 };
                 let nextData = wordDataArray[wordIdx + 1];
-                let endTime = nextData ? nextData.t : (wData.t + 0.8); // กะเวลาจบคำ
+                let endTime = nextData && nextData.t ? nextData.t : (wData.t + 0.8); 
                 
-                rowHtml += `
-                    <div class="k-word-group" style="display:inline-flex; flex-direction:column; align-items:center;" data-start="${wData.t}" data-end="${endTime}">
-                        <span style="position:relative; font-size:1.1em; color:rgba(255,255,255,0.5); font-weight:bold;">
-                            ${word}
-                            <span class="k-fill" style="color:#0a84ff; position:absolute; left:0; top:0; width:0%; overflow:hidden; white-space:nowrap; text-shadow: 0 0 10px #0a84ff;">${word}</span>
-                        </span>
-                    </div>
+                mainWipeHtml += `
+                    <span class="k-word-group" style="position:relative; display:inline-block;" data-start="${wData.t}" data-end="${endTime}">
+                        <span style="color:inherit; opacity:1;">${word}</span>
+                        <span class="k-fill" style="color:#0a84ff; position:absolute; left:0; top:0; width:0%; overflow:hidden; white-space:nowrap; text-shadow: 0 0 10px #0a84ff;">${word}</span>
+                    </span>
                 `;
                 wordIdx++;
             });
-            rowHtml += `</div>`;
-            linesHtml += rowHtml;
+            mainWipeHtml += `</span>`;
+
+            let subHtml = subStr ? `<span class="lyric-sub">${subStr}</span>` : '';
+            let transHtml = transStr ? `<div class="lang-${i}-trans" style="font-size:0.85em; color:#aaa; margin-top:4px; text-align:center;">${transStr}</div>` : '';
+
+            // ประกอบร่างคืนตามคลาส CSS เดิมเป๊ะๆ
+            if (subStr) {
+                linesHtml += `<div class="lang-${i} dual-lyric${hlClass}">${mainWipeHtml}${subHtml}</div>`;
+            } else {
+                linesHtml += `<div class="lang-${i}${hlClass}">${mainWipeHtml}</div>`;
+            }
+            if (transStr) {
+                linesHtml += transHtml;
+            }
         });
         
         this.appendSingers(lineDiv, linesHtml, lyric.trim(), song, index);
