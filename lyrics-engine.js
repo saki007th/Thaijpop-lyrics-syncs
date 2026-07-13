@@ -57,7 +57,7 @@ window.LyricsEngine = {
         this.appendSingers(lineDiv, linesHtml, cleanLyric, song, index);
     },
 
-    buildKaraokeLine: function(lineDiv, lyric, wordDataArray, song, index) {
+buildKaraokeLine: function(lineDiv, lyric, wordDataArray, song, index) {
         let linesHtml = ""; let wordIdx = 0;
         let lines = lyric.split('\n').filter(l => l.trim() !== '');
         
@@ -65,50 +65,63 @@ window.LyricsEngine = {
             const isMiddle = (i > 0 && i < lines.length - 1);
             const hlClass = isMiddle ? ' reading-text' : ''; 
 
-            let parts = l.split('||');
-            let mainStr = parts[0];
-            let subStr = parts[1] ? parts[1].replace(/\|/g, '').trim() : '';
-            let transStr = parts[2] ? parts[2].replace(/\|/g, '').trim() : '';
-            
-            let mainWords = mainStr.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|');
+            // กรณีใช้ || แบ่งคำในบรรทัดเดียวกัน (เผื่อไว้)
+            if (l.includes('||')) {
+                let parts = l.split('||');
+                let mainStr = parts[0];
+                let subStr = parts[1] ? parts[1].replace(/\|/g, '').trim() : '';
 
-            // 🟢 แทรกโค้ดปาดสี เฉพาะในกล่อง <span class="lyric-main"> ของคุณ
-            let mainWipeHtml = `<span class="lyric-main" style="display:inline-flex; flex-wrap:wrap; justify-content:center;">`;
-            
-            mainWords.forEach((word) => {
-                if (word.trim() === '') { mainWipeHtml += `<span>&nbsp;</span>`; return; }
-                
-                let wData = wordDataArray[wordIdx] || { t: 0 };
-                let nextData = wordDataArray[wordIdx + 1];
-                let endTime = nextData && nextData.t ? nextData.t : (wData.t + 0.8); 
-                
-                mainWipeHtml += `
-                    <span class="k-word-group" style="position:relative; display:inline-block;" data-start="${wData.t}" data-end="${endTime}">
-                        <span style="color:inherit; opacity:1;">${word}</span>
-                        <span class="k-fill" style="color:#0a84ff; position:absolute; left:0; top:0; width:0%; overflow:hidden; white-space:nowrap; text-shadow: 0 0 10px #0a84ff;">${word}</span>
-                    </span>
-                `;
-                wordIdx++;
-            });
-            mainWipeHtml += `</span>`;
+                let mainWords = mainStr.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|');
+                let mainWipeHtml = `<span class="lyric-main" style="display:inline-flex; flex-wrap:wrap; justify-content:center;">`;
 
-            let subHtml = subStr ? `<span class="lyric-sub">${subStr}</span>` : '';
-            let transHtml = transStr ? `<div class="lang-${i}-trans" style="font-size:0.85em; color:#aaa; margin-top:4px; text-align:center;">${transStr}</div>` : '';
-
-            // ประกอบร่างคืนตามคลาส CSS เดิมเป๊ะๆ
-            if (subStr) {
+                mainWords.forEach((word) => {
+                    if (word.trim() === '') { mainWipeHtml += `<span>&nbsp;</span>`; return; }
+                    let wData = wordDataArray[wordIdx] || { t: 0 };
+                    let nextData = wordDataArray[wordIdx + 1];
+                    let endTime = nextData && nextData.t ? nextData.t : (wData.t + 0.8); 
+                    
+                    mainWipeHtml += `
+                        <span class="k-word-group" style="position:relative; display:inline-block;" data-start="${wData.t}" data-end="${endTime}">
+                            <span style="color:inherit; opacity:1;">${word}</span>
+                            <span class="k-fill" style="color:#0a84ff; position:absolute; left:0; top:0; width:0%; overflow:hidden; white-space:nowrap; text-shadow: 0 0 10px #0a84ff;">${word}</span>
+                        </span>
+                    `;
+                    wordIdx++;
+                });
+                mainWipeHtml += `</span>`;
+                let subHtml = subStr ? `<span class="lyric-sub">${subStr}</span>` : '';
                 linesHtml += `<div class="lang-${i} dual-lyric${hlClass}">${mainWipeHtml}${subHtml}</div>`;
-            } else {
-                linesHtml += `<div class="lang-${i}${hlClass}">${mainWipeHtml}</div>`;
-            }
-            if (transStr) {
-                linesHtml += transHtml;
+            } 
+            // 🟢 กรณีขึ้นบรรทัดใหม่ด้วย Enter (แบบที่คุณใช้ในรูป)
+            else {
+                if (i === 0) { 
+                    // บรรทัดที่ 1 (เนื้อร้องหลัก) -> ใส่แอนิเมชันปาดสีฟ้า
+                    let mainWords = l.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|');
+                    let mainWipeHtml = "";
+                    mainWords.forEach((word) => {
+                        if (word.trim() === '') { mainWipeHtml += `<span>&nbsp;</span>`; return; }
+                        let wData = wordDataArray[wordIdx] || { t: 0 };
+                        let nextData = wordDataArray[wordIdx + 1];
+                        let endTime = nextData && nextData.t ? nextData.t : (wData.t + 0.8); 
+                        
+                        mainWipeHtml += `
+                            <span class="k-word-group" style="position:relative; display:inline-block;" data-start="${wData.t}" data-end="${endTime}">
+                                <span style="color:inherit; opacity:1;">${word}</span>
+                                <span class="k-fill" style="color:#0a84ff; position:absolute; left:0; top:0; width:0%; overflow:hidden; white-space:nowrap; text-shadow: 0 0 10px #0a84ff;">${word}</span>
+                            </span>
+                        `;
+                        wordIdx++;
+                    });
+                    linesHtml += `<div class="lang-${i}${hlClass}">${mainWipeHtml}</div>`;
+                } else {
+                    // บรรทัดที่ 2 และ 3 (คำอ่าน, แปลไทย) -> โชว์ข้อความเฉยๆ คงดีไซน์ CSS เดิม 100%
+                    linesHtml += `<div class="lang-${i}${hlClass}">${l.replace(/\|/g, '')}</div>`;
+                }
             }
         });
         
         this.appendSingers(lineDiv, linesHtml, lyric.trim(), song, index);
     },
-
     appendSingers: function(lineDiv, linesHtml, cleanLyric, song, index) {
         const activeSingers = window.getActiveSingers(song);
         const singerString = activeSingers[index] || null;
