@@ -1,5 +1,5 @@
 // ==========================================
-// 🎤 Lyrics Engine (ระบบลูกผสม Hybrid - คงดีไซน์ดั้งเดิม 100%)
+// 🎤 Lyrics Engine (ระบบปาดสีคาราโอเกะ - แก้บั๊กสมบูรณ์)
 // ==========================================
 
 window.LyricsEngine = {
@@ -25,7 +25,6 @@ window.LyricsEngine = {
                 }
             };
             
-            // 🔀 ถ้าบรรทัดนี้เคยรูดสีไว้ ให้ใช้ระบบ Wiping
             if (karaokeData[index] && karaokeData[index].length > 0) {
                 this.buildKaraokeLine(lineDiv, lyric, karaokeData[index], song, index);
             } else {
@@ -57,7 +56,7 @@ window.LyricsEngine = {
         this.appendSingers(lineDiv, linesHtml, cleanLyric, song, index);
     },
 
-buildKaraokeLine: function(lineDiv, lyric, wordDataArray, song, index) {
+    buildKaraokeLine: function(lineDiv, lyric, wordDataArray, song, index) {
         let linesHtml = ""; let wordIdx = 0;
         let lines = lyric.split('\n').filter(l => l.trim() !== '');
         
@@ -65,7 +64,6 @@ buildKaraokeLine: function(lineDiv, lyric, wordDataArray, song, index) {
             const isMiddle = (i > 0 && i < lines.length - 1);
             const hlClass = isMiddle ? ' reading-text' : ''; 
 
-            // กรณีใช้ || แบ่งคำในบรรทัดเดียวกัน (เผื่อไว้)
             if (l.includes('||')) {
                 let parts = l.split('||');
                 let mainStr = parts[0];
@@ -73,17 +71,22 @@ buildKaraokeLine: function(lineDiv, lyric, wordDataArray, song, index) {
 
                 let mainWords = mainStr.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|');
                 let mainWipeHtml = `<span class="lyric-main" style="display:inline-flex; flex-wrap:wrap; justify-content:center;">`;
+                let lastTime = 0;
 
                 mainWords.forEach((word) => {
                     if (word.trim() === '') { mainWipeHtml += `<span>&nbsp;</span>`; return; }
-                    let wData = wordDataArray[wordIdx] || { t: 0 };
+                    let wData = wordDataArray[wordIdx];
+                    let t = (wData && wData.t) ? wData.t : lastTime + 0.2; // 🟢 แก้บั๊กเวลา: ถ้าเวลาหาย ให้บวกเพิ่มจากคำก่อนหน้า
+                    lastTime = t;
+
                     let nextData = wordDataArray[wordIdx + 1];
-                    let endTime = nextData && nextData.t ? nextData.t : (wData.t + 0.8); 
+                    let endTime = (nextData && nextData.t) ? nextData.t : (t + 0.4); 
                     
                     mainWipeHtml += `
-                        <span class="k-word-group" style="position:relative; display:inline-block;" data-start="${wData.t}" data-end="${endTime}">
-                            <span style="color:inherit; opacity:1;">${word}</span>
-                            <span class="k-fill" style="color:#0a84ff; position:absolute; left:0; top:0; width:0%; overflow:hidden; white-space:nowrap; text-shadow: 0 0 10px #0a84ff;">${word}</span>
+                        <span class="k-word-group" style="position:relative; display:inline-block;" data-start="${t}" data-end="${endTime}">
+                            <span style="color:transparent;">${word}</span>
+                            <span style="position:absolute; left:0; top:0; color:inherit;">${word}</span>
+                            <span class="k-fill" style="color:#0a84ff; position:absolute; left:0; top:0; width:0%; overflow:hidden; white-space:pre; text-shadow: 0 0 10px #0a84ff;">${word}</span>
                         </span>
                     `;
                     wordIdx++;
@@ -92,29 +95,35 @@ buildKaraokeLine: function(lineDiv, lyric, wordDataArray, song, index) {
                 let subHtml = subStr ? `<span class="lyric-sub">${subStr}</span>` : '';
                 linesHtml += `<div class="lang-${i} dual-lyric${hlClass}">${mainWipeHtml}${subHtml}</div>`;
             } 
-            // 🟢 กรณีขึ้นบรรทัดใหม่ด้วย Enter (แบบที่คุณใช้ในรูป)
             else {
                 if (i === 0) { 
-                    // บรรทัดที่ 1 (เนื้อร้องหลัก) -> ใส่แอนิเมชันปาดสีฟ้า
                     let mainWords = l.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|');
                     let mainWipeHtml = "";
+                    let lastTime = 0; // 🟢 ตัวจำเวลาคำก่อนหน้า
+
                     mainWords.forEach((word) => {
                         if (word.trim() === '') { mainWipeHtml += `<span>&nbsp;</span>`; return; }
-                        let wData = wordDataArray[wordIdx] || { t: 0 };
-                        let nextData = wordDataArray[wordIdx + 1];
-                        let endTime = nextData && nextData.t ? nextData.t : (wData.t + 0.8); 
                         
+                        // 🟢 ดึงเวลา หรือถ้าไม่มีให้บวกจากคำเก่า (ป้องกันสีขึ้นพร้อมกัน)
+                        let wData = wordDataArray[wordIdx];
+                        let t = (wData && wData.t) ? wData.t : lastTime + 0.2; 
+                        lastTime = t;
+
+                        let nextData = wordDataArray[wordIdx + 1];
+                        let endTime = (nextData && nextData.t) ? nextData.t : (t + 0.4); 
+                        
+                        // 🟢 แก้บั๊กตัวอักษรแหว่ง: ใช้ color:transparent เป็นฐานดันกล่องให้กว้างเป๊ะ 100%
                         mainWipeHtml += `
-                            <span class="k-word-group" style="position:relative; display:inline-block;" data-start="${wData.t}" data-end="${endTime}">
-                                <span style="color:inherit; opacity:1;">${word}</span>
-                                <span class="k-fill" style="color:#0a84ff; position:absolute; left:0; top:0; width:0%; overflow:hidden; white-space:nowrap; text-shadow: 0 0 10px #0a84ff;">${word}</span>
+                            <span class="k-word-group" style="position:relative; display:inline-block;" data-start="${t}" data-end="${endTime}">
+                                <span style="color:transparent;">${word}</span>
+                                <span style="position:absolute; left:0; top:0; color:inherit;">${word}</span>
+                                <span class="k-fill" style="color:#0a84ff; position:absolute; left:0; top:0; width:0%; overflow:hidden; white-space:pre; text-shadow: 0 0 10px #0a84ff;">${word}</span>
                             </span>
                         `;
                         wordIdx++;
                     });
                     linesHtml += `<div class="lang-${i}${hlClass}">${mainWipeHtml}</div>`;
                 } else {
-                    // บรรทัดที่ 2 และ 3 (คำอ่าน, แปลไทย) -> โชว์ข้อความเฉยๆ คงดีไซน์ CSS เดิม 100%
                     linesHtml += `<div class="lang-${i}${hlClass}">${l.replace(/\|/g, '')}</div>`;
                 }
             }
@@ -122,6 +131,7 @@ buildKaraokeLine: function(lineDiv, lyric, wordDataArray, song, index) {
         
         this.appendSingers(lineDiv, linesHtml, lyric.trim(), song, index);
     },
+
     appendSingers: function(lineDiv, linesHtml, cleanLyric, song, index) {
         const activeSingers = window.getActiveSingers(song);
         const singerString = activeSingers[index] || null;
@@ -146,22 +156,23 @@ buildKaraokeLine: function(lineDiv, lyric, wordDataArray, song, index) {
     },
 
     updateWipe: function(cTime) {
-        const activeLine = document.querySelector('.lyric-line.active');
-        if (!activeLine) return;
-
-        const wordGroups = activeLine.querySelectorAll('.k-word-group');
-        wordGroups.forEach(group => {
+        // 🟢 แก้บั๊กกรอกลับ: สั่งเช็คคำทั้งหมดบนหน้าจอ ไม่ใช่แค่บรรทัดที่ร้องอยู่
+        const allWordGroups = document.querySelectorAll('.k-word-group');
+        allWordGroups.forEach(group => {
             const start = parseFloat(group.getAttribute('data-start'));
             const end = parseFloat(group.getAttribute('data-end'));
             
             let progress = 0;
-            if (cTime >= end) progress = 100;
-            else if (cTime >= start && cTime < end) {
-                progress = ((cTime - start) / (end - start)) * 100; 
+            if (cTime >= end) {
+                progress = 100; // ร้องผ่านไปแล้ว ระบายเต็ม
+            } else if (cTime >= start && cTime < end) {
+                progress = ((cTime - start) / (end - start)) * 100; // กำลังร้อง ค่อยๆ ปาด
+            } else {
+                progress = 0; // 🟢 ยังไม่ร้อง หรือกรอกลับมา ให้ลบสีทิ้งเป็น 0%
             }
             
-            const fills = group.querySelectorAll('.k-fill');
-            fills.forEach(fill => { fill.style.width = progress + '%'; });
+            const fill = group.querySelector('.k-fill');
+            if (fill) fill.style.width = progress + '%';
         });
     }
 };
