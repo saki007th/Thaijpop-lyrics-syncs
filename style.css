@@ -640,3 +640,51 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 }
 .version-badge:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
 .version-badge.active { border-color: transparent; }
+
+/* ==========================================
+   🌟 เฟส 1: ตัวหนังสือวิ่งแบบ Apple Music Style
+   ========================================== */
+
+/* 1. จัดการกล่องเนื้อเพลงให้เลื่อนบรรทัดแรกและบรรทัดสุดท้ายมาตรงกลางจอได้ */
+.lyrics-container {
+    padding-top: 40vh; /* เผื่อพื้นที่ว่างด้านบนให้ดันเนื้อเพลงลงมาตรงกลาง */
+    padding-bottom: 40vh; /* เผื่อพื้นที่ว่างด้านล่าง */
+    scroll-behavior: smooth;
+}
+
+/* 2. บรรทัดปกติ (ที่ยังไม่ได้ร้อง หรือ ร้องผ่านไปแล้ว) */
+.lyric-line {
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1); /* แอนิเมชันนุ่มๆ ระดับพรีเมียม */
+    opacity: 0.35; /* ทำให้จางลง */
+    transform: scale(0.9); /* หดตัวเล็กลง 10% */
+    transform-origin: left center; /* ให้ขยายจากฝั่งซ้ายไปขวา */
+    margin-bottom: 28px; /* เพิ่มระยะห่างให้อ่านง่าย */
+    cursor: pointer;
+    filter: blur(1.5px); /* เบลอตัวหนังสือนิดๆ เพิ่มมิติความลึก */
+}
+
+/* เวลาเอาเมาส์ไปชี้บรรทัดที่เบลอๆ ให้มันชัดขึ้นมานิดนึง */
+.lyric-line:hover {
+    opacity: 0.7;
+    filter: blur(0px);
+}
+
+/* 3. 🔴 บรรทัดที่ "กำลังร้อง" (Active) */
+.lyric-line.active {
+    opacity: 1 !important; /* สว่างเต็มที่ 100% */
+    transform: scale(1.15) !important; /* เด้งขยายใหญ่ขึ้น 15% */
+    filter: blur(0px) !important; /* ชัดเจน 100% */
+    text-shadow: 0px 4px 20px rgba(255, 255, 255, 0.35); /* เรืองแสงด้านหลังเบาๆ */
+    font-weight: bold; /* ตัวหนาขึ้น */
+}
+
+/* 4. ทำให้ป้ายชื่อคนร้อง (Singer Badge) จางและสว่างเนียนไปพร้อมกับบรรทัด */
+.lyric-line .singer-badges {
+    transition: all 0.4s ease;
+    opacity: 0.5;
+    margin-bottom: 8px;
+}
+.lyric-line.active .singer-badges {
+    opacity: 1;
+    transform: scale(1.05); /* ป้ายชื่อขยายตามเนื้อเพลงนิดๆ */
+}
