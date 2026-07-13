@@ -753,12 +753,13 @@ window.renderTimestampEditor = function() {
         btnAddEnd.onclick = () => window.addLyricLine(window.currentLyricsArray.length - 1); container.appendChild(btnAddEnd);
     }
 }
+
 // ==========================================
-// 🚀 ฟังก์ชันกระดานรูดปาดสี (ซิงค์แค่คำหลัก + ปุ่มล้างบรรทัด)
+// 🚀 ฟังก์ชันกระดานรูดปาดสี (โชว์แค่เนื้อหลัก + วิ่งตามอัตโนมัติ)
 // ==========================================
 window.renderKaraokeEditorUI = function(container, song) {
     const info = document.createElement('div');
-    info.innerHTML = '<div style="background: rgba(10, 132, 255, 0.2); color: #0a84ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.5;"><b>💡 วิธีใช้งาน:</b> รูดเมาส์เฉพาะ <b>"คำหลัก"</b> ส่วนคำอ่านและคำแปลจะวิ่งตามอัตโนมัติ</div>';
+    info.innerHTML = '<div style="background: rgba(10, 132, 255, 0.2); color: #0a84ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.5;"><b>💡 วิธีใช้งาน:</b> รูดเมาส์เฉพาะ <b>"คำหลัก"</b> ส่วนคำอ่านและแปลไทยจะแสดงผลฝั่งคนดูให้อัตโนมัติ</div>';
     container.appendChild(info);
 
     let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
@@ -770,7 +771,13 @@ window.renderKaraokeEditorUI = function(container, song) {
 
     window.currentLyricsArray.forEach((lyricLine, lineIndex) => {
         const lineDiv = document.createElement('div');
-        lineDiv.style.background = 'rgba(255, 255, 255, 0.05)'; lineDiv.style.padding = '15px'; lineDiv.style.borderRadius = '8px'; lineDiv.style.marginBottom = '10px';
+        lineDiv.id = `k-row-${lineIndex}`; // 🟢 เพิ่ม ID ให้บรรทัด เพื่อให้ระบบเลื่อนจอหาเจอ
+        lineDiv.style.background = 'rgba(255, 255, 255, 0.05)'; 
+        lineDiv.style.padding = '15px'; 
+        lineDiv.style.borderRadius = '8px'; 
+        lineDiv.style.marginBottom = '10px';
+        lineDiv.style.border = '1px solid rgba(255,255,255,0.1)';
+        lineDiv.style.transition = 'all 0.3s ease';
 
         if (lyricLine.trim() === '[ดนตรี]') {
             lineDiv.innerHTML = '<div style="color: #8e8e93; font-style: italic; text-align: center;">🎵 ท่อนดนตรี (ข้ามได้ไม่ต้องระบาย) 🎵</div>';
@@ -778,72 +785,51 @@ window.renderKaraokeEditorUI = function(container, song) {
             return;
         }
 
-        let wordIndexCounter = 0; // ตัวนับ index คำหลักแบบต่อเนื่องในบรรทัดนั้น
         let lines = lyricLine.split('\n').filter(l => l.trim() !== '');
+        // 🟢 เอาเฉพาะ "บรรทัดแรกสุด" (เนื้อเพลงหลัก) มาแสดงให้แอดมินกด
+        let mainLine = lines[0] || '';
+        let mainStr = mainLine.split('||')[0]; // ตัดคำอ่านออกถ้ามีเครื่องหมาย ||
+        let mainWords = mainStr.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|');
 
-        lines.forEach(l => {
-            // แยก คำหลัก || คำอ่าน || แปลไทย
-            let parts = l.split('||');
-            let mainWords = parts[0].split(/(\s+|\|)/).filter(w => w !== '' && w !== '|');
-            let subText = parts[1] ? parts[1].replace(/\|/g, '').trim() : '';
-            let transText = parts[2] ? parts[2].replace(/\|/g, '').trim() : '';
+        const rowDiv = document.createElement('div');
+        rowDiv.style.marginBottom = '12px'; rowDiv.style.textAlign = 'center';
+        rowDiv.style.display = 'flex'; rowDiv.style.flexWrap = 'wrap'; rowDiv.style.justifyContent = 'center';
 
-            const rowDiv = document.createElement('div');
-            rowDiv.style.marginBottom = '12px'; rowDiv.style.textAlign = 'center';
+        mainWords.forEach((word, wordIndex) => {
+            if (word.trim() === '') { rowDiv.appendChild(document.createTextNode(' ')); return; }
 
-            // 1. โซนคำหลัก (กดรูดได้)
-            const mainWordsDiv = document.createElement('div');
-            mainWordsDiv.style.display = 'flex'; mainWordsDiv.style.flexWrap = 'wrap'; mainWordsDiv.style.justifyContent = 'center'; mainWordsDiv.style.marginBottom = '4px';
+            const wordSpan = document.createElement('span');
+            wordSpan.innerText = word;
+            wordSpan.style.display = 'inline-block'; wordSpan.style.padding = '4px 8px'; wordSpan.style.margin = '2px'; wordSpan.style.borderRadius = '6px'; wordSpan.style.cursor = 'crosshair'; wordSpan.style.border = '1px solid rgba(255,255,255,0.2)'; wordSpan.style.fontSize = '1.1em'; wordSpan.style.transition = 'background 0.1s, transform 0.1s';
 
-            mainWords.forEach((word) => {
-                if (word.trim() === '') { mainWordsDiv.appendChild(document.createTextNode(' ')); return; }
-
-                const currentWordIdx = wordIndexCounter++;
-                const wordSpan = document.createElement('span');
-                wordSpan.innerText = word;
-                wordSpan.style.display = 'inline-block'; wordSpan.style.padding = '4px 8px'; wordSpan.style.margin = '2px'; wordSpan.style.borderRadius = '6px'; wordSpan.style.cursor = 'crosshair'; wordSpan.style.border = '1px solid rgba(255,255,255,0.2)'; wordSpan.style.fontSize = '1.1em'; wordSpan.style.transition = 'background 0.1s, transform 0.1s';
-
-                if (activeKaraokeData[lineIndex] && activeKaraokeData[lineIndex][currentWordIdx]) {
-                    wordSpan.style.background = 'rgba(10, 132, 255, 0.8)'; wordSpan.style.borderColor = '#0a84ff';
-                }
-
-                const syncWord = () => {
-                    if (!window.ytPlayer || typeof window.ytPlayer.getCurrentTime !== 'function') return;
-                    const cTime = window.ytPlayer.getCurrentTime();
-                    
-                    wordSpan.style.background = '#0a84ff'; wordSpan.style.borderColor = '#0a84ff'; wordSpan.style.transform = 'scale(1.1)';
-                    setTimeout(() => wordSpan.style.transform = 'scale(1)', 150);
-                    
-                    if (!activeKaraokeData[lineIndex]) activeKaraokeData[lineIndex] = [];
-                    activeKaraokeData[lineIndex][currentWordIdx] = { w: word.trim(), t: cTime };
-                    
-                    if (isCover) {
-                        if (!song.covers[window.currentCoverIndex].karaokeData) song.covers[window.currentCoverIndex].karaokeData = [];
-                        song.covers[window.currentCoverIndex].karaokeData[lineIndex] = activeKaraokeData[lineIndex];
-                    } else { song.karaokeData = activeKaraokeData; }
-                };
-
-                wordSpan.onmousedown = (e) => { e.preventDefault(); window.isDraggingKaraoke = true; syncWord(); };
-                wordSpan.onmouseenter = () => { if (window.isDraggingKaraoke) syncWord(); };
-
-                mainWordsDiv.appendChild(wordSpan);
-            });
-            rowDiv.appendChild(mainWordsDiv);
-
-            // 2. โซนคำอ่าน (โชว์เฉยๆ กดไม่ได้)
-            if (subText) {
-                const subDiv = document.createElement('div'); subDiv.innerText = subText; subDiv.style.fontSize = '0.9em'; subDiv.style.color = '#aaa';
-                rowDiv.appendChild(subDiv);
+            if (activeKaraokeData[lineIndex] && activeKaraokeData[lineIndex][wordIndex]) {
+                wordSpan.style.background = 'rgba(10, 132, 255, 0.8)'; wordSpan.style.borderColor = '#0a84ff';
             }
-            // 3. โซนแปลไทย (โชว์เฉยๆ กดไม่ได้)
-            if (transText) {
-                const transDiv = document.createElement('div'); transDiv.innerText = transText; transDiv.style.fontSize = '0.85em'; transDiv.style.color = '#888';
-                rowDiv.appendChild(transDiv);
-            }
-            lineDiv.appendChild(rowDiv);
+
+            const syncWord = () => {
+                if (!window.ytPlayer || typeof window.ytPlayer.getCurrentTime !== 'function') return;
+                const cTime = window.ytPlayer.getCurrentTime();
+                
+                wordSpan.style.background = '#0a84ff'; wordSpan.style.borderColor = '#0a84ff'; wordSpan.style.transform = 'scale(1.1)';
+                setTimeout(() => wordSpan.style.transform = 'scale(1)', 150);
+                
+                if (!activeKaraokeData[lineIndex]) activeKaraokeData[lineIndex] = [];
+                activeKaraokeData[lineIndex][wordIndex] = { w: word.trim(), t: cTime };
+                
+                if (isCover) {
+                    if (!song.covers[window.currentCoverIndex].karaokeData) song.covers[window.currentCoverIndex].karaokeData = [];
+                    song.covers[window.currentCoverIndex].karaokeData[lineIndex] = activeKaraokeData[lineIndex];
+                } else { song.karaokeData = activeKaraokeData; }
+            };
+
+            wordSpan.onmousedown = (e) => { e.preventDefault(); window.isDraggingKaraoke = true; syncWord(); };
+            wordSpan.onmouseenter = () => { if (window.isDraggingKaraoke) syncWord(); };
+
+            rowDiv.appendChild(wordSpan);
         });
+        lineDiv.appendChild(rowDiv);
 
-        // 🟢 ปุ่มล้างเวลาเฉพาะบรรทัดนี้
+        // ปุ่มล้างเวลาเฉพาะบรรทัด
         const clearLineBtn = document.createElement('button');
         clearLineBtn.innerHTML = '🗑️ ล้างเวลาบรรทัดนี้';
         clearLineBtn.style.cssText = 'display:block; margin: 10px auto 0; padding: 4px 10px; background: rgba(255, 59, 48, 0.2); color: #ff3b30; border: 1px solid rgba(255, 59, 48, 0.5); border-radius: 6px; font-size: 0.85em; cursor: pointer;';
@@ -851,7 +837,7 @@ window.renderKaraokeEditorUI = function(container, song) {
             if (isCover) { if(song.covers[window.currentCoverIndex].karaokeData) song.covers[window.currentCoverIndex].karaokeData[lineIndex] = null; } 
             else { if(song.karaokeData) song.karaokeData[lineIndex] = null; }
             await window.saveKaraokeToFirebase();
-            window.renderKaraokeEditorUI(container, song); // รีเฟรชหน้า
+            window.renderKaraokeEditorUI(container, song); 
         };
         lineDiv.appendChild(clearLineBtn);
 
@@ -865,7 +851,6 @@ window.renderKaraokeEditorUI = function(container, song) {
     btnControls.appendChild(saveBtn); 
     container.appendChild(kContainer); container.appendChild(btnControls);
 };
-
 window.saveKaraokeToFirebase = async function() {
     if (!window.isAdmin) return;
     const song = window.songs.find(s => s.id === window.currentSongId); if (!song) return;
