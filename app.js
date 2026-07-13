@@ -618,7 +618,7 @@ window.playSong = function(id) {
 }; 
 
 // ==========================================
-// 🔴 อัปเกรด: ฟังก์ชันบันทึกเวลาให้เซฟแยกลง Cover 
+// 🔴 อัปเกรด: ฟังก์ชันบันทึกเวลาให้เซฟแยกลง Cover (ป้องกันเวลาหาย)
 // ==========================================
 window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
     if (!window.isAdmin) return;
@@ -629,13 +629,29 @@ window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
     const count = window.currentLyricsArray.length;
     
     let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
+
+    // 🟢 สำคัญมาก: ถ้าเป็น Cover และเพิ่งแก้ครั้งแรก ต้องโคลนเวลาต้นฉบับมาให้หมดก่อน
+    if (isCover) {
+        if (!song.covers[window.currentCoverIndex].timestamps || song.covers[window.currentCoverIndex].timestamps.length === 0) {
+            song.covers[window.currentCoverIndex].timestamps = [...(song.timestamps || [])];
+        }
+        if (!song.covers[window.currentCoverIndex].singers || song.covers[window.currentCoverIndex].singers.length === 0) {
+            song.covers[window.currentCoverIndex].singers = [...(song.singers || [])];
+        }
+    }
+
     let currentTs = isCover ? (song.covers[window.currentCoverIndex].timestamps || []) : (song.timestamps || []);
     let currentSg = isCover ? (song.covers[window.currentCoverIndex].singers || []) : (song.singers || []);
 
     const safeTs = Array.from({length: count}, (_, i) => currentTs[i] != null ? currentTs[i] : null);
     const safeSg = Array.from({length: count}, (_, i) => currentSg[i] != null ? currentSg[i] : "");
 
-    const payload = {};
+    // เตรียม Payload ที่มี covers เดิมแนบไปด้วยเสมอ
+    const payload = {
+        timestamps: song.timestamps || [],
+        singers: song.singers || [],
+        covers: song.covers || []
+    };
     if (updateLyricsText) payload.lyrics = song.lyrics; 
 
     if (isCover) {
@@ -643,8 +659,10 @@ window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
         song.covers[window.currentCoverIndex].singers = safeSg;
         payload.covers = song.covers;
     } else {
-        song.timestamps = safeTs; song.singers = safeSg;
-        payload.timestamps = safeTs; payload.singers = safeSg;
+        song.timestamps = safeTs; 
+        song.singers = safeSg;
+        payload.timestamps = safeTs; 
+        payload.singers = safeSg;
     }
 
     await updateDoc(doc(db, "songs", window.currentSongId), payload);
@@ -656,10 +674,11 @@ window.renderTimestampEditor = function() {
     container.innerHTML = '';
     const song = window.songs.find(s => s.id === window.currentSongId); if (!song) return;
 
-    // 🔴 โหลดเวลาให้ตรงเวอร์ชัน
     let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
-    let activeTimestamps = isCover ? (song.covers[window.currentCoverIndex].timestamps || []) : (song.timestamps || []);
-    let activeSingers = isCover ? (song.covers[window.currentCoverIndex].singers || []) : (song.singers || []);
+    
+    // 🟢 โหลดเวลาให้ตรงเวอร์ชัน โดยดึงผ่าน Fallback
+    let activeTimestamps = window.getActiveTimestamps(song);
+    let activeSingers = window.getActiveSingers(song);
 
     window.currentLyricsArray.forEach((lyric, index) => {
         const row = document.createElement('div'); row.className = 'ts-row'; row.id = `ts-row-${index}`;
@@ -691,7 +710,10 @@ window.renderTimestampEditor = function() {
                     const selected = Array.from(menu.querySelectorAll('input:checked')).map(cb => cb.value);
                     toggleBtn.innerText = selected.length > 0 ? selected.join(', ') : '👤 เลือกร้อง';
                     if (isCover) {
-                        if (!song.covers[window.currentCoverIndex].singers) song.covers[window.currentCoverIndex].singers = [];
+                        // 🟢 ถ้าแก้คนร้องใน Cover ครั้งแรก ให้ก๊อปปี้มาทั้งหมดก่อน
+                        if (!song.covers[window.currentCoverIndex].singers || song.covers[window.currentCoverIndex].singers.length === 0) {
+                            song.covers[window.currentCoverIndex].singers = [...(song.singers || [])];
+                        }
                         song.covers[window.currentCoverIndex].singers[index] = selected.length > 0 ? selected.join(', ') : "";
                     } else {
                         if (!song.singers) song.singers = []; song.singers[index] = selected.length > 0 ? selected.join(', ') : "";
@@ -721,7 +743,10 @@ window.renderTimestampEditor = function() {
                 const val = parseFloat(e.target.value); 
                 const finalVal = isNaN(val) ? null : val;
                 if (isCover) {
-                    if (!song.covers[window.currentCoverIndex].timestamps) song.covers[window.currentCoverIndex].timestamps = [];
+                    // 🟢 ถ้าแก้เวลาใน Cover ครั้งแรก ให้ก๊อปปี้เวลาทั้งหมดมาก่อน
+                    if (!song.covers[window.currentCoverIndex].timestamps || song.covers[window.currentCoverIndex].timestamps.length === 0) {
+                        song.covers[window.currentCoverIndex].timestamps = [...(song.timestamps || [])];
+                    }
                     song.covers[window.currentCoverIndex].timestamps[index] = finalVal;
                 } else {
                     if (!song.timestamps) song.timestamps = []; 
@@ -819,7 +844,10 @@ window.nextLyric = function(isAuto = false) {
                 let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
 
                 if (isCover) {
-                    if (!song.covers[window.currentCoverIndex].timestamps) song.covers[window.currentCoverIndex].timestamps = [];
+                    // 🟢 ถ้ากดยิงเวลาใน Cover ครั้งแรก ให้ก๊อปปี้เวลาทั้งหมดมาก่อน
+                    if (!song.covers[window.currentCoverIndex].timestamps || song.covers[window.currentCoverIndex].timestamps.length === 0) {
+                        song.covers[window.currentCoverIndex].timestamps = [...(song.timestamps || [])];
+                    }
                     song.covers[window.currentCoverIndex].timestamps[window.currentLyricIndex] = currentTime;
                 } else {
                     if (!song.timestamps) song.timestamps = []; 
@@ -844,7 +872,10 @@ window.prevLyric = function() {
             if (song) { 
                 let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
                 if (isCover) {
-                    if (song.covers[window.currentCoverIndex].timestamps) song.covers[window.currentCoverIndex].timestamps[window.currentLyricIndex] = null;
+                    if (!song.covers[window.currentCoverIndex].timestamps || song.covers[window.currentCoverIndex].timestamps.length === 0) {
+                        song.covers[window.currentCoverIndex].timestamps = [...(song.timestamps || [])];
+                    }
+                    song.covers[window.currentCoverIndex].timestamps[window.currentLyricIndex] = null;
                 } else {
                     if (song.timestamps) song.timestamps[window.currentLyricIndex] = null; 
                 }
