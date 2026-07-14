@@ -1,7 +1,10 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { initializeSingerColors, openSingerColorManager } from './singerColors.js';
+
+window.setDoc = setDoc; // 🟢 ผูกเข้า window ให้ระบบเรียกใช้ได้เหมือนเดิม
+window.getDoc = getDoc;
 
 const ALLOWED_EMAILS = ["sashikiwa@gmail.com", "panupong.bb27115@gmail.com"]; 
 
@@ -755,11 +758,11 @@ window.renderTimestampEditor = function() {
 }
 
 // ==========================================
-// 🚀 ฟังก์ชันกระดานรูดปาดสี (ซิงค์ละเอียดระดับ "ตัวอักษร")
+// 🚀 ฟังก์ชันกระดานรูดปาดสี (เว้นวรรคคำให้ลากง่าย)
 // ==========================================
 window.renderKaraokeEditorUI = function(container, song) {
     const info = document.createElement('div');
-    info.innerHTML = '<div style="background: rgba(10, 132, 255, 0.2); color: #0a84ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.5;"><b>💡 วิธีใช้งาน (โหมดตัวอักษร):</b> ลากเมาส์รูดผ่าน <b>"ทีละตัวอักษร"</b> เพื่อความแม่นยำสูงสุด (ไม่ต้องพิมพ์ | แบ่งคำแล้ว ระบบจัดการให้เอง)</div>';
+    info.innerHTML = '<div style="background: rgba(10, 132, 255, 0.2); color: #0a84ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.5;"><b>💡 วิธีใช้งาน:</b> ลากเมาส์รูดผ่าน <b>"ทีละตัวอักษร"</b> (ปรับระยะเว้นวรรคให้ลากง่ายขึ้นแล้ว)</div>';
     container.appendChild(info);
 
     let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
@@ -769,7 +772,6 @@ window.renderKaraokeEditorUI = function(container, song) {
     kContainer.style.userSelect = 'none';
     document.addEventListener('mouseup', () => { window.isDraggingKaraoke = false; });
 
-    // 🟢 เรียกใช้ตัวหั่นตัวอักษรภาษาไทยอัจฉริยะ (ไม่ให้สระ/วรรณยุกต์ลอย)
     const segmenter = new Intl.Segmenter('th', { granularity: 'grapheme' });
 
     window.currentLyricsArray.forEach((lyricLine, lineIndex) => {
@@ -787,22 +789,22 @@ window.renderKaraokeEditorUI = function(container, song) {
         }
 
         let lines = lyricLine.split('\n').filter(l => l.trim() !== '');
-        let mainLine = lines[0] || '';
-        // ลบเครื่องหมาย | ออกไปเลย เพราะเราหั่นทีละตัวอักษรแล้ว
-        let mainStr = mainLine.split('||')[0].replace(/\|/g, ''); 
-        
-        // หั่นข้อความเป็นตัวอักษร
+        let mainStr = (lines[0] || '').split('||')[0].replace(/\|/g, ''); 
         let characters = Array.from(segmenter.segment(mainStr)).map(s => s.segment);
 
         const rowDiv = document.createElement('div');
         rowDiv.style.marginBottom = '12px'; rowDiv.style.textAlign = 'center';
         rowDiv.style.display = 'flex'; rowDiv.style.flexWrap = 'wrap'; rowDiv.style.justifyContent = 'center';
 
-        let charIndexCounter = 0; // ตัวนับ index เฉพาะตัวอักษร (ไม่นับช่องว่าง)
+        let charIndexCounter = 0; 
 
         characters.forEach((char) => {
+            // 🟢 สร้างช่องว่างให้กว้างขึ้น เพื่อให้แอดมินเห็นคำแยกกันชัดเจน
             if (char.trim() === '') { 
-                rowDiv.appendChild(document.createTextNode(' ')); // ใส่ช่องว่างปกติ
+                const spaceSpan = document.createElement('span');
+                spaceSpan.style.display = 'inline-block';
+                spaceSpan.style.width = '20px'; // ปรับความกว้างของเว้นวรรคตรงนี้ได้ครับ
+                rowDiv.appendChild(spaceSpan);
                 return; 
             }
 
@@ -810,7 +812,7 @@ window.renderKaraokeEditorUI = function(container, song) {
             const charSpan = document.createElement('span');
             charSpan.innerText = char;
             charSpan.style.display = 'inline-block'; 
-            charSpan.style.padding = '2px 4px'; // ปรับ padding ให้เล็กลงสำหรับตัวอักษร
+            charSpan.style.padding = '2px 4px'; 
             charSpan.style.margin = '1px'; 
             charSpan.style.borderRadius = '4px'; 
             charSpan.style.cursor = 'crosshair'; 
@@ -859,39 +861,44 @@ window.renderKaraokeEditorUI = function(container, song) {
     });
 
     const btnControls = document.createElement('div'); btnControls.style.display = 'flex'; btnControls.style.gap = '10px'; btnControls.style.marginTop = '20px';
-    const saveBtn = document.createElement('button'); saveBtn.innerText = '💾 บันทึกเวลาทั้งหมดขึ้น Cloud'; saveBtn.style.flex = '2'; saveBtn.style.padding = '12px'; saveBtn.style.background = '#0a84ff'; saveBtn.style.color = '#fff'; saveBtn.style.border = 'none'; saveBtn.style.borderRadius = '8px'; saveBtn.style.fontWeight = 'bold'; saveBtn.style.cursor = 'pointer';
-    saveBtn.onclick = () => { window.saveKaraokeToFirebase(); saveBtn.innerText = '✅ บันทึกเสร็จสมบูรณ์!'; setTimeout(() => saveBtn.innerText = '💾 บันทึกเวลาทั้งหมดขึ้น Cloud', 2000); };
+    const saveBtn = document.createElement('button'); saveBtn.innerText = '💾 บันทึกลง Collection ใหม่ (karaoke_syncs)'; saveBtn.style.flex = '2'; saveBtn.style.padding = '12px'; saveBtn.style.background = '#0a84ff'; saveBtn.style.color = '#fff'; saveBtn.style.border = 'none'; saveBtn.style.borderRadius = '8px'; saveBtn.style.fontWeight = 'bold'; saveBtn.style.cursor = 'pointer';
+    saveBtn.onclick = () => { window.saveKaraokeToFirebase(); saveBtn.innerText = '✅ บันทึกสำเร็จ!'; setTimeout(() => saveBtn.innerText = '💾 บันทึกลง Collection ใหม่ (karaoke_syncs)', 2000); };
     
     btnControls.appendChild(saveBtn); 
     container.appendChild(kContainer); container.appendChild(btnControls);
 };
+
+// ==========================================
+// 🚀 ฟังก์ชันเซฟ Database สู่ Collection ใหม่แยกต่างหาก!
+// ==========================================
 window.saveKaraokeToFirebase = async function() {
     if (!window.isAdmin) return;
     const song = window.songs.find(s => s.id === window.currentSongId); if (!song) return;
 
     let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
-    let targetKData = isCover ? song.covers[window.currentCoverIndex].karaokeData : song.karaokeData;
-    let targetTs = isCover ? song.covers[window.currentCoverIndex].timestamps : song.timestamps;
-    
-    // ก๊อปปี้เวลาคำแรก ไปใส่ในระบบ Classic ให้อัตโนมัติ (Fallback)
-    if (targetKData) {
-        targetKData.forEach((lineWords, idx) => {
-            if (lineWords && lineWords.length > 0) {
-                // หาคำแรกที่มีข้อมูลเวลา
-                const firstWord = lineWords.find(w => w != null);
-                if (firstWord && firstWord.t) {
-                    if(!targetTs) targetTs = []; targetTs[idx] = firstWord.t;
-                }
-            }
-        });
+    let activeKaraokeData = isCover ? (song.covers[window.currentCoverIndex].karaokeData || []) : (song.karaokeData || []);
+
+    try {
+        // 🟢 สร้าง Document ใน Collection ใหม่ชื่อ "karaoke_syncs"
+        const docRef = window.doc(window.db, "karaoke_syncs", window.currentSongId);
+        
+        const payload = {};
+        if (isCover) { payload[`cover_${window.currentCoverIndex}`] = activeKaraokeData; } 
+        else { payload.original = activeKaraokeData; }
+
+        // 🟢 ใช้ setDoc + merge: true จะปลอดภัยกว่าการใช้ updateDoc 
+        await window.setDoc(docRef, payload, { merge: true });
+        
+        // อัปเดต Cache
+        if (!window.karaokeCache) window.karaokeCache = {};
+        window.karaokeCache[window.currentSongId] = payload;
+
+        console.log("บันทึกข้อมูลลง Collection ใหม่เรียบร้อย!");
+        if(window.LyricsEngine) window.LyricsEngine.render();
+    } catch(e) {
+        console.error("Save Error:", e);
+        alert("บันทึกไม่สำเร็จ ตรวจสอบ Console(F12) หรือเช็คการ Import Firebase ครับ");
     }
-
-    const payload = {};
-    if (isCover) { payload.covers = song.covers; } 
-    else { payload.karaokeData = song.karaokeData || []; payload.timestamps = song.timestamps || []; }
-
-    try { await window.updateDoc(window.doc(window.db, "songs", window.currentSongId), payload); if(window.LyricsEngine) window.LyricsEngine.render(); } 
-    catch(e) { alert("บันทึกไม่สำเร็จ"); console.error(e); }
 }
 
 window.addLyricLine = function(index) {
