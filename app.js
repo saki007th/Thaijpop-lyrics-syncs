@@ -568,7 +568,19 @@ window.playSong = function(id) {
 }; 
 
 // ==========================================
-// 🔴 อัปเกรด: ฟังก์ชันบันทึกเวลาให้เซฟแยกลง Cover (ป้องกันเวลาหาย)
+// 🚀 Helper: ระบบดึงค่าความเร็วการปาดสี (Duration)
+// ==========================================
+window.getActiveDurations = function(song) {
+    if (!song) return [];
+    if (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]) {
+        const coverDurs = song.covers[window.currentCoverIndex].durations;
+        if (coverDurs && coverDurs.length > 0) return coverDurs;
+    }
+    return song.durations || [];
+};
+
+// ==========================================
+// 🚀 อัปเกรด: ฟังก์ชัน Save ให้บันทึก "ความเร็ว" ของแถบเลื่อนด้วย
 // ==========================================
 window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
     if (!window.isAdmin) return;
@@ -580,7 +592,7 @@ window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
     
     let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
 
-    // 🟢 สำคัญมาก: ถ้าเป็น Cover และเพิ่งแก้ครั้งแรก ต้องโคลนเวลาต้นฉบับมาให้หมดก่อน
+    // โคลนข้อมูลถ้าเป็นการเซฟ Cover ครั้งแรก
     if (isCover) {
         if (!song.covers[window.currentCoverIndex].timestamps || song.covers[window.currentCoverIndex].timestamps.length === 0) {
             song.covers[window.currentCoverIndex].timestamps = [...(song.timestamps || [])];
@@ -588,18 +600,23 @@ window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
         if (!song.covers[window.currentCoverIndex].singers || song.covers[window.currentCoverIndex].singers.length === 0) {
             song.covers[window.currentCoverIndex].singers = [...(song.singers || [])];
         }
+        if (!song.covers[window.currentCoverIndex].durations || song.covers[window.currentCoverIndex].durations.length === 0) {
+            song.covers[window.currentCoverIndex].durations = [...(song.durations || [])];
+        }
     }
 
     let currentTs = isCover ? (song.covers[window.currentCoverIndex].timestamps || []) : (song.timestamps || []);
     let currentSg = isCover ? (song.covers[window.currentCoverIndex].singers || []) : (song.singers || []);
+    let currentDur = isCover ? (song.covers[window.currentCoverIndex].durations || []) : (song.durations || []);
 
     const safeTs = Array.from({length: count}, (_, i) => currentTs[i] != null ? currentTs[i] : null);
     const safeSg = Array.from({length: count}, (_, i) => currentSg[i] != null ? currentSg[i] : "");
+    const safeDur = Array.from({length: count}, (_, i) => currentDur[i] != null ? currentDur[i] : 2.5); // ค่าเริ่มต้นปาดสีคือ 2.5 วิ
 
-    // เตรียม Payload ที่มี covers เดิมแนบไปด้วยเสมอ
     const payload = {
         timestamps: song.timestamps || [],
         singers: song.singers || [],
+        durations: song.durations || [],
         covers: song.covers || []
     };
     if (updateLyricsText) payload.lyrics = song.lyrics; 
@@ -607,59 +624,33 @@ window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
     if (isCover) {
         song.covers[window.currentCoverIndex].timestamps = safeTs;
         song.covers[window.currentCoverIndex].singers = safeSg;
+        song.covers[window.currentCoverIndex].durations = safeDur;
         payload.covers = song.covers;
     } else {
         song.timestamps = safeTs; 
         song.singers = safeSg;
+        song.durations = safeDur;
         payload.timestamps = safeTs; 
         payload.singers = safeSg;
+        payload.durations = safeDur;
     }
 
-    await updateDoc(doc(db, "songs", window.currentSongId), payload);
+    await window.updateDoc(window.doc(window.db, "songs", window.currentSongId), payload);
     if (updateLyricsText) { window.renderLyricsToContainer(); window.updateLyricDisplay(); }
 }
 
-window.currentAdminSyncMode = 'classic'; 
-window.isDraggingKaraoke = false; 
-
+// ==========================================
+// 🚀 หน้าต่างแอดมิน (เพิ่มแถบเลื่อนปรับความเร็ว)
+// ==========================================
 window.renderTimestampEditor = function() {
     const container = document.getElementById('timestampList'); if(!container) return;
     container.innerHTML = '';
     const song = window.songs.find(s => s.id === window.currentSongId); if (!song) return;
 
-    // 🟢 1. สร้างปุ่ม Tab สลับโหมด (Classic / Karaoke)
-    const tabDiv = document.createElement('div');
-    tabDiv.style.display = 'flex'; tabDiv.style.gap = '10px'; tabDiv.style.marginBottom = '15px';
-    
-    const btnClassic = document.createElement('button');
-    btnClassic.innerText = '📝 ซิงค์บรรทัด (Classic)';
-    btnClassic.style.flex = '1'; btnClassic.style.padding = '8px'; btnClassic.style.cursor = 'pointer';
-    btnClassic.style.background = window.currentAdminSyncMode !== 'karaoke' ? '#0a84ff' : 'rgba(255,255,255,0.1)';
-    btnClassic.style.color = '#fff'; btnClassic.style.border = 'none'; btnClassic.style.borderRadius = '8px';
-    btnClassic.onclick = () => { window.currentAdminSyncMode = 'classic'; window.renderTimestampEditor(); };
-
-    const btnKaraoke = document.createElement('button');
-    btnKaraoke.innerText = '🖌️ รูดปาดสี (Karaoke)';
-    btnKaraoke.style.flex = '1'; btnKaraoke.style.padding = '8px'; btnKaraoke.style.cursor = 'pointer';
-    btnKaraoke.style.background = window.currentAdminSyncMode === 'karaoke' ? '#ff375f' : 'rgba(255,255,255,0.1)';
-    btnKaraoke.style.color = '#fff'; btnKaraoke.style.border = 'none'; btnKaraoke.style.borderRadius = '8px';
-    btnKaraoke.onclick = () => { window.currentAdminSyncMode = 'karaoke'; window.renderTimestampEditor(); };
-
-    tabDiv.appendChild(btnClassic); tabDiv.appendChild(btnKaraoke);
-    container.appendChild(tabDiv);
-
-    // 🟢 2. เช็คโหมด: ถ้าเป็น Karaoke ให้โหลดหน้าต่างรูดระบายสี
-    if (window.currentAdminSyncMode === 'karaoke') {
-        window.renderKaraokeEditorUI(container, song);
-        return; 
-    }
-
-    // ==========================================
-    // 🛡️ โค้ดโหมด Classic ดั้งเดิม
-    // ==========================================
     let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
     let activeTimestamps = window.getActiveTimestamps(song);
     let activeSingers = window.getActiveSingers(song);
+    let activeDurations = window.getActiveDurations(song); // 🟢 ดึงความเร็วที่เคยเซฟไว้
 
     window.currentLyricsArray.forEach((lyric, index) => {
         const row = document.createElement('div'); row.className = 'ts-row'; row.id = `ts-row-${index}`;
@@ -677,6 +668,7 @@ window.renderTimestampEditor = function() {
         const badge = document.createElement('span'); badge.innerText = `#${index + 1}`; badge.style.color = '#0a84ff'; badge.style.fontWeight = 'bold'; leftControls.appendChild(badge);
 
         if (window.isAdmin) {
+            // Dropdown คนร้อง
             const allSingers = window.getSingersList(song.artist);
             const dropdown = document.createElement('div'); dropdown.className = 'ts-singer-dropdown'; dropdown.style.position = 'relative';
             const toggleBtn = document.createElement('button'); toggleBtn.className = 'ts-dropdown-toggle';
@@ -691,9 +683,7 @@ window.renderTimestampEditor = function() {
                     const selected = Array.from(menu.querySelectorAll('input:checked')).map(cb => cb.value);
                     toggleBtn.innerText = selected.length > 0 ? selected.join(', ') : '👤 เลือกร้อง';
                     if (isCover) {
-                        if (!song.covers[window.currentCoverIndex].singers || song.covers[window.currentCoverIndex].singers.length === 0) {
-                            song.covers[window.currentCoverIndex].singers = [...(song.singers || [])];
-                        }
+                        if (!song.covers[window.currentCoverIndex].singers) song.covers[window.currentCoverIndex].singers = [];
                         song.covers[window.currentCoverIndex].singers[index] = selected.length > 0 ? selected.join(', ') : "";
                     } else {
                         if (!song.singers) song.singers = []; song.singers[index] = selected.length > 0 ? selected.join(', ') : "";
@@ -702,38 +692,57 @@ window.renderTimestampEditor = function() {
                 };
                 itemLabel.appendChild(checkbox); itemLabel.appendChild(document.createTextNode(' ' + singer)); menu.appendChild(itemLabel);
             });
-            toggleBtn.onclick = (e) => {
-                e.stopPropagation(); 
-                const isShowing = menu.classList.contains('show'); 
-                document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show'));
-                if (!isShowing) { 
-                    menu.classList.add('show'); 
-                    const rect = toggleBtn.getBoundingClientRect(); 
-                    menu.style.position = 'absolute'; menu.style.left = '0'; 
-                    if (window.innerHeight - rect.bottom < 200) { menu.style.top = 'auto'; menu.style.bottom = 'calc(100% + 5px)'; } 
-                    else { menu.style.top = 'calc(100% + 5px)'; menu.style.bottom = 'auto'; }
-                }
-            };
+            toggleBtn.onclick = (e) => { e.stopPropagation(); const isShowing = menu.classList.contains('show'); document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show')); if (!isShowing) { menu.classList.add('show'); const rect = toggleBtn.getBoundingClientRect(); menu.style.position = 'absolute'; menu.style.left = '0'; if (window.innerHeight - rect.bottom < 200) { menu.style.top = 'auto'; menu.style.bottom = 'calc(100% + 5px)'; } else { menu.style.top = 'calc(100% + 5px)'; menu.style.bottom = 'auto'; } } };
             dropdown.appendChild(toggleBtn); dropdown.appendChild(menu); leftControls.appendChild(dropdown);
 
+            // กล่องพิมพ์เวลา
             const timeInput = document.createElement('input'); timeInput.type = 'number'; timeInput.step = '0.1'; timeInput.min = '0';
             timeInput.style.width = '70px'; timeInput.style.margin = '0'; timeInput.style.padding = '4px 6px'; timeInput.style.textAlign = 'center';
             timeInput.value = (activeTimestamps[index] != null) ? activeTimestamps[index].toFixed(1) : '';
             timeInput.onchange = (e) => { 
-                const val = parseFloat(e.target.value); 
-                const finalVal = isNaN(val) ? null : val;
+                const val = parseFloat(e.target.value); const finalVal = isNaN(val) ? null : val;
                 if (isCover) {
-                    if (!song.covers[window.currentCoverIndex].timestamps || song.covers[window.currentCoverIndex].timestamps.length === 0) {
-                        song.covers[window.currentCoverIndex].timestamps = [...(song.timestamps || [])];
-                    }
+                    if (!song.covers[window.currentCoverIndex].timestamps) song.covers[window.currentCoverIndex].timestamps = [];
                     song.covers[window.currentCoverIndex].timestamps[index] = finalVal;
                 } else {
-                    if (!song.timestamps) song.timestamps = []; 
-                    song.timestamps[index] = finalVal;
+                    if (!song.timestamps) song.timestamps = []; song.timestamps[index] = finalVal;
                 }
                 window.saveTimestampsToFirebase(); 
             };
             leftControls.appendChild(timeInput);
+
+            // 🟢 แถบเลื่อนปรับความเร็วการปาดสี (Slider)
+            const durContainer = document.createElement('div');
+            durContainer.style.display = 'flex'; durContainer.style.alignItems = 'center'; durContainer.style.gap = '6px'; durContainer.style.marginLeft = '10px';
+            
+            const durLabel = document.createElement('span'); durLabel.innerText = '⏱️ ความเร็ว:'; durLabel.style.fontSize = '0.85em'; durLabel.style.color = '#bbb';
+            
+            const durSlider = document.createElement('input'); 
+            durSlider.type = 'range'; durSlider.min = '0.5'; durSlider.max = '10'; durSlider.step = '0.1';
+            durSlider.style.width = '90px'; durSlider.style.cursor = 'pointer';
+            
+            let currentDur = activeDurations[index] != null ? activeDurations[index] : 2.5; 
+            durSlider.value = currentDur;
+            
+            const durVal = document.createElement('span'); 
+            durVal.innerText = currentDur.toFixed(1) + 's'; 
+            durVal.style.fontSize = '0.85em'; durVal.style.color = '#0a84ff'; durVal.style.width = '35px';
+            
+            durSlider.oninput = (e) => { durVal.innerText = parseFloat(e.target.value).toFixed(1) + 's'; };
+            durSlider.onchange = (e) => {
+                const val = parseFloat(e.target.value);
+                if (isCover) {
+                    if (!song.covers[window.currentCoverIndex].durations) song.covers[window.currentCoverIndex].durations = [];
+                    song.covers[window.currentCoverIndex].durations[index] = val;
+                } else {
+                    if (!song.durations) song.durations = [];
+                    song.durations[index] = val;
+                }
+                window.saveTimestampsToFirebase();
+            };
+            
+            durContainer.appendChild(durLabel); durContainer.appendChild(durSlider); durContainer.appendChild(durVal);
+            leftControls.appendChild(durContainer);
         }
 
         const rightControls = document.createElement('div'); rightControls.style.display = 'flex'; rightControls.style.gap = '8px';
@@ -756,119 +765,6 @@ window.renderTimestampEditor = function() {
         btnAddEnd.onclick = () => window.addLyricLine(window.currentLyricsArray.length - 1); container.appendChild(btnAddEnd);
     }
 }
-
-// ==========================================
-// 🚀 ฟังก์ชันหน้าต่างซิงค์แอดมิน (เน้นง่าย แม่นยำ เซฟติด 100%)
-// ==========================================
-window.renderTimestampEditor = function() {
-    const container = document.getElementById('timestampList'); if(!container) return;
-    container.innerHTML = '';
-    const song = window.songs.find(s => s.id === window.currentSongId); if (!song) return;
-
-    const info = document.createElement('div');
-    info.innerHTML = '<div style="background: rgba(10, 132, 255, 0.2); color: #0a84ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.5;"><b>💡 วิธีใช้งาน:</b> ไม่ต้องลากระบายสีให้เมื่อยมือแล้ว! แค่กด <b>"เล่นเพลง"</b> แล้วเคาะลูกศร <b>ถัดไป</b> เมื่อนักร้องขึ้นท่อนใหม่ ระบบจะปาดสี 0-100% ให้คนดูเองอัตโนมัติ!</div>';
-    container.appendChild(info);
-
-    let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
-    let activeTimestamps = window.getActiveTimestamps(song);
-    let activeSingers = window.getActiveSingers(song);
-
-    window.currentLyricsArray.forEach((lyric, index) => {
-        const row = document.createElement('div'); row.className = 'ts-row'; row.id = `ts-row-${index}`;
-        row.style.background = 'rgba(255, 255, 255, 0.05)'; row.style.padding = '12px 10px'; row.style.borderRadius = '8px'; row.style.marginBottom = '12px'; row.style.border = '1px solid rgba(255, 255, 255, 0.1)';
-
-        const lyricEditor = document.createElement('textarea');
-        lyricEditor.value = lyric; lyricEditor.style.width = '100%'; lyricEditor.style.minHeight = '55px'; lyricEditor.style.marginBottom = '10px';
-        if (!window.isAdmin) { lyricEditor.readOnly = true; lyricEditor.style.border = 'none'; lyricEditor.style.background = 'transparent'; } 
-        else { lyricEditor.onchange = (e) => { window.currentLyricsArray[index] = e.target.value.trim(); window.saveTimestampsToFirebase(true); }; }
-        row.appendChild(lyricEditor);
-
-        const controlsDiv = document.createElement('div'); controlsDiv.style.display = 'flex'; controlsDiv.style.justifyContent = 'space-between'; controlsDiv.style.alignItems = 'center'; controlsDiv.style.flexWrap = 'wrap'; controlsDiv.style.gap = '8px';
-        const leftControls = document.createElement('div'); leftControls.style.display = 'flex'; leftControls.style.gap = '8px'; leftControls.style.alignItems = 'center';
-        
-        const badge = document.createElement('span'); badge.innerText = `#${index + 1}`; badge.style.color = '#0a84ff'; badge.style.fontWeight = 'bold'; leftControls.appendChild(badge);
-
-        if (window.isAdmin) {
-            const allSingers = window.getSingersList(song.artist);
-            const dropdown = document.createElement('div'); dropdown.className = 'ts-singer-dropdown'; dropdown.style.position = 'relative';
-            const toggleBtn = document.createElement('button'); toggleBtn.className = 'ts-dropdown-toggle';
-            const currentSingers = activeSingers[index] ? activeSingers[index].split(',').map(s=>s.trim()).filter(s=>s) : [];
-            toggleBtn.innerText = currentSingers.length > 0 ? currentSingers.join(', ') : '👤 เลือกร้อง';
-            
-            const menu = document.createElement('div'); menu.className = 'ts-dropdown-menu';
-            allSingers.forEach(singer => {
-                const itemLabel = document.createElement('label'); itemLabel.className = 'ts-dropdown-item';
-                const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.value = singer; checkbox.checked = currentSingers.includes(singer);
-                checkbox.onchange = () => {
-                    const selected = Array.from(menu.querySelectorAll('input:checked')).map(cb => cb.value);
-                    toggleBtn.innerText = selected.length > 0 ? selected.join(', ') : '👤 เลือกร้อง';
-                    if (isCover) {
-                        if (!song.covers[window.currentCoverIndex].singers || song.covers[window.currentCoverIndex].singers.length === 0) {
-                            song.covers[window.currentCoverIndex].singers = [...(song.singers || [])];
-                        }
-                        song.covers[window.currentCoverIndex].singers[index] = selected.length > 0 ? selected.join(', ') : "";
-                    } else {
-                        if (!song.singers) song.singers = []; song.singers[index] = selected.length > 0 ? selected.join(', ') : "";
-                    }
-                    window.saveTimestampsToFirebase(true); 
-                };
-                itemLabel.appendChild(checkbox); itemLabel.appendChild(document.createTextNode(' ' + singer)); menu.appendChild(itemLabel);
-            });
-            toggleBtn.onclick = (e) => {
-                e.stopPropagation(); 
-                const isShowing = menu.classList.contains('show'); 
-                document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show'));
-                if (!isShowing) { 
-                    menu.classList.add('show'); 
-                    const rect = toggleBtn.getBoundingClientRect(); 
-                    menu.style.position = 'absolute'; menu.style.left = '0'; 
-                    if (window.innerHeight - rect.bottom < 200) { menu.style.top = 'auto'; menu.style.bottom = 'calc(100% + 5px)'; } 
-                    else { menu.style.top = 'calc(100% + 5px)'; menu.style.bottom = 'auto'; }
-                }
-            };
-            dropdown.appendChild(toggleBtn); dropdown.appendChild(menu); leftControls.appendChild(dropdown);
-
-            const timeInput = document.createElement('input'); timeInput.type = 'number'; timeInput.step = '0.1'; timeInput.min = '0';
-            timeInput.style.width = '70px'; timeInput.style.margin = '0'; timeInput.style.padding = '4px 6px'; timeInput.style.textAlign = 'center';
-            timeInput.value = (activeTimestamps[index] != null) ? activeTimestamps[index].toFixed(1) : '';
-            timeInput.onchange = (e) => { 
-                const val = parseFloat(e.target.value); 
-                const finalVal = isNaN(val) ? null : val;
-                if (isCover) {
-                    if (!song.covers[window.currentCoverIndex].timestamps || song.covers[window.currentCoverIndex].timestamps.length === 0) {
-                        song.covers[window.currentCoverIndex].timestamps = [...(song.timestamps || [])];
-                    }
-                    song.covers[window.currentCoverIndex].timestamps[index] = finalVal;
-                } else {
-                    if (!song.timestamps) song.timestamps = []; 
-                    song.timestamps[index] = finalVal;
-                }
-                window.saveTimestampsToFirebase(); 
-            };
-            leftControls.appendChild(timeInput);
-        }
-
-        const rightControls = document.createElement('div'); rightControls.style.display = 'flex'; rightControls.style.gap = '8px';
-        if (window.isAdmin) {
-            const btnMusic = document.createElement('button'); btnMusic.innerText = '🎵 ดนตรี'; btnMusic.style.background = 'rgba(255, 159, 10, 0.2)'; btnMusic.style.color = '#ff9f0a'; btnMusic.style.border = '1px solid rgba(255, 159, 10, 0.4)'; btnMusic.style.padding = '4px 10px'; btnMusic.style.borderRadius = '6px'; btnMusic.style.cursor = 'pointer';
-            btnMusic.onclick = () => { lyricEditor.value = '[ดนตรี]'; window.currentLyricsArray[index] = '[ดนตรี]'; window.saveTimestampsToFirebase(true); };
-
-            const btnAdd = document.createElement('button'); btnAdd.innerText = '➕'; btnAdd.style.background = 'rgba(52, 199, 89, 0.2)'; btnAdd.style.color = '#34c759'; btnAdd.style.border = '1px solid rgba(52, 199, 89, 0.4)'; btnAdd.style.padding = '4px 10px'; btnAdd.onclick = () => window.addLyricLine(index);
-            const btnDel = document.createElement('button'); btnDel.innerText = '🗑️'; btnDel.style.background = 'rgba(255, 59, 48, 0.2)'; btnDel.style.color = '#ff3b30'; btnDel.style.border = '1px solid rgba(255, 59, 48, 0.4)'; btnDel.style.padding = '4px 10px'; btnDel.onclick = () => window.deleteLyricLine(index);
-            
-            rightControls.appendChild(btnMusic); rightControls.appendChild(btnAdd); rightControls.appendChild(btnDel);
-        }
-        
-        controlsDiv.appendChild(leftControls); controlsDiv.appendChild(rightControls);
-        row.appendChild(controlsDiv); container.appendChild(row);
-    });
-    
-    if (window.isAdmin) {
-        const btnAddEnd = document.createElement('button'); btnAddEnd.innerText = '➕ เพิ่มท่อนใหม่ต่อท้ายสุด'; btnAddEnd.style.background = 'rgba(255, 255, 255, 0.1)'; btnAddEnd.style.padding = "8px"; btnAddEnd.style.color = "#fff"; btnAddEnd.style.border = "none"; btnAddEnd.style.borderRadius = "8px"; btnAddEnd.style.width = "100%"; btnAddEnd.style.cursor = "pointer";
-        btnAddEnd.onclick = () => window.addLyricLine(window.currentLyricsArray.length - 1); container.appendChild(btnAddEnd);
-    }
-}
-
 window.addLyricLine = function(index) {
     if (!confirm('ต้องการแทรกเนื้อเพลงใช่หรือไม่?')) return;
     const song = window.songs.find(s => s.id === window.currentSongId); if(!song) return;
