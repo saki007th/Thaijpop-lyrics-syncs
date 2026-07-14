@@ -566,91 +566,40 @@ window.playSong = function(id) {
         }
     }, 100); 
 }; 
-
 // ==========================================
-// 🚀 Helper: ระบบดึงค่าความเร็วการปาดสี (Duration)
+// 🚀 หน้าต่างแอดมิน (รวมมิตร: สไลเดอร์ 0-100% + บันทึกลง Collection)
 // ==========================================
-window.getActiveDurations = function(song) {
-    if (!song) return [];
-    if (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]) {
-        const coverDurs = song.covers[window.currentCoverIndex].durations;
-        if (coverDurs && coverDurs.length > 0) return coverDurs;
-    }
-    return song.durations || [];
-};
-
-// ==========================================
-// 🚀 อัปเกรด: ฟังก์ชัน Save ให้บันทึก "ความเร็ว" ของแถบเลื่อนด้วย
-// ==========================================
-window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
-    if (!window.isAdmin) return;
-    const song = window.songs.find(s => s.id === window.currentSongId);
-    if (!song) return;
-
-    if (updateLyricsText) song.lyrics = window.currentLyricsArray.join('\n\n');
-    const count = window.currentLyricsArray.length;
-    
-    let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
-
-    // โคลนข้อมูลถ้าเป็นการเซฟ Cover ครั้งแรก
-    if (isCover) {
-        if (!song.covers[window.currentCoverIndex].timestamps || song.covers[window.currentCoverIndex].timestamps.length === 0) {
-            song.covers[window.currentCoverIndex].timestamps = [...(song.timestamps || [])];
-        }
-        if (!song.covers[window.currentCoverIndex].singers || song.covers[window.currentCoverIndex].singers.length === 0) {
-            song.covers[window.currentCoverIndex].singers = [...(song.singers || [])];
-        }
-        if (!song.covers[window.currentCoverIndex].durations || song.covers[window.currentCoverIndex].durations.length === 0) {
-            song.covers[window.currentCoverIndex].durations = [...(song.durations || [])];
-        }
-    }
-
-    let currentTs = isCover ? (song.covers[window.currentCoverIndex].timestamps || []) : (song.timestamps || []);
-    let currentSg = isCover ? (song.covers[window.currentCoverIndex].singers || []) : (song.singers || []);
-    let currentDur = isCover ? (song.covers[window.currentCoverIndex].durations || []) : (song.durations || []);
-
-    const safeTs = Array.from({length: count}, (_, i) => currentTs[i] != null ? currentTs[i] : null);
-    const safeSg = Array.from({length: count}, (_, i) => currentSg[i] != null ? currentSg[i] : "");
-    const safeDur = Array.from({length: count}, (_, i) => currentDur[i] != null ? currentDur[i] : 2.5); // ค่าเริ่มต้นปาดสีคือ 2.5 วิ
-
-    const payload = {
-        timestamps: song.timestamps || [],
-        singers: song.singers || [],
-        durations: song.durations || [],
-        covers: song.covers || []
-    };
-    if (updateLyricsText) payload.lyrics = song.lyrics; 
-
-    if (isCover) {
-        song.covers[window.currentCoverIndex].timestamps = safeTs;
-        song.covers[window.currentCoverIndex].singers = safeSg;
-        song.covers[window.currentCoverIndex].durations = safeDur;
-        payload.covers = song.covers;
-    } else {
-        song.timestamps = safeTs; 
-        song.singers = safeSg;
-        song.durations = safeDur;
-        payload.timestamps = safeTs; 
-        payload.singers = safeSg;
-        payload.durations = safeDur;
-    }
-
-    await window.updateDoc(window.doc(window.db, "songs", window.currentSongId), payload);
-    if (updateLyricsText) { window.renderLyricsToContainer(); window.updateLyricDisplay(); }
-}
-
-// ==========================================
-// 🚀 หน้าต่างแอดมิน (เพิ่มแถบเลื่อนปรับความเร็ว)
-// ==========================================
-window.renderTimestampEditor = function() {
+window.renderTimestampEditor = async function() {
     const container = document.getElementById('timestampList'); if(!container) return;
-    container.innerHTML = '';
+    container.innerHTML = '<div style="text-align:center; padding:20px; color:#0a84ff;">กำลังโหลดข้อมูล...</div>';
     const song = window.songs.find(s => s.id === window.currentSongId); if (!song) return;
 
     let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
+
+    // 🟢 โหลดข้อมูลเวลาคาราโอเกะ (จาก Collection: karaoke_syncs)
+    window.karaokeCache = window.karaokeCache || {};
+    if (!window.karaokeCache[song.id]) {
+        try {
+            const snap = await window.getDoc(window.doc(window.db, "karaoke_syncs", song.id));
+            if (snap.exists()) { window.karaokeCache[song.id] = snap.data(); }
+        } catch(e) {}
+    }
+    let dbData = window.karaokeCache[song.id] || {};
+    let activeKaraokeData = isCover ? (dbData[`cover_${window.currentCoverIndex}`] || []) : (dbData.original || []);
+    
+    // ผูกเข้าตัวแปรหลัก
+    if (isCover) {
+        if (!song.covers[window.currentCoverIndex].karaokeData) song.covers[window.currentCoverIndex].karaokeData = [];
+        song.covers[window.currentCoverIndex].karaokeData = activeKaraokeData;
+    } else { song.karaokeData = activeKaraokeData; }
+
+    container.innerHTML = '';
+    const info = document.createElement('div');
+    info.innerHTML = '<div style="background: rgba(10, 132, 255, 0.2); color: #0a84ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.5;"><b>💡 วิธีใช้งานระดับโปร:</b> กดเล่นเพลง แล้ว <b>"จับแถบสไลเดอร์รูด 0-100%"</b> ตามเสียงร้องได้เลย! ถ้านักร้องหยุดกลางประโยค ให้เราหยุดมือตาม ระบบจะจำทุกจังหวะขยับอัตโนมัติ!</div>';
+    container.appendChild(info);
+
     let activeTimestamps = window.getActiveTimestamps(song);
     let activeSingers = window.getActiveSingers(song);
-    let activeDurations = window.getActiveDurations(song); // 🟢 ดึงความเร็วที่เคยเซฟไว้
 
     window.currentLyricsArray.forEach((lyric, index) => {
         const row = document.createElement('div'); row.className = 'ts-row'; row.id = `ts-row-${index}`;
@@ -668,13 +617,12 @@ window.renderTimestampEditor = function() {
         const badge = document.createElement('span'); badge.innerText = `#${index + 1}`; badge.style.color = '#0a84ff'; badge.style.fontWeight = 'bold'; leftControls.appendChild(badge);
 
         if (window.isAdmin) {
-            // Dropdown คนร้อง
+            // Dropdown เลือกคนร้อง
             const allSingers = window.getSingersList(song.artist);
             const dropdown = document.createElement('div'); dropdown.className = 'ts-singer-dropdown'; dropdown.style.position = 'relative';
             const toggleBtn = document.createElement('button'); toggleBtn.className = 'ts-dropdown-toggle';
             const currentSingers = activeSingers[index] ? activeSingers[index].split(',').map(s=>s.trim()).filter(s=>s) : [];
             toggleBtn.innerText = currentSingers.length > 0 ? currentSingers.join(', ') : '👤 เลือกร้อง';
-            
             const menu = document.createElement('div'); menu.className = 'ts-dropdown-menu';
             allSingers.forEach(singer => {
                 const itemLabel = document.createElement('label'); itemLabel.className = 'ts-dropdown-item';
@@ -682,12 +630,8 @@ window.renderTimestampEditor = function() {
                 checkbox.onchange = () => {
                     const selected = Array.from(menu.querySelectorAll('input:checked')).map(cb => cb.value);
                     toggleBtn.innerText = selected.length > 0 ? selected.join(', ') : '👤 เลือกร้อง';
-                    if (isCover) {
-                        if (!song.covers[window.currentCoverIndex].singers) song.covers[window.currentCoverIndex].singers = [];
-                        song.covers[window.currentCoverIndex].singers[index] = selected.length > 0 ? selected.join(', ') : "";
-                    } else {
-                        if (!song.singers) song.singers = []; song.singers[index] = selected.length > 0 ? selected.join(', ') : "";
-                    }
+                    if (isCover) { if (!song.covers[window.currentCoverIndex].singers) song.covers[window.currentCoverIndex].singers = []; song.covers[window.currentCoverIndex].singers[index] = selected.length > 0 ? selected.join(', ') : ""; } 
+                    else { if (!song.singers) song.singers = []; song.singers[index] = selected.length > 0 ? selected.join(', ') : ""; }
                     window.saveTimestampsToFirebase(true); 
                 };
                 itemLabel.appendChild(checkbox); itemLabel.appendChild(document.createTextNode(' ' + singer)); menu.appendChild(itemLabel);
@@ -695,59 +639,22 @@ window.renderTimestampEditor = function() {
             toggleBtn.onclick = (e) => { e.stopPropagation(); const isShowing = menu.classList.contains('show'); document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show')); if (!isShowing) { menu.classList.add('show'); const rect = toggleBtn.getBoundingClientRect(); menu.style.position = 'absolute'; menu.style.left = '0'; if (window.innerHeight - rect.bottom < 200) { menu.style.top = 'auto'; menu.style.bottom = 'calc(100% + 5px)'; } else { menu.style.top = 'calc(100% + 5px)'; menu.style.bottom = 'auto'; } } };
             dropdown.appendChild(toggleBtn); dropdown.appendChild(menu); leftControls.appendChild(dropdown);
 
-            // กล่องพิมพ์เวลา
+            // กล่องเวลาบรรทัด (Classic)
             const timeInput = document.createElement('input'); timeInput.type = 'number'; timeInput.step = '0.1'; timeInput.min = '0';
             timeInput.style.width = '70px'; timeInput.style.margin = '0'; timeInput.style.padding = '4px 6px'; timeInput.style.textAlign = 'center';
             timeInput.value = (activeTimestamps[index] != null) ? activeTimestamps[index].toFixed(1) : '';
             timeInput.onchange = (e) => { 
                 const val = parseFloat(e.target.value); const finalVal = isNaN(val) ? null : val;
-                if (isCover) {
-                    if (!song.covers[window.currentCoverIndex].timestamps) song.covers[window.currentCoverIndex].timestamps = [];
-                    song.covers[window.currentCoverIndex].timestamps[index] = finalVal;
-                } else {
-                    if (!song.timestamps) song.timestamps = []; song.timestamps[index] = finalVal;
-                }
+                if (isCover) { if (!song.covers[window.currentCoverIndex].timestamps) song.covers[window.currentCoverIndex].timestamps = []; song.covers[window.currentCoverIndex].timestamps[index] = finalVal; } 
+                else { if (!song.timestamps) song.timestamps = []; song.timestamps[index] = finalVal; }
                 window.saveTimestampsToFirebase(); 
             };
             leftControls.appendChild(timeInput);
-
-            // 🟢 แถบเลื่อนปรับความเร็วการปาดสี (Slider)
-            const durContainer = document.createElement('div');
-            durContainer.style.display = 'flex'; durContainer.style.alignItems = 'center'; durContainer.style.gap = '6px'; durContainer.style.marginLeft = '10px';
-            
-            const durLabel = document.createElement('span'); durLabel.innerText = '⏱️ ความเร็ว:'; durLabel.style.fontSize = '0.85em'; durLabel.style.color = '#bbb';
-            
-            const durSlider = document.createElement('input'); 
-            durSlider.type = 'range'; durSlider.min = '0.5'; durSlider.max = '10'; durSlider.step = '0.1';
-            durSlider.style.width = '90px'; durSlider.style.cursor = 'pointer';
-            
-            let currentDur = activeDurations[index] != null ? activeDurations[index] : 2.5; 
-            durSlider.value = currentDur;
-            
-            const durVal = document.createElement('span'); 
-            durVal.innerText = currentDur.toFixed(1) + 's'; 
-            durVal.style.fontSize = '0.85em'; durVal.style.color = '#0a84ff'; durVal.style.width = '35px';
-            
-            durSlider.oninput = (e) => { durVal.innerText = parseFloat(e.target.value).toFixed(1) + 's'; };
-            durSlider.onchange = (e) => {
-                const val = parseFloat(e.target.value);
-                if (isCover) {
-                    if (!song.covers[window.currentCoverIndex].durations) song.covers[window.currentCoverIndex].durations = [];
-                    song.covers[window.currentCoverIndex].durations[index] = val;
-                } else {
-                    if (!song.durations) song.durations = [];
-                    song.durations[index] = val;
-                }
-                window.saveTimestampsToFirebase();
-            };
-            
-            durContainer.appendChild(durLabel); durContainer.appendChild(durSlider); durContainer.appendChild(durVal);
-            leftControls.appendChild(durContainer);
         }
 
         const rightControls = document.createElement('div'); rightControls.style.display = 'flex'; rightControls.style.gap = '8px';
         if (window.isAdmin) {
-            const btnMusic = document.createElement('button'); btnMusic.innerText = '🎵 ดนตรี'; btnMusic.style.background = 'rgba(255, 159, 10, 0.2)'; btnMusic.style.color = '#ff9f0a'; btnMusic.style.border = '1px solid rgba(255, 159, 10, 0.4)'; btnMusic.style.padding = '4px 10px'; btnMusic.style.borderRadius = '6px'; btnMusic.style.cursor = 'pointer';
+            const btnMusic = document.createElement('button'); btnMusic.innerText = '🎵'; btnMusic.style.background = 'rgba(255, 159, 10, 0.2)'; btnMusic.style.color = '#ff9f0a'; btnMusic.style.border = '1px solid rgba(255, 159, 10, 0.4)'; btnMusic.style.padding = '4px 10px'; btnMusic.style.borderRadius = '6px'; btnMusic.style.cursor = 'pointer';
             btnMusic.onclick = () => { lyricEditor.value = '[ดนตรี]'; window.currentLyricsArray[index] = '[ดนตรี]'; window.saveTimestampsToFirebase(true); };
 
             const btnAdd = document.createElement('button'); btnAdd.innerText = '➕'; btnAdd.style.background = 'rgba(52, 199, 89, 0.2)'; btnAdd.style.color = '#34c759'; btnAdd.style.border = '1px solid rgba(52, 199, 89, 0.4)'; btnAdd.style.padding = '4px 10px'; btnAdd.onclick = () => window.addLyricLine(index);
@@ -757,7 +664,77 @@ window.renderTimestampEditor = function() {
         }
         
         controlsDiv.appendChild(leftControls); controlsDiv.appendChild(rightControls);
-        row.appendChild(controlsDiv); container.appendChild(row);
+        row.appendChild(controlsDiv); 
+
+        // 🟢 แถบสไลเดอร์ 0-100% สำหรับการปาดสี
+        if (window.isAdmin && lyric.trim() !== '[ดนตรี]') {
+            const slideContainer = document.createElement('div');
+            slideContainer.style.marginTop = '15px'; slideContainer.style.padding = '10px'; slideContainer.style.background = 'rgba(10, 132, 255, 0.1)'; slideContainer.style.borderRadius = '8px'; slideContainer.style.display = 'flex'; slideContainer.style.alignItems = 'center'; slideContainer.style.gap = '10px';
+            
+            const slideLabel = document.createElement('span');
+            slideLabel.innerText = '👉 ปาดสี (0-100%):'; slideLabel.style.color = '#0a84ff'; slideLabel.style.fontSize = '0.85em'; slideLabel.style.fontWeight = 'bold';
+
+            const slider = document.createElement('input');
+            slider.type = 'range'; slider.min = '0'; slider.max = '100'; slider.step = '1';
+            slider.style.flex = '1'; slider.style.cursor = 'pointer';
+
+            const statusLabel = document.createElement('span');
+            statusLabel.style.fontSize = '0.8em'; statusLabel.style.color = '#bbb'; statusLabel.style.width = '45px'; statusLabel.style.textAlign = 'right';
+            
+            let lineData = activeKaraokeData[index] || [];
+            if (lineData.length > 0) { slider.value = lineData[lineData.length - 1].p; statusLabel.innerText = `${slider.value}%`; } 
+            else { slider.value = 0; statusLabel.innerText = `0%`; }
+
+            // จับจังหวะขยับสไลเดอร์ (บันทึกเป็น Keyframe)
+            slider.oninput = (e) => {
+                if (!window.ytPlayer || typeof window.ytPlayer.getCurrentTime !== 'function') return;
+                const cTime = window.ytPlayer.getCurrentTime();
+                const p = parseFloat(e.target.value);
+                statusLabel.innerText = `${p}%`;
+                
+                if (!activeKaraokeData[index]) activeKaraokeData[index] = [];
+                const kArr = activeKaraokeData[index];
+                
+                // บันทึกเฉพาะข้อมูลที่มีการขยับไปข้างหน้า
+                if (kArr.length > 0 && (cTime - kArr[kArr.length - 1].t) < 0.1) {
+                    kArr[kArr.length - 1].p = p; 
+                } else {
+                    kArr.push({ t: cTime, p: p });
+                }
+
+                // 🟢 Magic: ก๊อปปี้เวลาเริ่มต้นไปใส่ระบบ Classic ให้อัตโนมัติ (แถบจะได้เลื่อนตามนักร้องได้)
+                if (p > 0 && kArr.length === 1) {
+                    const timeInput = row.querySelector('input[type="number"]');
+                    if (timeInput) {
+                        timeInput.value = cTime.toFixed(1);
+                        if (isCover) { if(!song.covers[window.currentCoverIndex].timestamps) song.covers[window.currentCoverIndex].timestamps=[]; song.covers[window.currentCoverIndex].timestamps[index] = cTime; } 
+                        else { if(!song.timestamps) song.timestamps=[]; song.timestamps[index] = cTime; }
+                        window.saveTimestampsToFirebase();
+                    }
+                }
+                
+                if (isCover) { song.covers[window.currentCoverIndex].karaokeData[index] = activeKaraokeData[index]; } 
+                else { song.karaokeData = activeKaraokeData; }
+            };
+
+            // ปล่อยเมาส์ปุ๊บ เซฟลง Collection ทันที
+            slider.onchange = () => { window.saveKaraokeToFirebase(); };
+            
+            const clearBtn = document.createElement('button');
+            clearBtn.innerText = '🗑️ ล้าง';
+            clearBtn.style.background = 'rgba(255, 59, 48, 0.2)'; clearBtn.style.color = '#ff3b30'; clearBtn.style.border = '1px solid rgba(255, 59, 48, 0.5)'; clearBtn.style.borderRadius = '6px'; clearBtn.style.padding = '4px 8px'; clearBtn.style.cursor = 'pointer'; clearBtn.style.fontSize = '0.8em';
+            clearBtn.onclick = () => {
+                if (isCover) { if (song.covers[window.currentCoverIndex].karaokeData) song.covers[window.currentCoverIndex].karaokeData[index] = null; } 
+                else { if (song.karaokeData) song.karaokeData[index] = null; }
+                slider.value = 0; statusLabel.innerText = `0%`;
+                window.saveKaraokeToFirebase();
+            };
+
+            slideContainer.appendChild(slideLabel); slideContainer.appendChild(slider); slideContainer.appendChild(statusLabel); slideContainer.appendChild(clearBtn);
+            row.appendChild(slideContainer);
+        }
+
+        container.appendChild(row);
     });
     
     if (window.isAdmin) {
@@ -765,6 +742,32 @@ window.renderTimestampEditor = function() {
         btnAddEnd.onclick = () => window.addLyricLine(window.currentLyricsArray.length - 1); container.appendChild(btnAddEnd);
     }
 }
+
+// ==========================================
+// 🚀 ฟังก์ชันเซฟลง Collection: karaoke_syncs
+// ==========================================
+window.saveKaraokeToFirebase = async function() {
+    if (!window.isAdmin) return;
+    const song = window.songs.find(s => s.id === window.currentSongId); if (!song) return;
+
+    let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
+    let activeKaraokeData = isCover ? (song.covers[window.currentCoverIndex].karaokeData || []) : (song.karaokeData || []);
+
+    try {
+        const docRef = window.doc(window.db, "karaoke_syncs", window.currentSongId);
+        const payload = {};
+        if (isCover) { payload[`cover_${window.currentCoverIndex}`] = activeKaraokeData; } 
+        else { payload.original = activeKaraokeData; }
+
+        await window.setDoc(docRef, payload, { merge: true });
+        
+        if (!window.karaokeCache) window.karaokeCache = {};
+        window.karaokeCache[window.currentSongId] = payload;
+        
+        if(window.LyricsEngine) window.LyricsEngine.render();
+    } catch(e) { console.error("Save Error:", e); }
+}
+
 window.addLyricLine = function(index) {
     if (!confirm('ต้องการแทรกเนื้อเพลงใช่หรือไม่?')) return;
     const song = window.songs.find(s => s.id === window.currentSongId); if(!song) return;
