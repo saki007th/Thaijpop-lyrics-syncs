@@ -1,18 +1,52 @@
 // ==========================================
-// 🎤 Lyrics Engine (ระบบปาดสีระดับพิกเซล - ทีละตัวอักษร)
+// 🎤 Lyrics Engine (ระบบดึงข้อมูลจาก Collection ใหม่: karaoke_syncs)
 // ==========================================
 
 window.LyricsEngine = {
     animationFrame: null,
     
-    render: function() {
+    // 🟢 เปลี่ยนฟังก์ชัน render ให้เป็น async เพื่อดึง Database ได้
+    render: async function() {
         const container = document.getElementById('lyricsContainer'); if(!container) return;
         container.innerHTML = ''; 
         const song = window.songs.find(s => s.id === window.currentSongId); if (!song) return;
 
         let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
-        let karaokeData = isCover ? (song.covers[window.currentCoverIndex].karaokeData || []) : (song.karaokeData || []);
+        
+        // =========================================
+        // 🟢 ดึงข้อมูลการซิงค์จาก Collection ใหม่แบบ Auto-Load
+        // =========================================
+        window.karaokeCache = window.karaokeCache || {};
+        let kData = [];
+        
+        try {
+            // ถ้ายังไม่มีใน Cache ให้ไปดึงมาจาก Cloud
+            if (!window.karaokeCache[window.currentSongId]) {
+                const snap = await window.getDoc(window.doc(window.db, "karaoke_syncs", window.currentSongId));
+                if (snap.exists()) {
+                    window.karaokeCache[window.currentSongId] = snap.data();
+                }
+            }
+            
+            const dbData = window.karaokeCache[window.currentSongId];
+            if (dbData) {
+                kData = isCover ? (dbData[`cover_${window.currentCoverIndex}`] || []) : (dbData.original || []);
+            }
+            
+            // ส่งข้อมูลกลับไปที่ตัวแปรหลัก เพื่อให้ระบบอื่นๆ ใช้งานต่อได้
+            if (isCover) {
+                if (!song.covers[window.currentCoverIndex].karaokeData) song.covers[window.currentCoverIndex].karaokeData = [];
+                song.covers[window.currentCoverIndex].karaokeData = kData;
+            } else {
+                song.karaokeData = kData;
+            }
+        } catch(e) {
+            console.warn("ไม่พบข้อมูลคาราโอเกะจาก Cloud (เล่นโหมดคลาสสิกปกติ)", e);
+        }
 
+        let karaokeData = kData;
+
+        // วาดเนื้อเพลงลงจอ
         window.currentLyricsArray.forEach((lyric, index) => {
             const lineDiv = document.createElement('div'); 
             lineDiv.className = 'lyric-line'; lineDiv.id = `lyric-line-${index}`;
@@ -87,7 +121,6 @@ window.LyricsEngine = {
         this.appendSingers(lineDiv, linesHtml, lyric.trim(), song, index);
     },
 
-    // 🟢 ฟังก์ชันสร้างกล่องปาดสีระดับตัวอักษร
     generateWipeHtml: function(textLine, charDataArray, startCharIdx) {
         const segmenter = new Intl.Segmenter('th', { granularity: 'grapheme' });
         let characters = Array.from(segmenter.segment(textLine)).map(s => s.segment);
@@ -100,7 +133,7 @@ window.LyricsEngine = {
             if (char.trim() === '') { html += `<span>&nbsp;</span>`; return; }
             
             let cData = charDataArray[cIdx];
-            let t = (cData && cData.t) ? cData.t : lastTime + 0.1; // เวลาสั้นลงเพราะเป็นตัวอักษร
+            let t = (cData && cData.t) ? cData.t : lastTime + 0.1; 
             lastTime = t;
 
             let nextData = charDataArray[cIdx + 1];
@@ -151,13 +184,9 @@ window.LyricsEngine = {
             let duration = end - start;
             if (duration <= 0) duration = 0.05; 
             
-            if (cTime >= end) {
-                progress = 100;
-            } else if (cTime >= start && cTime < end) {
-                progress = ((cTime - start) / duration) * 100;
-            } else {
-                progress = 0;
-            }
+            if (cTime >= end) { progress = 100; } 
+            else if (cTime >= start && cTime < end) { progress = ((cTime - start) / duration) * 100; } 
+            else { progress = 0; }
             
             const fill = group.querySelector('.k-fill');
             if (fill) fill.style.clipPath = `inset(0 ${100 - progress}% 0 0)`;
