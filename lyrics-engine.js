@@ -1,5 +1,5 @@
 // ==========================================
-// 🎤 Lyrics Engine (ระบบปาดสีคาราโอเกะ - แก้บั๊กสมบูรณ์ด้วย Clip-Path)
+// 🎤 Lyrics Engine (ระบบปาดสีระดับพิกเซล - ทีละตัวอักษร)
 // ==========================================
 
 window.LyricsEngine = {
@@ -56,8 +56,8 @@ window.LyricsEngine = {
         this.appendSingers(lineDiv, linesHtml, cleanLyric, song, index);
     },
 
-    buildKaraokeLine: function(lineDiv, lyric, wordDataArray, song, index) {
-        let linesHtml = ""; let wordIdx = 0;
+    buildKaraokeLine: function(lineDiv, lyric, charDataArray, song, index) {
+        let linesHtml = ""; let charIdx = 0;
         let lines = lyric.split('\n').filter(l => l.trim() !== '');
         
         lines.forEach((l, i) => {
@@ -66,15 +66,18 @@ window.LyricsEngine = {
 
             if (l.includes('||')) {
                 let parts = l.split('||');
-                let mainStr = parts[0];
+                let mainStr = parts[0].replace(/\|/g, '');
                 let subStr = parts[1] ? parts[1].replace(/\|/g, '').trim() : '';
-                linesHtml += `<div class="lang-${i} dual-lyric${hlClass}">${this.generateWipeHtml(mainStr, wordDataArray, wordIdx)}<span class="lyric-sub">${subStr}</span></div>`;
-                wordIdx += mainStr.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|' && w.trim() !== '').length;
+                
+                let result = this.generateWipeHtml(mainStr, charDataArray, charIdx);
+                linesHtml += `<div class="lang-${i} dual-lyric${hlClass}">${result.html}<span class="lyric-sub">${subStr}</span></div>`;
+                charIdx = result.nextIdx;
             } 
             else {
                 if (i === 0) { 
-                    linesHtml += `<div class="lang-${i}${hlClass}">${this.generateWipeHtml(l, wordDataArray, wordIdx)}</div>`;
-                    wordIdx += l.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|' && w.trim() !== '').length;
+                    let result = this.generateWipeHtml(l.replace(/\|/g, ''), charDataArray, charIdx);
+                    linesHtml += `<div class="lang-${i}${hlClass}">${result.html}</div>`;
+                    charIdx = result.nextIdx;
                 } else {
                     linesHtml += `<div class="lang-${i}${hlClass}">${l.replace(/\|/g, '')}</div>`;
                 }
@@ -84,32 +87,35 @@ window.LyricsEngine = {
         this.appendSingers(lineDiv, linesHtml, lyric.trim(), song, index);
     },
 
-    // 🟢 ฟังก์ชันสร้างกล่องตัวหนังสือแบบ Clip-Path (ปาดเนียนกริ๊บ 100%)
-    generateWipeHtml: function(textLine, wordDataArray, startWordIdx) {
-        let mainWords = textLine.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|');
-        let html = "";
+    // 🟢 ฟังก์ชันสร้างกล่องปาดสีระดับตัวอักษร
+    generateWipeHtml: function(textLine, charDataArray, startCharIdx) {
+        const segmenter = new Intl.Segmenter('th', { granularity: 'grapheme' });
+        let characters = Array.from(segmenter.segment(textLine)).map(s => s.segment);
+        
+        let html = `<span class="lyric-main" style="display:inline-flex; flex-wrap:wrap; justify-content:center;">`;
         let lastTime = 0; 
-        let wIdx = startWordIdx;
+        let cIdx = startCharIdx;
 
-        mainWords.forEach((word) => {
-            if (word.trim() === '') { html += `<span>&nbsp;</span>`; return; }
+        characters.forEach((char) => {
+            if (char.trim() === '') { html += `<span>&nbsp;</span>`; return; }
             
-            let wData = wordDataArray[wIdx];
-            let t = (wData && wData.t) ? wData.t : lastTime + 0.2; 
+            let cData = charDataArray[cIdx];
+            let t = (cData && cData.t) ? cData.t : lastTime + 0.1; // เวลาสั้นลงเพราะเป็นตัวอักษร
             lastTime = t;
 
-            let nextData = wordDataArray[wIdx + 1];
-            let endTime = (nextData && nextData.t) ? nextData.t : (t + 0.4); 
+            let nextData = charDataArray[cIdx + 1];
+            let endTime = (nextData && nextData.t) ? nextData.t : (t + 0.2); 
             
             html += `
                 <span class="k-word-group" style="position:relative; display:inline-block;" data-start="${t}" data-end="${endTime}">
-                    <span style="color:inherit; opacity:0.6;">${word}</span>
-                    <span class="k-fill" style="color:#0a84ff; position:absolute; left:0; top:0; white-space:nowrap; clip-path:inset(0 100% 0 0); text-shadow: 0 0 10px #0a84ff;">${word}</span>
+                    <span style="color:inherit; opacity:0.6;">${char}</span>
+                    <span class="k-fill" style="color:#0a84ff; position:absolute; left:0; top:0; white-space:nowrap; clip-path:inset(0 100% 0 0); text-shadow: 0 0 10px #0a84ff;">${char}</span>
                 </span>
             `;
-            wIdx++;
+            cIdx++;
         });
-        return html;
+        html += `</span>`;
+        return { html: html, nextIdx: cIdx };
     },
 
     appendSingers: function(lineDiv, linesHtml, cleanLyric, song, index) {
@@ -136,7 +142,6 @@ window.LyricsEngine = {
     },
 
     updateWipe: function(cTime) {
-        // 🟢 ให้ระบบประมวลผลคำทั้งหมดบนหน้าจอ (แก้บั๊กกรอกลับแล้วสีไม่ล้าง)
         const allWordGroups = document.querySelectorAll('.k-word-group');
         allWordGroups.forEach(group => {
             const start = parseFloat(group.getAttribute('data-start'));
@@ -144,18 +149,17 @@ window.LyricsEngine = {
             
             let progress = 0;
             let duration = end - start;
-            if (duration <= 0) duration = 0.1; // ดักจับเผื่อเวลามันซ้อนกัน ป้องกันบั๊กหารด้วย 0
+            if (duration <= 0) duration = 0.05; 
             
             if (cTime >= end) {
-                progress = 100; // ร้องผ่านไปแล้ว ปาดสีเต็ม 100%
+                progress = 100;
             } else if (cTime >= start && cTime < end) {
-                progress = ((cTime - start) / duration) * 100; // กำลังร้อง ค่อยๆ ปาดสี
+                progress = ((cTime - start) / duration) * 100;
             } else {
-                progress = 0; // ยังไม่ร้อง หรือ กรอกลับมา หดสีกลับไปเป็น 0%
+                progress = 0;
             }
             
             const fill = group.querySelector('.k-fill');
-            // ใช้ clip-path ค่อยๆ เปิดการมองเห็นจากซ้ายไปขวา
             if (fill) fill.style.clipPath = `inset(0 ${100 - progress}% 0 0)`;
         });
     }
