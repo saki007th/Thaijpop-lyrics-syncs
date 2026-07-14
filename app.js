@@ -758,146 +758,114 @@ window.renderTimestampEditor = function() {
 }
 
 // ==========================================
-// 🚀 ฟังก์ชันกระดานรูดปาดสี (เว้นวรรคคำให้ลากง่าย)
+// 🚀 ฟังก์ชันหน้าต่างซิงค์แอดมิน (เน้นง่าย แม่นยำ เซฟติด 100%)
 // ==========================================
-window.renderKaraokeEditorUI = function(container, song) {
+window.renderTimestampEditor = function() {
+    const container = document.getElementById('timestampList'); if(!container) return;
+    container.innerHTML = '';
+    const song = window.songs.find(s => s.id === window.currentSongId); if (!song) return;
+
     const info = document.createElement('div');
-    info.innerHTML = '<div style="background: rgba(10, 132, 255, 0.2); color: #0a84ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.5;"><b>💡 วิธีใช้งาน:</b> ลากเมาส์รูดผ่าน <b>"ทีละตัวอักษร"</b> (ปรับระยะเว้นวรรคให้ลากง่ายขึ้นแล้ว)</div>';
+    info.innerHTML = '<div style="background: rgba(10, 132, 255, 0.2); color: #0a84ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.5;"><b>💡 วิธีใช้งาน:</b> ไม่ต้องลากระบายสีให้เมื่อยมือแล้ว! แค่กด <b>"เล่นเพลง"</b> แล้วเคาะลูกศร <b>ถัดไป</b> เมื่อนักร้องขึ้นท่อนใหม่ ระบบจะปาดสี 0-100% ให้คนดูเองอัตโนมัติ!</div>';
     container.appendChild(info);
 
     let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
-    let activeKaraokeData = isCover ? (song.covers[window.currentCoverIndex].karaokeData || []) : (song.karaokeData || []);
+    let activeTimestamps = window.getActiveTimestamps(song);
+    let activeSingers = window.getActiveSingers(song);
 
-    const kContainer = document.createElement('div');
-    kContainer.style.userSelect = 'none';
-    document.addEventListener('mouseup', () => { window.isDraggingKaraoke = false; });
+    window.currentLyricsArray.forEach((lyric, index) => {
+        const row = document.createElement('div'); row.className = 'ts-row'; row.id = `ts-row-${index}`;
+        row.style.background = 'rgba(255, 255, 255, 0.05)'; row.style.padding = '12px 10px'; row.style.borderRadius = '8px'; row.style.marginBottom = '12px'; row.style.border = '1px solid rgba(255, 255, 255, 0.1)';
 
-    const segmenter = new Intl.Segmenter('th', { granularity: 'grapheme' });
+        const lyricEditor = document.createElement('textarea');
+        lyricEditor.value = lyric; lyricEditor.style.width = '100%'; lyricEditor.style.minHeight = '55px'; lyricEditor.style.marginBottom = '10px';
+        if (!window.isAdmin) { lyricEditor.readOnly = true; lyricEditor.style.border = 'none'; lyricEditor.style.background = 'transparent'; } 
+        else { lyricEditor.onchange = (e) => { window.currentLyricsArray[index] = e.target.value.trim(); window.saveTimestampsToFirebase(true); }; }
+        row.appendChild(lyricEditor);
 
-    window.currentLyricsArray.forEach((lyricLine, lineIndex) => {
-        const lineDiv = document.createElement('div');
-        lineDiv.id = `k-row-${lineIndex}`;
-        lineDiv.style.background = 'rgba(255, 255, 255, 0.05)'; 
-        lineDiv.style.padding = '15px'; lineDiv.style.borderRadius = '8px'; 
-        lineDiv.style.marginBottom = '10px'; lineDiv.style.border = '1px solid rgba(255,255,255,0.1)';
-        lineDiv.style.transition = 'all 0.3s ease';
+        const controlsDiv = document.createElement('div'); controlsDiv.style.display = 'flex'; controlsDiv.style.justifyContent = 'space-between'; controlsDiv.style.alignItems = 'center'; controlsDiv.style.flexWrap = 'wrap'; controlsDiv.style.gap = '8px';
+        const leftControls = document.createElement('div'); leftControls.style.display = 'flex'; leftControls.style.gap = '8px'; leftControls.style.alignItems = 'center';
+        
+        const badge = document.createElement('span'); badge.innerText = `#${index + 1}`; badge.style.color = '#0a84ff'; badge.style.fontWeight = 'bold'; leftControls.appendChild(badge);
 
-        if (lyricLine.trim() === '[ดนตรี]') {
-            lineDiv.innerHTML = '<div style="color: #8e8e93; font-style: italic; text-align: center;">🎵 ท่อนดนตรี 🎵</div>';
-            kContainer.appendChild(lineDiv);
-            return;
+        if (window.isAdmin) {
+            const allSingers = window.getSingersList(song.artist);
+            const dropdown = document.createElement('div'); dropdown.className = 'ts-singer-dropdown'; dropdown.style.position = 'relative';
+            const toggleBtn = document.createElement('button'); toggleBtn.className = 'ts-dropdown-toggle';
+            const currentSingers = activeSingers[index] ? activeSingers[index].split(',').map(s=>s.trim()).filter(s=>s) : [];
+            toggleBtn.innerText = currentSingers.length > 0 ? currentSingers.join(', ') : '👤 เลือกร้อง';
+            
+            const menu = document.createElement('div'); menu.className = 'ts-dropdown-menu';
+            allSingers.forEach(singer => {
+                const itemLabel = document.createElement('label'); itemLabel.className = 'ts-dropdown-item';
+                const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.value = singer; checkbox.checked = currentSingers.includes(singer);
+                checkbox.onchange = () => {
+                    const selected = Array.from(menu.querySelectorAll('input:checked')).map(cb => cb.value);
+                    toggleBtn.innerText = selected.length > 0 ? selected.join(', ') : '👤 เลือกร้อง';
+                    if (isCover) {
+                        if (!song.covers[window.currentCoverIndex].singers || song.covers[window.currentCoverIndex].singers.length === 0) {
+                            song.covers[window.currentCoverIndex].singers = [...(song.singers || [])];
+                        }
+                        song.covers[window.currentCoverIndex].singers[index] = selected.length > 0 ? selected.join(', ') : "";
+                    } else {
+                        if (!song.singers) song.singers = []; song.singers[index] = selected.length > 0 ? selected.join(', ') : "";
+                    }
+                    window.saveTimestampsToFirebase(true); 
+                };
+                itemLabel.appendChild(checkbox); itemLabel.appendChild(document.createTextNode(' ' + singer)); menu.appendChild(itemLabel);
+            });
+            toggleBtn.onclick = (e) => {
+                e.stopPropagation(); 
+                const isShowing = menu.classList.contains('show'); 
+                document.querySelectorAll('.ts-dropdown-menu.show').forEach(m => m.classList.remove('show'));
+                if (!isShowing) { 
+                    menu.classList.add('show'); 
+                    const rect = toggleBtn.getBoundingClientRect(); 
+                    menu.style.position = 'absolute'; menu.style.left = '0'; 
+                    if (window.innerHeight - rect.bottom < 200) { menu.style.top = 'auto'; menu.style.bottom = 'calc(100% + 5px)'; } 
+                    else { menu.style.top = 'calc(100% + 5px)'; menu.style.bottom = 'auto'; }
+                }
+            };
+            dropdown.appendChild(toggleBtn); dropdown.appendChild(menu); leftControls.appendChild(dropdown);
+
+            const timeInput = document.createElement('input'); timeInput.type = 'number'; timeInput.step = '0.1'; timeInput.min = '0';
+            timeInput.style.width = '70px'; timeInput.style.margin = '0'; timeInput.style.padding = '4px 6px'; timeInput.style.textAlign = 'center';
+            timeInput.value = (activeTimestamps[index] != null) ? activeTimestamps[index].toFixed(1) : '';
+            timeInput.onchange = (e) => { 
+                const val = parseFloat(e.target.value); 
+                const finalVal = isNaN(val) ? null : val;
+                if (isCover) {
+                    if (!song.covers[window.currentCoverIndex].timestamps || song.covers[window.currentCoverIndex].timestamps.length === 0) {
+                        song.covers[window.currentCoverIndex].timestamps = [...(song.timestamps || [])];
+                    }
+                    song.covers[window.currentCoverIndex].timestamps[index] = finalVal;
+                } else {
+                    if (!song.timestamps) song.timestamps = []; 
+                    song.timestamps[index] = finalVal;
+                }
+                window.saveTimestampsToFirebase(); 
+            };
+            leftControls.appendChild(timeInput);
         }
 
-        let lines = lyricLine.split('\n').filter(l => l.trim() !== '');
-        let mainStr = (lines[0] || '').split('||')[0].replace(/\|/g, ''); 
-        let characters = Array.from(segmenter.segment(mainStr)).map(s => s.segment);
+        const rightControls = document.createElement('div'); rightControls.style.display = 'flex'; rightControls.style.gap = '8px';
+        if (window.isAdmin) {
+            const btnMusic = document.createElement('button'); btnMusic.innerText = '🎵 ดนตรี'; btnMusic.style.background = 'rgba(255, 159, 10, 0.2)'; btnMusic.style.color = '#ff9f0a'; btnMusic.style.border = '1px solid rgba(255, 159, 10, 0.4)'; btnMusic.style.padding = '4px 10px'; btnMusic.style.borderRadius = '6px'; btnMusic.style.cursor = 'pointer';
+            btnMusic.onclick = () => { lyricEditor.value = '[ดนตรี]'; window.currentLyricsArray[index] = '[ดนตรี]'; window.saveTimestampsToFirebase(true); };
 
-        const rowDiv = document.createElement('div');
-        rowDiv.style.marginBottom = '12px'; rowDiv.style.textAlign = 'center';
-        rowDiv.style.display = 'flex'; rowDiv.style.flexWrap = 'wrap'; rowDiv.style.justifyContent = 'center';
-
-        let charIndexCounter = 0; 
-
-        characters.forEach((char) => {
-            // 🟢 สร้างช่องว่างให้กว้างขึ้น เพื่อให้แอดมินเห็นคำแยกกันชัดเจน
-            if (char.trim() === '') { 
-                const spaceSpan = document.createElement('span');
-                spaceSpan.style.display = 'inline-block';
-                spaceSpan.style.width = '20px'; // ปรับความกว้างของเว้นวรรคตรงนี้ได้ครับ
-                rowDiv.appendChild(spaceSpan);
-                return; 
-            }
-
-            const currentCharIdx = charIndexCounter++;
-            const charSpan = document.createElement('span');
-            charSpan.innerText = char;
-            charSpan.style.display = 'inline-block'; 
-            charSpan.style.padding = '2px 4px'; 
-            charSpan.style.margin = '1px'; 
-            charSpan.style.borderRadius = '4px'; 
-            charSpan.style.cursor = 'crosshair'; 
-            charSpan.style.border = '1px solid rgba(255,255,255,0.1)'; 
-            charSpan.style.fontSize = '1.2em'; 
-            charSpan.style.transition = 'background 0.1s, transform 0.1s';
-
-            if (activeKaraokeData[lineIndex] && activeKaraokeData[lineIndex][currentCharIdx]) {
-                charSpan.style.background = 'rgba(10, 132, 255, 0.8)'; charSpan.style.borderColor = '#0a84ff';
-            }
-
-            const syncChar = () => {
-                if (!window.ytPlayer || typeof window.ytPlayer.getCurrentTime !== 'function') return;
-                const cTime = window.ytPlayer.getCurrentTime();
-                
-                charSpan.style.background = '#0a84ff'; charSpan.style.borderColor = '#0a84ff'; charSpan.style.transform = 'scale(1.15)';
-                setTimeout(() => charSpan.style.transform = 'scale(1)', 150);
-                
-                if (!activeKaraokeData[lineIndex]) activeKaraokeData[lineIndex] = [];
-                activeKaraokeData[lineIndex][currentCharIdx] = { w: char.trim(), t: cTime };
-                
-                if (isCover) {
-                    if (!song.covers[window.currentCoverIndex].karaokeData) song.covers[window.currentCoverIndex].karaokeData = [];
-                    song.covers[window.currentCoverIndex].karaokeData[lineIndex] = activeKaraokeData[lineIndex];
-                } else { song.karaokeData = activeKaraokeData; }
-            };
-
-            charSpan.onmousedown = (e) => { e.preventDefault(); window.isDraggingKaraoke = true; syncChar(); };
-            charSpan.onmouseenter = () => { if (window.isDraggingKaraoke) syncChar(); };
-
-            rowDiv.appendChild(charSpan);
-        });
-        lineDiv.appendChild(rowDiv);
-
-        const clearLineBtn = document.createElement('button');
-        clearLineBtn.innerHTML = '🗑️ ล้างเวลาบรรทัดนี้';
-        clearLineBtn.style.cssText = 'display:block; margin: 10px auto 0; padding: 4px 10px; background: rgba(255, 59, 48, 0.2); color: #ff3b30; border: 1px solid rgba(255, 59, 48, 0.5); border-radius: 6px; font-size: 0.85em; cursor: pointer;';
-        clearLineBtn.onclick = async () => {
-            if (isCover) { if(song.covers[window.currentCoverIndex].karaokeData) song.covers[window.currentCoverIndex].karaokeData[lineIndex] = null; } 
-            else { if(song.karaokeData) song.karaokeData[lineIndex] = null; }
-            await window.saveKaraokeToFirebase();
-            window.renderKaraokeEditorUI(container, song); 
-        };
-        lineDiv.appendChild(clearLineBtn);
-        kContainer.appendChild(lineDiv);
+            const btnAdd = document.createElement('button'); btnAdd.innerText = '➕'; btnAdd.style.background = 'rgba(52, 199, 89, 0.2)'; btnAdd.style.color = '#34c759'; btnAdd.style.border = '1px solid rgba(52, 199, 89, 0.4)'; btnAdd.style.padding = '4px 10px'; btnAdd.onclick = () => window.addLyricLine(index);
+            const btnDel = document.createElement('button'); btnDel.innerText = '🗑️'; btnDel.style.background = 'rgba(255, 59, 48, 0.2)'; btnDel.style.color = '#ff3b30'; btnDel.style.border = '1px solid rgba(255, 59, 48, 0.4)'; btnDel.style.padding = '4px 10px'; btnDel.onclick = () => window.deleteLyricLine(index);
+            
+            rightControls.appendChild(btnMusic); rightControls.appendChild(btnAdd); rightControls.appendChild(btnDel);
+        }
+        
+        controlsDiv.appendChild(leftControls); controlsDiv.appendChild(rightControls);
+        row.appendChild(controlsDiv); container.appendChild(row);
     });
-
-    const btnControls = document.createElement('div'); btnControls.style.display = 'flex'; btnControls.style.gap = '10px'; btnControls.style.marginTop = '20px';
-    const saveBtn = document.createElement('button'); saveBtn.innerText = '💾 บันทึกลง Collection ใหม่ (karaoke_syncs)'; saveBtn.style.flex = '2'; saveBtn.style.padding = '12px'; saveBtn.style.background = '#0a84ff'; saveBtn.style.color = '#fff'; saveBtn.style.border = 'none'; saveBtn.style.borderRadius = '8px'; saveBtn.style.fontWeight = 'bold'; saveBtn.style.cursor = 'pointer';
-    saveBtn.onclick = () => { window.saveKaraokeToFirebase(); saveBtn.innerText = '✅ บันทึกสำเร็จ!'; setTimeout(() => saveBtn.innerText = '💾 บันทึกลง Collection ใหม่ (karaoke_syncs)', 2000); };
     
-    btnControls.appendChild(saveBtn); 
-    container.appendChild(kContainer); container.appendChild(btnControls);
-};
-
-// ==========================================
-// 🚀 ฟังก์ชันเซฟ Database สู่ Collection ใหม่แยกต่างหาก!
-// ==========================================
-window.saveKaraokeToFirebase = async function() {
-    if (!window.isAdmin) return;
-    const song = window.songs.find(s => s.id === window.currentSongId); if (!song) return;
-
-    let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
-    let activeKaraokeData = isCover ? (song.covers[window.currentCoverIndex].karaokeData || []) : (song.karaokeData || []);
-
-    try {
-        // 🟢 สร้าง Document ใน Collection ใหม่ชื่อ "karaoke_syncs"
-        const docRef = window.doc(window.db, "karaoke_syncs", window.currentSongId);
-        
-        const payload = {};
-        if (isCover) { payload[`cover_${window.currentCoverIndex}`] = activeKaraokeData; } 
-        else { payload.original = activeKaraokeData; }
-
-        // 🟢 ใช้ setDoc + merge: true จะปลอดภัยกว่าการใช้ updateDoc 
-        await window.setDoc(docRef, payload, { merge: true });
-        
-        // อัปเดต Cache
-        if (!window.karaokeCache) window.karaokeCache = {};
-        window.karaokeCache[window.currentSongId] = payload;
-
-        console.log("บันทึกข้อมูลลง Collection ใหม่เรียบร้อย!");
-        if(window.LyricsEngine) window.LyricsEngine.render();
-    } catch(e) {
-        console.error("Save Error:", e);
-        alert("บันทึกไม่สำเร็จ ตรวจสอบ Console(F12) หรือเช็คการ Import Firebase ครับ");
+    if (window.isAdmin) {
+        const btnAddEnd = document.createElement('button'); btnAddEnd.innerText = '➕ เพิ่มท่อนใหม่ต่อท้ายสุด'; btnAddEnd.style.background = 'rgba(255, 255, 255, 0.1)'; btnAddEnd.style.padding = "8px"; btnAddEnd.style.color = "#fff"; btnAddEnd.style.border = "none"; btnAddEnd.style.borderRadius = "8px"; btnAddEnd.style.width = "100%"; btnAddEnd.style.cursor = "pointer";
+        btnAddEnd.onclick = () => window.addLyricLine(window.currentLyricsArray.length - 1); container.appendChild(btnAddEnd);
     }
 }
 
