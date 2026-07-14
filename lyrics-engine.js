@@ -1,5 +1,5 @@
 // ==========================================
-// 🎤 Lyrics Engine (ระบบปาดสีคาราโอเกะ - แก้บั๊กสมบูรณ์)
+// 🎤 Lyrics Engine (ระบบปาดสีคาราโอเกะ - แก้บั๊กสมบูรณ์ด้วย Clip-Path)
 // ==========================================
 
 window.LyricsEngine = {
@@ -68,61 +68,13 @@ window.LyricsEngine = {
                 let parts = l.split('||');
                 let mainStr = parts[0];
                 let subStr = parts[1] ? parts[1].replace(/\|/g, '').trim() : '';
-
-                let mainWords = mainStr.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|');
-                let mainWipeHtml = `<span class="lyric-main" style="display:inline-flex; flex-wrap:wrap; justify-content:center;">`;
-                let lastTime = 0;
-
-                mainWords.forEach((word) => {
-                    if (word.trim() === '') { mainWipeHtml += `<span>&nbsp;</span>`; return; }
-                    let wData = wordDataArray[wordIdx];
-                    let t = (wData && wData.t) ? wData.t : lastTime + 0.2; // 🟢 แก้บั๊กเวลา: ถ้าเวลาหาย ให้บวกเพิ่มจากคำก่อนหน้า
-                    lastTime = t;
-
-                    let nextData = wordDataArray[wordIdx + 1];
-                    let endTime = (nextData && nextData.t) ? nextData.t : (t + 0.4); 
-                    
-                    mainWipeHtml += `
-                        <span class="k-word-group" style="position:relative; display:inline-block;" data-start="${t}" data-end="${endTime}">
-                            <span style="color:transparent;">${word}</span>
-                            <span style="position:absolute; left:0; top:0; color:inherit;">${word}</span>
-                            <span class="k-fill" style="color:#0a84ff; position:absolute; left:0; top:0; width:0%; overflow:hidden; white-space:pre; text-shadow: 0 0 10px #0a84ff;">${word}</span>
-                        </span>
-                    `;
-                    wordIdx++;
-                });
-                mainWipeHtml += `</span>`;
-                let subHtml = subStr ? `<span class="lyric-sub">${subStr}</span>` : '';
-                linesHtml += `<div class="lang-${i} dual-lyric${hlClass}">${mainWipeHtml}${subHtml}</div>`;
+                linesHtml += `<div class="lang-${i} dual-lyric${hlClass}">${this.generateWipeHtml(mainStr, wordDataArray, wordIdx)}<span class="lyric-sub">${subStr}</span></div>`;
+                wordIdx += mainStr.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|' && w.trim() !== '').length;
             } 
             else {
                 if (i === 0) { 
-                    let mainWords = l.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|');
-                    let mainWipeHtml = "";
-                    let lastTime = 0; // 🟢 ตัวจำเวลาคำก่อนหน้า
-
-                    mainWords.forEach((word) => {
-                        if (word.trim() === '') { mainWipeHtml += `<span>&nbsp;</span>`; return; }
-                        
-                        // 🟢 ดึงเวลา หรือถ้าไม่มีให้บวกจากคำเก่า (ป้องกันสีขึ้นพร้อมกัน)
-                        let wData = wordDataArray[wordIdx];
-                        let t = (wData && wData.t) ? wData.t : lastTime + 0.2; 
-                        lastTime = t;
-
-                        let nextData = wordDataArray[wordIdx + 1];
-                        let endTime = (nextData && nextData.t) ? nextData.t : (t + 0.4); 
-                        
-                        // 🟢 แก้บั๊กตัวอักษรแหว่ง: ใช้ color:transparent เป็นฐานดันกล่องให้กว้างเป๊ะ 100%
-                        mainWipeHtml += `
-                            <span class="k-word-group" style="position:relative; display:inline-block;" data-start="${t}" data-end="${endTime}">
-                                <span style="color:transparent;">${word}</span>
-                                <span style="position:absolute; left:0; top:0; color:inherit;">${word}</span>
-                                <span class="k-fill" style="color:#0a84ff; position:absolute; left:0; top:0; width:0%; overflow:hidden; white-space:pre; text-shadow: 0 0 10px #0a84ff;">${word}</span>
-                            </span>
-                        `;
-                        wordIdx++;
-                    });
-                    linesHtml += `<div class="lang-${i}${hlClass}">${mainWipeHtml}</div>`;
+                    linesHtml += `<div class="lang-${i}${hlClass}">${this.generateWipeHtml(l, wordDataArray, wordIdx)}</div>`;
+                    wordIdx += l.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|' && w.trim() !== '').length;
                 } else {
                     linesHtml += `<div class="lang-${i}${hlClass}">${l.replace(/\|/g, '')}</div>`;
                 }
@@ -130,6 +82,34 @@ window.LyricsEngine = {
         });
         
         this.appendSingers(lineDiv, linesHtml, lyric.trim(), song, index);
+    },
+
+    // 🟢 ฟังก์ชันสร้างกล่องตัวหนังสือแบบ Clip-Path (ปาดเนียนกริ๊บ 100%)
+    generateWipeHtml: function(textLine, wordDataArray, startWordIdx) {
+        let mainWords = textLine.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|');
+        let html = "";
+        let lastTime = 0; 
+        let wIdx = startWordIdx;
+
+        mainWords.forEach((word) => {
+            if (word.trim() === '') { html += `<span>&nbsp;</span>`; return; }
+            
+            let wData = wordDataArray[wIdx];
+            let t = (wData && wData.t) ? wData.t : lastTime + 0.2; 
+            lastTime = t;
+
+            let nextData = wordDataArray[wIdx + 1];
+            let endTime = (nextData && nextData.t) ? nextData.t : (t + 0.4); 
+            
+            html += `
+                <span class="k-word-group" style="position:relative; display:inline-block;" data-start="${t}" data-end="${endTime}">
+                    <span style="color:inherit; opacity:0.6;">${word}</span>
+                    <span class="k-fill" style="color:#0a84ff; position:absolute; left:0; top:0; white-space:nowrap; clip-path:inset(0 100% 0 0); text-shadow: 0 0 10px #0a84ff;">${word}</span>
+                </span>
+            `;
+            wIdx++;
+        });
+        return html;
     },
 
     appendSingers: function(lineDiv, linesHtml, cleanLyric, song, index) {
@@ -156,23 +136,27 @@ window.LyricsEngine = {
     },
 
     updateWipe: function(cTime) {
-        // 🟢 แก้บั๊กกรอกลับ: สั่งเช็คคำทั้งหมดบนหน้าจอ ไม่ใช่แค่บรรทัดที่ร้องอยู่
+        // 🟢 ให้ระบบประมวลผลคำทั้งหมดบนหน้าจอ (แก้บั๊กกรอกลับแล้วสีไม่ล้าง)
         const allWordGroups = document.querySelectorAll('.k-word-group');
         allWordGroups.forEach(group => {
             const start = parseFloat(group.getAttribute('data-start'));
             const end = parseFloat(group.getAttribute('data-end'));
             
             let progress = 0;
+            let duration = end - start;
+            if (duration <= 0) duration = 0.1; // ดักจับเผื่อเวลามันซ้อนกัน ป้องกันบั๊กหารด้วย 0
+            
             if (cTime >= end) {
-                progress = 100; // ร้องผ่านไปแล้ว ระบายเต็ม
+                progress = 100; // ร้องผ่านไปแล้ว ปาดสีเต็ม 100%
             } else if (cTime >= start && cTime < end) {
-                progress = ((cTime - start) / (end - start)) * 100; // กำลังร้อง ค่อยๆ ปาด
+                progress = ((cTime - start) / duration) * 100; // กำลังร้อง ค่อยๆ ปาดสี
             } else {
-                progress = 0; // 🟢 ยังไม่ร้อง หรือกรอกลับมา ให้ลบสีทิ้งเป็น 0%
+                progress = 0; // ยังไม่ร้อง หรือ กรอกลับมา หดสีกลับไปเป็น 0%
             }
             
             const fill = group.querySelector('.k-fill');
-            if (fill) fill.style.width = progress + '%';
+            // ใช้ clip-path ค่อยๆ เปิดการมองเห็นจากซ้ายไปขวา
+            if (fill) fill.style.clipPath = `inset(0 ${100 - progress}% 0 0)`;
         });
     }
 };
