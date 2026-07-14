@@ -755,11 +755,11 @@ window.renderTimestampEditor = function() {
 }
 
 // ==========================================
-// 🚀 ฟังก์ชันกระดานรูดปาดสี (โชว์แค่เนื้อหลัก + วิ่งตามอัตโนมัติ)
+// 🚀 ฟังก์ชันกระดานรูดปาดสี (ซิงค์ละเอียดระดับ "ตัวอักษร")
 // ==========================================
 window.renderKaraokeEditorUI = function(container, song) {
     const info = document.createElement('div');
-    info.innerHTML = '<div style="background: rgba(10, 132, 255, 0.2); color: #0a84ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.5;"><b>💡 วิธีใช้งาน:</b> รูดเมาส์เฉพาะ <b>"คำหลัก"</b> ส่วนคำอ่านและแปลไทยจะแสดงผลฝั่งคนดูให้อัตโนมัติ</div>';
+    info.innerHTML = '<div style="background: rgba(10, 132, 255, 0.2); color: #0a84ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.5;"><b>💡 วิธีใช้งาน (โหมดตัวอักษร):</b> ลากเมาส์รูดผ่าน <b>"ทีละตัวอักษร"</b> เพื่อความแม่นยำสูงสุด (ไม่ต้องพิมพ์ | แบ่งคำแล้ว ระบบจัดการให้เอง)</div>';
     container.appendChild(info);
 
     let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
@@ -769,52 +769,68 @@ window.renderKaraokeEditorUI = function(container, song) {
     kContainer.style.userSelect = 'none';
     document.addEventListener('mouseup', () => { window.isDraggingKaraoke = false; });
 
+    // 🟢 เรียกใช้ตัวหั่นตัวอักษรภาษาไทยอัจฉริยะ (ไม่ให้สระ/วรรณยุกต์ลอย)
+    const segmenter = new Intl.Segmenter('th', { granularity: 'grapheme' });
+
     window.currentLyricsArray.forEach((lyricLine, lineIndex) => {
         const lineDiv = document.createElement('div');
-        lineDiv.id = `k-row-${lineIndex}`; // 🟢 เพิ่ม ID ให้บรรทัด เพื่อให้ระบบเลื่อนจอหาเจอ
+        lineDiv.id = `k-row-${lineIndex}`;
         lineDiv.style.background = 'rgba(255, 255, 255, 0.05)'; 
-        lineDiv.style.padding = '15px'; 
-        lineDiv.style.borderRadius = '8px'; 
-        lineDiv.style.marginBottom = '10px';
-        lineDiv.style.border = '1px solid rgba(255,255,255,0.1)';
+        lineDiv.style.padding = '15px'; lineDiv.style.borderRadius = '8px'; 
+        lineDiv.style.marginBottom = '10px'; lineDiv.style.border = '1px solid rgba(255,255,255,0.1)';
         lineDiv.style.transition = 'all 0.3s ease';
 
         if (lyricLine.trim() === '[ดนตรี]') {
-            lineDiv.innerHTML = '<div style="color: #8e8e93; font-style: italic; text-align: center;">🎵 ท่อนดนตรี (ข้ามได้ไม่ต้องระบาย) 🎵</div>';
+            lineDiv.innerHTML = '<div style="color: #8e8e93; font-style: italic; text-align: center;">🎵 ท่อนดนตรี 🎵</div>';
             kContainer.appendChild(lineDiv);
             return;
         }
 
         let lines = lyricLine.split('\n').filter(l => l.trim() !== '');
-        // 🟢 เอาเฉพาะ "บรรทัดแรกสุด" (เนื้อเพลงหลัก) มาแสดงให้แอดมินกด
         let mainLine = lines[0] || '';
-        let mainStr = mainLine.split('||')[0]; // ตัดคำอ่านออกถ้ามีเครื่องหมาย ||
-        let mainWords = mainStr.split(/(\s+|\|)/).filter(w => w !== '' && w !== '|');
+        // ลบเครื่องหมาย | ออกไปเลย เพราะเราหั่นทีละตัวอักษรแล้ว
+        let mainStr = mainLine.split('||')[0].replace(/\|/g, ''); 
+        
+        // หั่นข้อความเป็นตัวอักษร
+        let characters = Array.from(segmenter.segment(mainStr)).map(s => s.segment);
 
         const rowDiv = document.createElement('div');
         rowDiv.style.marginBottom = '12px'; rowDiv.style.textAlign = 'center';
         rowDiv.style.display = 'flex'; rowDiv.style.flexWrap = 'wrap'; rowDiv.style.justifyContent = 'center';
 
-        mainWords.forEach((word, wordIndex) => {
-            if (word.trim() === '') { rowDiv.appendChild(document.createTextNode(' ')); return; }
+        let charIndexCounter = 0; // ตัวนับ index เฉพาะตัวอักษร (ไม่นับช่องว่าง)
 
-            const wordSpan = document.createElement('span');
-            wordSpan.innerText = word;
-            wordSpan.style.display = 'inline-block'; wordSpan.style.padding = '4px 8px'; wordSpan.style.margin = '2px'; wordSpan.style.borderRadius = '6px'; wordSpan.style.cursor = 'crosshair'; wordSpan.style.border = '1px solid rgba(255,255,255,0.2)'; wordSpan.style.fontSize = '1.1em'; wordSpan.style.transition = 'background 0.1s, transform 0.1s';
-
-            if (activeKaraokeData[lineIndex] && activeKaraokeData[lineIndex][wordIndex]) {
-                wordSpan.style.background = 'rgba(10, 132, 255, 0.8)'; wordSpan.style.borderColor = '#0a84ff';
+        characters.forEach((char) => {
+            if (char.trim() === '') { 
+                rowDiv.appendChild(document.createTextNode(' ')); // ใส่ช่องว่างปกติ
+                return; 
             }
 
-            const syncWord = () => {
+            const currentCharIdx = charIndexCounter++;
+            const charSpan = document.createElement('span');
+            charSpan.innerText = char;
+            charSpan.style.display = 'inline-block'; 
+            charSpan.style.padding = '2px 4px'; // ปรับ padding ให้เล็กลงสำหรับตัวอักษร
+            charSpan.style.margin = '1px'; 
+            charSpan.style.borderRadius = '4px'; 
+            charSpan.style.cursor = 'crosshair'; 
+            charSpan.style.border = '1px solid rgba(255,255,255,0.1)'; 
+            charSpan.style.fontSize = '1.2em'; 
+            charSpan.style.transition = 'background 0.1s, transform 0.1s';
+
+            if (activeKaraokeData[lineIndex] && activeKaraokeData[lineIndex][currentCharIdx]) {
+                charSpan.style.background = 'rgba(10, 132, 255, 0.8)'; charSpan.style.borderColor = '#0a84ff';
+            }
+
+            const syncChar = () => {
                 if (!window.ytPlayer || typeof window.ytPlayer.getCurrentTime !== 'function') return;
                 const cTime = window.ytPlayer.getCurrentTime();
                 
-                wordSpan.style.background = '#0a84ff'; wordSpan.style.borderColor = '#0a84ff'; wordSpan.style.transform = 'scale(1.1)';
-                setTimeout(() => wordSpan.style.transform = 'scale(1)', 150);
+                charSpan.style.background = '#0a84ff'; charSpan.style.borderColor = '#0a84ff'; charSpan.style.transform = 'scale(1.15)';
+                setTimeout(() => charSpan.style.transform = 'scale(1)', 150);
                 
                 if (!activeKaraokeData[lineIndex]) activeKaraokeData[lineIndex] = [];
-                activeKaraokeData[lineIndex][wordIndex] = { w: word.trim(), t: cTime };
+                activeKaraokeData[lineIndex][currentCharIdx] = { w: char.trim(), t: cTime };
                 
                 if (isCover) {
                     if (!song.covers[window.currentCoverIndex].karaokeData) song.covers[window.currentCoverIndex].karaokeData = [];
@@ -822,14 +838,13 @@ window.renderKaraokeEditorUI = function(container, song) {
                 } else { song.karaokeData = activeKaraokeData; }
             };
 
-            wordSpan.onmousedown = (e) => { e.preventDefault(); window.isDraggingKaraoke = true; syncWord(); };
-            wordSpan.onmouseenter = () => { if (window.isDraggingKaraoke) syncWord(); };
+            charSpan.onmousedown = (e) => { e.preventDefault(); window.isDraggingKaraoke = true; syncChar(); };
+            charSpan.onmouseenter = () => { if (window.isDraggingKaraoke) syncChar(); };
 
-            rowDiv.appendChild(wordSpan);
+            rowDiv.appendChild(charSpan);
         });
         lineDiv.appendChild(rowDiv);
 
-        // ปุ่มล้างเวลาเฉพาะบรรทัด
         const clearLineBtn = document.createElement('button');
         clearLineBtn.innerHTML = '🗑️ ล้างเวลาบรรทัดนี้';
         clearLineBtn.style.cssText = 'display:block; margin: 10px auto 0; padding: 4px 10px; background: rgba(255, 59, 48, 0.2); color: #ff3b30; border: 1px solid rgba(255, 59, 48, 0.5); border-radius: 6px; font-size: 0.85em; cursor: pointer;';
@@ -840,7 +855,6 @@ window.renderKaraokeEditorUI = function(container, song) {
             window.renderKaraokeEditorUI(container, song); 
         };
         lineDiv.appendChild(clearLineBtn);
-
         kContainer.appendChild(lineDiv);
     });
 
@@ -910,6 +924,7 @@ window.deleteLyricLine = function(index) {
             if(c.singers) c.singers.splice(index, 1);
         });
     }
+    
     window.saveTimestampsToFirebase(true).then(() => { window.renderTimestampEditor(); });
 }
 
