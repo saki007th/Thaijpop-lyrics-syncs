@@ -1,7 +1,10 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { initializeSingerColors, openSingerColorManager } from './singerColors.js';
+
+window.setDoc = setDoc; 
+window.getDoc = getDoc;
 
 const ALLOWED_EMAILS = ["sashikiwa@gmail.com", "panupong.bb27115@gmail.com"]; 
 
@@ -26,7 +29,6 @@ window.editingSongId = null; window.currentSongId = null; window.ytPlayer = null
 window.syncInterval = null; window.isLoggedIn = false; window.isAdmin = false;
 window.isYTApiReady = false; window.currentFilter = 'All'; 
 
-// ฟังก์ชันสำหรับดึงชื่อศิลปินทั้งหมดมาใส่ใน Datalist
 window.updateArtistSuggestions = function() {
     const datalist = document.getElementById('artistList');
     if (!datalist) return; 
@@ -266,7 +268,7 @@ async function fetchSongs() {
                 lyrics: data.lyrics, 
                 timestamps: data.timestamps || [], 
                 singers: data.singers || [], 
-                covers: data.covers || [], // ดึงข้อมูล Cover
+                covers: data.covers || [],
                 createdAt: data.createdAt 
             });
         });
@@ -424,17 +426,15 @@ window.renderSongList = function(query = '', artistFilter = 'All') {
 // ระบบเล่นเพลง & จัดการเวลา (Full Admin Controls)
 // ==========================================
 
-// ✨ Helper: ดึงเวลาที่ถูกต้อง (รองรับ Fallback ต้นฉบับ)
 window.getActiveTimestamps = function(song) {
     if (!song) return [];
     if (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]) {
         const coverTs = song.covers[window.currentCoverIndex].timestamps;
-        if (coverTs && coverTs.some(t => t != null)) return coverTs; // ถ้า Cover มีเวลา ใช้เวลา Cover
+        if (coverTs && coverTs.some(t => t != null)) return coverTs; 
     }
-    return song.timestamps || []; // Fallback ถ้ายังไม่ได้ซิงค์ให้ใช้เวลาต้นฉบับ
+    return song.timestamps || []; 
 };
 
-// ✨ Helper: ดึงคนร้องที่ถูกต้อง
 window.getActiveSingers = function(song) {
     if (!song) return [];
     if (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]) {
@@ -551,7 +551,6 @@ function createBadgeElement(label, artistName, index) {
         if (window.ytPlayer && typeof window.ytPlayer.loadVideoById === 'function') window.ytPlayer.loadVideoById(videoId);
         
         window.currentLyricIndex = -1;
-        // 🔴 สั่งให้หน้าต่าง Admin Sync โหลดเวลาของเวอร์ชันใหม่
         window.renderTimestampEditor(); 
         window.renderLyricsToContainer();
         window.updateLyricDisplay();
@@ -617,9 +616,6 @@ window.playSong = function(id) {
     }, 100); 
 }; 
 
-// ==========================================
-// 🔴 อัปเกรด: ฟังก์ชันบันทึกเวลาให้เซฟแยกลง Cover (ป้องกันเวลาหาย)
-// ==========================================
 window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
     if (!window.isAdmin) return;
     const song = window.songs.find(s => s.id === window.currentSongId);
@@ -630,7 +626,6 @@ window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
     
     let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
 
-    // 🟢 สำคัญมาก: ถ้าเป็น Cover และเพิ่งแก้ครั้งแรก ต้องโคลนเวลาต้นฉบับมาให้หมดก่อน
     if (isCover) {
         if (!song.covers[window.currentCoverIndex].timestamps || song.covers[window.currentCoverIndex].timestamps.length === 0) {
             song.covers[window.currentCoverIndex].timestamps = [...(song.timestamps || [])];
@@ -646,7 +641,6 @@ window.saveTimestampsToFirebase = async function(updateLyricsText = false) {
     const safeTs = Array.from({length: count}, (_, i) => currentTs[i] != null ? currentTs[i] : null);
     const safeSg = Array.from({length: count}, (_, i) => currentSg[i] != null ? currentSg[i] : "");
 
-    // เตรียม Payload ที่มี covers เดิมแนบไปด้วยเสมอ
     const payload = {
         timestamps: song.timestamps || [],
         singers: song.singers || [],
@@ -674,9 +668,40 @@ window.renderTimestampEditor = function() {
     container.innerHTML = '';
     const song = window.songs.find(s => s.id === window.currentSongId); if (!song) return;
 
+    // ==========================================
+    // 🟢 แถบ Calibrate หูฟังบลูทูธ (จดจำแยกเครื่องลง localStorage)
+    // ==========================================
+    if (window.isAdmin) {
+        const savedOffset = localStorage.getItem('admin_audio_offset') || '0';
+        const offsetDiv = document.createElement('div');
+        offsetDiv.style.cssText = 'background: rgba(255, 159, 10, 0.15); border: 1px solid rgba(255, 159, 10, 0.3); padding: 12px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;';
+        offsetDiv.innerHTML = `
+            <div>
+                <div style="color: #ff9f0a; font-weight: bold; font-size: 0.9em;">🎧 Calibrate หูฟังไร้สาย</div>
+                <div style="color: #aaa; font-size: 0.8em; margin-top: 2px;">หักลบความหน่วง (Latency) ออกจากเวลาจริง</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <button onclick="window.startCalibration()" style="background: rgba(10, 132, 255, 0.2); color: #0a84ff; border: 1px solid rgba(10, 132, 255, 0.5); border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 0.85em; font-weight: bold;">🎯 จับจังหวะอัตโนมัติ</button>
+                <div style="display:flex; align-items:center; gap:3px;">
+                    <input type="number" id="adminAudioOffset" value="${savedOffset}" step="10" min="0" style="width: 65px; padding: 4px; text-align: center; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: #fff; margin: 0;">
+                    <span style="color: #ff9f0a; font-size: 0.85em;">ms</span>
+                </div>
+            </div>
+        `;
+        container.appendChild(offsetDiv);
+
+        setTimeout(() => {
+            const offsetInput = document.getElementById('adminAudioOffset');
+            if (offsetInput) {
+                offsetInput.addEventListener('change', (e) => {
+                    localStorage.setItem('admin_audio_offset', Math.max(0, parseInt(e.target.value) || 0));
+                });
+            }
+        }, 50);
+    }
+
     let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
     
-    // 🟢 โหลดเวลาให้ตรงเวอร์ชัน โดยดึงผ่าน Fallback
     let activeTimestamps = window.getActiveTimestamps(song);
     let activeSingers = window.getActiveSingers(song);
 
@@ -710,7 +735,6 @@ window.renderTimestampEditor = function() {
                     const selected = Array.from(menu.querySelectorAll('input:checked')).map(cb => cb.value);
                     toggleBtn.innerText = selected.length > 0 ? selected.join(', ') : '👤 เลือกร้อง';
                     if (isCover) {
-                        // 🟢 ถ้าแก้คนร้องใน Cover ครั้งแรก ให้ก๊อปปี้มาทั้งหมดก่อน
                         if (!song.covers[window.currentCoverIndex].singers || song.covers[window.currentCoverIndex].singers.length === 0) {
                             song.covers[window.currentCoverIndex].singers = [...(song.singers || [])];
                         }
@@ -743,7 +767,6 @@ window.renderTimestampEditor = function() {
                 const val = parseFloat(e.target.value); 
                 const finalVal = isNaN(val) ? null : val;
                 if (isCover) {
-                    // 🟢 ถ้าแก้เวลาใน Cover ครั้งแรก ให้ก๊อปปี้เวลาทั้งหมดมาก่อน
                     if (!song.covers[window.currentCoverIndex].timestamps || song.covers[window.currentCoverIndex].timestamps.length === 0) {
                         song.covers[window.currentCoverIndex].timestamps = [...(song.timestamps || [])];
                     }
@@ -832,6 +855,7 @@ window.updateLyricDisplay = function() {
     window.syncTimestampEditorUI(); 
 }
 
+// 🟢 ระบบหักลบความหน่วง (Calibrate) ทำงานตรงฟังก์ชันนี้
 window.nextLyric = function(isAuto = false) {
     if (window.currentLyricIndex < window.currentLyricsArray.length) {
         window.currentLyricIndex++; 
@@ -840,11 +864,15 @@ window.nextLyric = function(isAuto = false) {
         if (!isAuto && window.isAdmin && window.currentSongId && window.ytPlayer) {
             const song = window.songs.find(s => s.id === window.currentSongId);
             if (song) { 
-                const currentTime = window.ytPlayer.getCurrentTime();
+                
+                // คำนวณหักลบเวลาความหน่วง
+                const offsetMs = parseInt(localStorage.getItem('admin_audio_offset')) || 0;
+                const rawTime = window.ytPlayer.getCurrentTime();
+                const currentTime = Math.max(0, rawTime - (offsetMs / 1000));
+                
                 let isCover = (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]);
 
                 if (isCover) {
-                    // 🟢 ถ้ากดยิงเวลาใน Cover ครั้งแรก ให้ก๊อปปี้เวลาทั้งหมดมาก่อน
                     if (!song.covers[window.currentCoverIndex].timestamps || song.covers[window.currentCoverIndex].timestamps.length === 0) {
                         song.covers[window.currentCoverIndex].timestamps = [...(song.timestamps || [])];
                     }
@@ -920,16 +948,14 @@ window.toggleLang = function(langIndex) {
 }
 
 window.onPlayerStateChange = function(event) {
-    // 🔴 ซิงค์ไอคอนปุ่ม Play/Pause ใน Live Activity
     const playPauseBtn = document.getElementById('livePlayPauseBtn');
-    if (event.data === 1 && playPauseBtn) playPauseBtn.innerText = '⏸'; // สถานะเล่น
-    if (event.data === 2 && playPauseBtn) playPauseBtn.innerText = '▶'; // สถานะหยุดพัก
+    if (event.data === 1 && playPauseBtn) playPauseBtn.innerText = '⏸'; 
+    if (event.data === 2 && playPauseBtn) playPauseBtn.innerText = '▶'; 
 
-    if (event.data === 0) { // เลข 0 คือสถานะเพลงเล่นจบ
+    if (event.data === 0) { 
         if (!window.songs || window.songs.length === 0) return;
 
         if (window.isShuffleEnabled) {
-            // 🔀 โหมดสุ่มเพลง (สุ่มให้ไม่ซ้ำเพลงเดิม)
             let randomIndex = Math.floor(Math.random() * window.songs.length);
             if (window.songs.length > 1) {
                 const currentIdx = window.songs.findIndex(s => s.id === window.currentSongId);
@@ -939,12 +965,10 @@ window.onPlayerStateChange = function(event) {
             }
             window.playSong(window.songs[randomIndex].id);
         } else {
-            // ➡️ โหมดเล่นเรียงตามปกติ 
             const idx = window.songs.findIndex(s => s.id === window.currentSongId);
             if (idx !== -1 && idx + 1 < window.songs.length) {
                 window.playSong(window.songs[idx + 1].id);
             } else {
-                // 🛑 ถ้าไม่มีเพลงต่อให้ซ่อน UI
                 const bgEl = document.getElementById('dynamic-bg');
                 if (bgEl) bgEl.classList.remove('active');
                 
@@ -961,9 +985,6 @@ window.onPlayerStateChange = function(event) {
     }
 };
 
-// ==========================================
-// ⚙️ ระบบ Custom Theme & Personalization
-// ==========================================
 window.setWindowStyle = function() {
     const op = document.getElementById('sliderOpacity').value;
     const blur = document.getElementById('sliderBlur').value;
@@ -1029,9 +1050,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.loadCustomSettings();
 });
 
-// ==========================================
-// 🎲 ระบบแถบสุ่มเพลงด้านขวา (Widget)
-// ==========================================
 window.setRandomPanelState = function(isOpen) {
     const panel = document.getElementById('randomPlaylistPanel');
     const icon = document.getElementById('panelToggleIcon');
@@ -1078,9 +1096,6 @@ window.renderRandomPlaylist = function() {
     });
 }
 
-// ==========================================
-// 🎵 ระบบควบคุมเพลงใน Live Activity
-// ==========================================
 window.toggleLivePlay = function() {
     if (!window.ytPlayer || typeof window.ytPlayer.getPlayerState !== 'function') return;
     const state = window.ytPlayer.getPlayerState();
@@ -1116,3 +1131,133 @@ window.prevLiveSong = function() {
     const prevIndex = currentIdx - 1 >= 0 ? currentIdx - 1 : window.songs.length - 1;
     window.playSong(window.songs[prevIndex].id);
 }
+
+// ==========================================
+// 🎯 ระบบ Auto Calibration (จับจังหวะเสียงหาความหน่วง Bluetooth)
+// ==========================================
+window.startCalibration = function() {
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!actx) return alert("เบราว์เซอร์ไม่รองรับระบบนี้ แนะนำให้พิมพ์ตัวเลขเองครับ");
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.95); z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff;';
+    
+    overlay.innerHTML = `
+        <h2 style="color:#0a84ff; margin-bottom: 10px;">🎯 ทดสอบความหน่วงหูฟัง</h2>
+        <p style="color:#aaa; text-align:center; max-width:400px; line-height:1.6; margin-bottom:30px;">
+            ระบบจะส่งเสียง "ติ๊ด" เป็นจังหวะจำนวน 4 ครั้ง <br>
+            ให้คุณ <b>กดปุ่ม Spacebar หรือคลิกปุ่มด้านล่าง</b> <br>ให้ตรงกับเสียงที่ได้ยินเป๊ะๆ เพื่อคำนวณความหน่วง
+        </p>
+        <div id="calibBtn" style="width:140px; height:140px; border-radius:50%; background:#0a84ff; display:flex; align-items:center; justify-content:center; font-size:2em; font-weight:bold; cursor:pointer; user-select:none; box-shadow:0 10px 30px rgba(10,132,255,0.4); transition:transform 0.1s;">
+            👆 กด!
+        </div>
+        <div id="calibStatus" style="margin-top: 35px; font-size: 1.2em; font-weight: bold; color: #ffcc00;">แตะหน้าจอ 1 ครั้งเพื่อเริ่ม...</div>
+        <button id="calibCancel" style="margin-top:40px; background:transparent; border:1px solid #ff3b30; color:#ff3b30; padding:8px 25px; border-radius:20px; cursor:pointer;">ยกเลิก</button>
+    `;
+    document.body.appendChild(overlay);
+
+    const btn = overlay.querySelector('#calibBtn');
+    const status = overlay.querySelector('#calibStatus');
+    let expectedTimes = [];
+    let tapTimes = [];
+    let isStarted = false;
+    let totalBeeps = 4;
+
+    const startTest = () => {
+        if(actx.state === 'suspended') actx.resume();
+        status.style.color = "#34c759";
+        status.innerText = "เตรียมตัว... (3)";
+        
+        setTimeout(() => status.innerText = "เตรียมตัว... (2)", 600);
+        setTimeout(() => status.innerText = "เตรียมตัว... (1)", 1200);
+
+        setTimeout(() => {
+            status.innerText = "🎵 ฟังจังหวะแล้วกดเลย!";
+            let startTime = actx.currentTime + 0.5;
+            
+            for(let i=0; i<totalBeeps; i++) {
+                let timeToPlay = startTime + i;
+                expectedTimes.push(timeToPlay);
+                
+                const osc = actx.createOscillator();
+                const gain = actx.createGain();
+                osc.connect(gain);
+                gain.connect(actx.destination);
+                osc.type = 'sine';
+                osc.frequency.value = 880; 
+                
+                gain.gain.setValueAtTime(1, timeToPlay);
+                gain.gain.exponentialRampToValueAtTime(0.001, timeToPlay + 0.1);
+                
+                osc.start(timeToPlay);
+                osc.stop(timeToPlay + 0.1);
+            }
+        }, 1800);
+    };
+
+    const handleTap = (e) => {
+        if (e.type === 'keydown' && e.code !== 'Space') return;
+        e.preventDefault();
+
+        if (!isStarted) {
+            isStarted = true;
+            startTest();
+            return;
+        }
+
+        if (tapTimes.length >= totalBeeps) return;
+
+        tapTimes.push(actx.currentTime);
+
+        btn.style.transform = 'scale(0.85)';
+        btn.style.background = '#34c759';
+        setTimeout(() => { btn.style.transform = 'scale(1)'; btn.style.background = '#0a84ff'; }, 100);
+
+        if (tapTimes.length === totalBeeps) {
+            calculateResult();
+        }
+    };
+
+    const calculateResult = () => {
+        let totalLatency = 0;
+        let validTaps = 0;
+
+        for (let i = 0; i < totalBeeps; i++) {
+            let diff = tapTimes[i] - expectedTimes[i];
+            
+            if (diff > -0.2 && diff < 1.0) {
+                totalLatency += diff;
+                validTaps++;
+            }
+        }
+        
+        if (validTaps === 0) {
+            status.style.color = "#ff3b30";
+            status.innerText = "❌ จับจังหวะไม่สำเร็จ ลองใหม่อีกครั้ง";
+            setTimeout(() => { document.body.removeChild(overlay); }, 2000);
+            return;
+        }
+
+        let avgLatencyMs = Math.round((totalLatency / validTaps) * 1000);
+        avgLatencyMs = Math.max(0, avgLatencyMs); 
+
+        status.style.color = "#ffcc00";
+        status.innerText = `✅ ตรวจพบความหน่วง: ${avgLatencyMs} ms`;
+
+        localStorage.setItem('admin_audio_offset', avgLatencyMs);
+        const inputOffset = document.getElementById('adminAudioOffset');
+        if (inputOffset) inputOffset.value = avgLatencyMs;
+
+        btn.style.display = 'none';
+        setTimeout(() => { document.body.removeChild(overlay); }, 2000);
+    };
+
+    overlay.addEventListener('mousedown', (e) => { if (e.target.id !== 'calibCancel') handleTap(e); });
+    window.addEventListener('keydown', handleTap);
+    
+    overlay.querySelector('#calibCancel').onclick = () => { document.body.removeChild(overlay); };
+    const observer = new MutationObserver(() => {
+        if (!document.body.contains(overlay)) { window.removeEventListener('keydown', handleTap); observer.disconnect(); }
+    });
+    observer.observe(document.body, { childList: true });
+};
