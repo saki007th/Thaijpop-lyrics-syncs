@@ -1,10 +1,10 @@
 // ==========================================
 // pip.js - ระบบหน้าต่างเนื้อเพลงลอยอิสระ (Document Picture-in-Picture)
-// อัปเดต: คืนชีพหน้าตาเนื้อเพลงสุดสวย + ระบบหน้าปกฉลาด (รองรับเพลง Cover)
+// อัปเดต: ระบบ Dynamic Layout (ยุบหน้าต่างอัตโนมัติเมื่อเพลงเล่น) + ตัวเลขเวลา
 // ==========================================
 
 let pipWindow = null;
-let lastTrackKey = null; // ตัวแปรสำหรับเช็คว่ามีการเปลี่ยนเพลงหรือสลับเวอร์ชัน Cover หรือไม่
+let lastTrackKey = null; 
 
 window.togglePiPMode = async function() {
     if (!('documentPictureInPicture' in window)) {
@@ -23,7 +23,7 @@ window.togglePiPMode = async function() {
             height: 480 
         });
 
-        // 1. ใส่สไตล์ CSS (ผสานความสวยงามเดิม + โครงสร้างใหม่)
+        // 1. ใส่สไตล์ CSS (ผสานความสวยงามเดิม + ระบบแอนิเมชัน Compact Mode)
         const style = document.createElement('style');
         style.textContent = `
             body { 
@@ -31,44 +31,98 @@ window.togglePiPMode = async function() {
                 display: flex; flex-direction: column; 
                 height: 100vh; overflow: hidden; 
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+                transition: background 0.5s ease;
             }
+            
+            /* =========================================
+               🎧 โหมดเริ่มต้น (Full Layout)
+               ========================================= */
             #pip-header {
                 display: flex; align-items: center; gap: 15px;
-                padding: 15px 20px;
+                padding: 20px 20px;
                 background: rgba(255, 255, 255, 0.05);
+                transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
             }
             #pip-cover {
-                width: 50px; height: 50px;
-                border-radius: 8px; object-fit: cover;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+                width: 65px; height: 65px;
+                border-radius: 12px; object-fit: cover;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.4);
                 background: #1c1c1e; 
-                display: none; /* ซ่อนไว้ก่อนถ้ายังไม่มีรูป */
+                display: none; 
+                transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
             }
             #pip-info {
-                display: flex; flex-direction: column; overflow: hidden; flex: 1;
+                display: flex; flex-direction: column; justify-content: center;
+                flex: 1; overflow: hidden;
+                transition: all 0.6s ease;
             }
             #pip-title {
-                font-size: 16px; font-weight: bold; color: #0a84ff;
+                font-size: 17px; font-weight: bold; color: #0a84ff;
                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                transition: all 0.6s ease;
             }
             #pip-artist {
-                font-size: 13px; color: #8e8e93; margin-top: 2px;
+                font-size: 13px; color: #8e8e93; margin-top: 4px;
                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                max-height: 20px; opacity: 1;
+                transition: all 0.4s ease;
+            }
+            
+            /* ตัวจับเวลา (ซ่อนไว้ในโหมดแรก) */
+            #pip-timer {
+                font-family: monospace; font-size: 13px; color: #aaa;
+                font-weight: bold; text-align: right;
+                opacity: 0; transform: translateX(10px);
+                max-width: 0; overflow: hidden;
+                transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
             }
             
             /* แถบความคืบหน้า (Progress Bar) */
             #pip-progress-container {
-                width: 100%; height: 3px;
-                background: rgba(255, 255, 255, 0.1);
-                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                width: 100%; height: 4px;
+                background: rgba(255, 255, 255, 0.08);
+                transition: all 0.6s ease;
             }
             #pip-progress-bar {
                 width: 0%; height: 100%;
                 background: #0a84ff; 
-                transition: width 0.2s linear; 
+                transition: width 0.2s linear, background 0.6s ease, box-shadow 0.6s ease; 
             }
 
-            /* 🟢 คืนชีพ CSS เนื้อเพลงสุดสวยของคุณ! */
+            /* =========================================
+               🚀 โหมดเล่นเพลง (Compact Mode แบบภาพร่าง)
+               ========================================= */
+            body.compact-mode #pip-header {
+                padding: 12px 15px;
+                background: transparent; /* กลืนไปกับพื้นหลังเนื้อเพลง */
+            }
+            body.compact-mode #pip-cover {
+                width: 32px; height: 32px; /* หดปกลง */
+                border-radius: 6px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            }
+            body.compact-mode #pip-title {
+                font-size: 15px; color: #fff; /* เปลี่ยนชื่อเพลงเป็นสีขาว */
+            }
+            body.compact-mode #pip-artist {
+                opacity: 0; max-height: 0; margin-top: 0; /* พับชื่อศิลปินเก็บ */
+            }
+            body.compact-mode #pip-timer {
+                opacity: 1; transform: translateX(0); max-width: 100px; /* โชว์เวลาขึ้นมาฝั่งขวา */
+            }
+            body.compact-mode #pip-progress-container {
+                height: 1px; /* กลายเป็นเส้นบางๆ */
+                background: rgba(255,255,255,0.15);
+                box-shadow: 0 0 10px rgba(10, 132, 255, 0.3);
+            }
+            body.compact-mode #pip-progress-bar {
+                background: #00d2ff;
+                box-shadow: 0 0 8px #00d2ff; /* แถบสีวิ่งเรืองแสง */
+            }
+
+            /* =========================================
+               📝 พื้นที่เนื้อเพลงสุดสวย (คงเดิม)
+               ========================================= */
             #pip-lyrics {
                 flex-grow: 1; 
                 display: flex; flex-direction: column; 
@@ -92,7 +146,7 @@ window.togglePiPMode = async function() {
         `;
         pipWindow.document.head.appendChild(style);
 
-        // 2. สร้างโครงสร้างหน้าต่าง (HTML)
+        // 2. สร้างโครงสร้างหน้าต่าง (HTML) เพิ่ม #pip-timer เข้าไป
         pipWindow.document.body.innerHTML = `
             <div id="pip-header">
                 <img id="pip-cover" src="" alt="cover" onerror="this.style.display='none'">
@@ -100,6 +154,7 @@ window.togglePiPMode = async function() {
                     <div id="pip-title">กำลังรอเพลง...</div>
                     <div id="pip-artist">🎤 -</div>
                 </div>
+                <div id="pip-timer">00:00</div>
             </div>
             <div id="pip-progress-container">
                 <div id="pip-progress-bar"></div>
@@ -111,30 +166,34 @@ window.togglePiPMode = async function() {
             </div>
         `;
 
+        // ฟังก์ชันช่วยแปลงวินาทีเป็น นาที:วินาที (เช่น 03:40)
+        const formatTime = (seconds) => {
+            if (isNaN(seconds) || seconds < 0) return "00:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+        };
+
         // 3. ระบบอัปเดตข้อมูลแบบ Real-time
         pipWindow.syncInterval = setInterval(() => {
             if (!window.currentSongId || !window.songs) return;
             const song = window.songs.find(s => s.id === window.currentSongId);
             if (!song) return;
             
-            // 🟢 ระบบ A: ตรวจจับการเปลี่ยนเพลง และ เวอร์ชัน Cover
+            // --- ระบบ A: ตรวจจับการเปลี่ยนเพลง และ เวอร์ชัน Cover ---
             let currentKey = song.id + "_" + (window.currentCoverIndex || -1);
 
             if (lastTrackKey !== currentKey) {
                 lastTrackKey = currentKey;
                 
-                // รีเซ็ตข้อความระหว่างเปลี่ยนเพลง
                 pipWindow.document.getElementById('current-lyric-text').innerHTML = '<span style="color:#8e8e93 !important; text-shadow:none;">🎵 กำลังรอเนื้อเพลง...</span>';
                 
                 let targetVideoPath = song.audioPath;
                 let displayArtist = song.artist || 'ไม่ระบุศิลปิน';
                 
-                // สลับชื่อนักร้องและหน้าปกหากเป็นโหมด Cover
                 if (window.currentCoverIndex >= 0 && song.covers && song.covers[window.currentCoverIndex]) {
                     targetVideoPath = song.covers[window.currentCoverIndex].audioPath;
-                    if(song.covers[window.currentCoverIndex].coverArtist) {
-                        displayArtist = song.covers[window.currentCoverIndex].coverArtist;
-                    }
+                    if(song.covers[window.currentCoverIndex].coverArtist) displayArtist = song.covers[window.currentCoverIndex].coverArtist;
                 }
 
                 pipWindow.document.getElementById('pip-title').innerText = song.title;
@@ -156,14 +215,27 @@ window.togglePiPMode = async function() {
                 pipWindow.document.getElementById('current-lyric-text').innerHTML = activeLine.innerHTML;
             }
 
-            // --- ระบบ C: อัปเดตแถบความคืบหน้า (Progress Bar) ---
+            // --- ระบบ C: จัดการ Progress, Timer และ แอนิเมชัน Compact Mode ---
             const playerObj = window.ytPlayer || window.player; 
             if (playerObj && typeof playerObj.getCurrentTime === 'function') {
                 const currentTime = playerObj.getCurrentTime();
                 const duration = playerObj.getDuration();
+                
+                // คำนวณหลอดสี
                 if (duration > 0) {
                     const percent = (currentTime / duration) * 100;
                     pipWindow.document.getElementById('pip-progress-bar').style.width = `${percent}%`;
+                }
+
+                // อัปเดตตัวเลขเวลา (เช่น 01:25 / 04:30)
+                pipWindow.document.getElementById('pip-timer').innerText = `${formatTime(currentTime)} / ${formatTime(duration)}`;
+
+                // 🌟 หัวใจสำคัญ: ถ้าร้องไปเกิน 3 วินาที ให้หดหน้าต่าง (Compact Mode)
+                if (currentTime > 3) {
+                    pipWindow.document.body.classList.add('compact-mode');
+                } else {
+                    // ถ้ากดย้อนกลับไปตอนเริ่มเพลง ให้กางหน้าต่างออกเหมือนเดิม
+                    pipWindow.document.body.classList.remove('compact-mode');
                 }
             }
 
