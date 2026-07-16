@@ -1,6 +1,6 @@
 // ==========================================
 // pip.js - ระบบหน้าต่างเนื้อเพลงลอยอิสระ (Document Picture-in-Picture)
-// อัปเดต: ระบบ Auto-Scale ย่อฟอนต์อัตโนมัติป้องกันเนื้อเพลงล้นขอบจอ
+// อัปเดต: คืนขนาดฟอนต์ใหญ่สะใจสำหรับท่อนสั้น + Auto-scale ท่อนยาว
 // ==========================================
 
 let pipWindow = null;
@@ -97,31 +97,32 @@ window.togglePiPMode = async function() {
             body.compact-mode #pip-progress-bar { background: #00d2ff; box-shadow: 0 0 8px #00d2ff; }
 
             /* =========================================
-               📝 พื้นที่เนื้อเพลง (แก้ไขช่องไฟให้พอดี 4 บรรทัด)
+               📝 พื้นที่เนื้อเพลง
                ========================================= */
             #pip-lyrics {
                 flex-grow: 1; 
                 display: flex; flex-direction: column; 
                 justify-content: center; align-items: center; 
-                padding: 15px; /* ลดขอบให้มีพื้นที่ตรงกลางเยอะขึ้น */
+                padding: 15px; 
                 text-align: center; box-sizing: border-box;
                 background: radial-gradient(circle at center, #1c1c1e 0%, #0a0a0c 100%);
-                width: 100%; overflow: hidden; /* ห้าม Scroll จะใช้ Auto-scale แทน */
+                width: 100%; overflow: hidden; 
             }
             
             #current-lyric-text {
-                font-size: clamp(14px, 4.5vmin, 32px); /* ปรับ Max size ลงมาเหลือ 32px */
+                /* 🟢 ปรับเพดานขนาดฟอนต์กลับไปใหญ่สะใจ (46px) ถ้าที่เหลือเฟือมันจะกางเต็มที่ */
+                font-size: clamp(16px, 6vmin, 46px); 
                 font-weight: 800; 
-                line-height: 1.25; /* บีบช่องไฟแนวตั้ง */
+                line-height: 1.25; 
                 width: 100%;
                 word-wrap: break-word; overflow-wrap: break-word; white-space: normal;
-                transition: font-size 0.15s ease; /* แอนิเมชันเวลาย่อขนาดฟอนต์ */
+                transition: font-size 0.15s ease; 
             }
             #current-lyric-text * { 
                 color: #ffffff !important; 
                 text-shadow: 0 2px 8px rgba(0,0,0,0.8);
                 display: block; 
-                margin-bottom: 6px !important; /* 🔴 หดระยะห่างระหว่างภาษา (ของเดิมกว้างไป) */
+                margin-bottom: 8px !important; /* ปรับช่องไฟให้หายใจสะดวกขึ้นนิดนึง */
             }
             #current-lyric-text span:not(:first-child) {
                 font-size: 0.75em; 
@@ -158,7 +159,6 @@ window.togglePiPMode = async function() {
             return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
         };
 
-        // 🟢 เพิ่มตัวแปรสำหรับเช็คบรรทัดเนื้อเพลง (ลดภาระการประมวลผล)
         pipWindow.lastLyricIndex = -1;
 
         // 3. ระบบอัปเดตข้อมูลแบบ Real-time
@@ -167,12 +167,11 @@ window.togglePiPMode = async function() {
             const song = window.songs.find(s => s.id === window.currentSongId);
             if (!song) return;
             
-            // --- ระบบ A: ตรวจจับการเปลี่ยนเพลง และ เวอร์ชัน Cover ---
             let currentKey = song.id + "_" + (window.currentCoverIndex || -1);
 
             if (lastTrackKey !== currentKey) {
                 lastTrackKey = currentKey;
-                pipWindow.lastLyricIndex = -1; // รีเซ็ตบรรทัด
+                pipWindow.lastLyricIndex = -1; 
                 
                 pipWindow.document.getElementById('current-lyric-text').innerHTML = '<span style="color:#8e8e93 !important; text-shadow:none;">🎵 กำลังรอเนื้อเพลง...</span>';
                 
@@ -197,7 +196,6 @@ window.togglePiPMode = async function() {
                 }
             }
 
-            // --- ระบบ B: อัปเดตเนื้อเพลง & ระบบ Auto-Scale อัจฉริยะ ---
             if (window.currentLyricIndex !== pipWindow.lastLyricIndex) {
                 pipWindow.lastLyricIndex = window.currentLyricIndex;
                 
@@ -211,25 +209,22 @@ window.togglePiPMode = async function() {
                     lyricBox.innerHTML = '<span style="color:#8e8e93 !important; text-shadow:none;">🎵 กำลังรอเนื้อเพลง...</span>';
                 }
 
-                // 🟢 เริ่มกระบวนการ Auto-Scale ย่อฟอนต์อัตโนมัติ
-                lyricBox.style.fontSize = ''; // คืนค่าเริ่มต้นให้ CSS (clamp) ทำงานก่อน
+                // 🟢 รีเซ็ตฟอนต์กลับไปค่า Default ใหญ่สุดก่อน (46px)
+                lyricBox.style.fontSize = ''; 
                 
-                // สั่งให้เช็คความกว้าง/สูง หลังจากเบราว์เซอร์วาด HTML เสร็จ (Delay เล็กน้อย)
                 setTimeout(() => {
                     if (!pipWindow || !pipWindow.document) return;
                     
                     let currentSize = parseFloat(pipWindow.getComputedStyle(lyricBox).fontSize);
                     
-                    // 🌟 ถ้าความสูงของข้อความ (scrollHeight) มากกว่า กล่องที่ครอบอยู่ (clientHeight) 
-                    // ให้ทำการลดขนาดฟอนต์ลงทีละ 1px จนกว่าจะพอดี (ขีดจำกัดห้ามเล็กกว่า 14px)
-                    while (lyricBox.scrollHeight > wrapper.clientHeight - 10 && currentSize > 14) {
+                    // 🌟 ถ้าความสูงล้นกรอบ ให้บีบไซส์ลงทีละนิดจนกว่าจะเข้าที่
+                    while (lyricBox.scrollHeight > wrapper.clientHeight - 20 && currentSize > 14) {
                         currentSize -= 1;
                         lyricBox.style.fontSize = currentSize + 'px';
                     }
                 }, 10);
             }
 
-            // --- ระบบ C: จัดการ Progress, Timer และ แอนิเมชัน Compact Mode ---
             const playerObj = window.ytPlayer || window.player; 
             if (playerObj && typeof playerObj.getCurrentTime === 'function') {
                 const currentTime = playerObj.getCurrentTime();
