@@ -1,6 +1,6 @@
 // ==========================================
 // pip.js - ระบบหน้าต่างเนื้อเพลงลอยอิสระ (Document Picture-in-Picture)
-// อัปเดต: คืนชื่อนักร้องในโหมด Compact (บรรทัดล่าง) + ระบบเลื่อนข้อความอัตโนมัติ (Smart Marquee)
+// อัปเดต: เปลี่ยนอนิเมชันเลื่อนข้อความเป็นแบบ Seamless (เฟดกลับ) และแก้ขอบเบลอ
 // ==========================================
 
 let pipWindow = null;
@@ -58,9 +58,9 @@ window.togglePiPMode = async function() {
                 display: flex; flex-direction: column; justify-content: center;
                 flex: 1; overflow: hidden;
                 transition: all 0.6s ease;
-                /* ใส่เอฟเฟกต์ขอบจางด้านขวา ป้องกันตัวอักษรโดนตัดฉับ */
-                -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent 100%);
-                mask-image: linear-gradient(90deg, #000 85%, transparent 100%);
+                /* 🟢 แก้ไขขอบเบลอให้แคบลง (จาก 85% เปลี่ยนเป็น 95%) ให้อ่านง่ายขึ้น */
+                -webkit-mask-image: linear-gradient(90deg, #000 95%, transparent 100%);
+                mask-image: linear-gradient(90deg, #000 95%, transparent 100%);
             }
             
             .scroll-box { width: 100%; overflow: hidden; white-space: nowrap; }
@@ -69,10 +69,13 @@ window.togglePiPMode = async function() {
             #pip-title-text { font-size: 17px; font-weight: bold; color: #0a84ff; }
             #pip-artist-text { font-size: 13px; color: #8e8e93; margin-top: 4px; }
 
-            /* 🟢 แอนิเมชันเลื่อนข้อความอัตโนมัติ ไป-กลับ */
+            /* 🟢 เปลี่ยนอนิเมชันเลื่อนข้อความใหม่: เลื่อนสุด > เฟดออก > กลับไปจุดเริ่ม > เฟดเข้า */
             @keyframes scroll-overflow {
-                0%, 15% { transform: translateX(0); }
-                85%, 100% { transform: translateX(var(--scroll-dist)); }
+                0%, 15% { transform: translateX(0); opacity: 1; }
+                75%, 85% { transform: translateX(var(--scroll-dist)); opacity: 1; }
+                90% { transform: translateX(var(--scroll-dist)); opacity: 0; }
+                95% { transform: translateX(0); opacity: 0; }
+                100% { transform: translateX(0); opacity: 1; }
             }
             
             #pip-timer {
@@ -94,41 +97,31 @@ window.togglePiPMode = async function() {
             }
 
             /* =========================================
-               🚀 โหมดเล่นเพลง (Compact Mode) - คืนชีพชื่อศิลปิน (Option 2)
+               🚀 โหมดเล่นเพลง (Compact Mode)
                ========================================= */
             body.compact-mode #pip-header { padding: 12px 15px; background: transparent; }
             body.compact-mode #pip-cover { width: 32px; height: 32px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }
             body.compact-mode #pip-title-text { font-size: 15px; color: #fff; }
-            
-            /* 🟢 แสดงชื่อศิลปินไว้ด้านล่าง แต่ปรับให้เล็กลงและจางลงนิดนึงเพื่อความเรียบหรู */
             body.compact-mode #pip-artist-text { font-size: 11px !important; opacity: 0.7; margin-top: 2px; }
-            
             body.compact-mode #pip-timer { opacity: 1; transform: translateX(0); max-width: 100px; padding-left: 10px; }
             body.compact-mode #pip-progress-container { height: 1px; background: rgba(255,255,255,0.15); box-shadow: 0 0 10px rgba(10, 132, 255, 0.3); }
             body.compact-mode #pip-progress-bar { background: #00d2ff; box-shadow: 0 0 8px #00d2ff; }
 
             /* =========================================
-               📝 พื้นที่เนื้อเพลง (คืนชีพสีและเงา)
+               📝 พื้นที่เนื้อเพลง
                ========================================= */
             #pip-lyrics {
-                flex-grow: 1; 
-                display: flex; flex-direction: column; 
+                flex-grow: 1; display: flex; flex-direction: column; 
                 justify-content: center; align-items: center; 
-                padding: 15px; 
-                text-align: center; box-sizing: border-box;
+                padding: 15px; text-align: center; box-sizing: border-box;
                 background: radial-gradient(circle at center, #1c1c1e 0%, #0a0a0c 100%);
                 width: 100%; overflow: hidden; 
             }
             
             #current-lyric-text {
-                font-size: clamp(20px, 6vmin, 44px); 
-                font-weight: 800; 
-                line-height: 1.25; 
-                width: 100%;
-                word-wrap: break-word; overflow-wrap: break-word; white-space: normal;
-                transition: font-size 0.15s ease; 
-                color: #fff;
-                text-shadow: 0 0 15px rgba(255,255,255,0.5); 
+                font-size: clamp(20px, 6vmin, 44px); font-weight: 800; line-height: 1.25; 
+                width: 100%; word-wrap: break-word; overflow-wrap: break-word; white-space: normal;
+                transition: font-size 0.15s ease; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); 
             }
 
             #current-lyric-text div[class^="lang-"] { margin-bottom: 8px; }
@@ -141,8 +134,7 @@ window.togglePiPMode = async function() {
             #current-lyric-text .lang-1:not(.reading-text), 
             #current-lyric-text .lang-2, 
             #current-lyric-text .lang-3 {
-                font-size: 0.85em; 
-                color: #e0e0e5; 
+                font-size: 0.85em; color: #e0e0e5; 
             }
 
             /* =========================================
@@ -160,18 +152,16 @@ window.togglePiPMode = async function() {
             .dual-lyric { display: flex; flex-direction: column; align-items: center; width: 100%; margin-bottom: 10px; }
             .lyric-main { text-align: center; width: 100%; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
             .lyric-sub {
-                display: block; text-align: center;
-                background: linear-gradient(90deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #ff9a9e); background-size: 200% auto;
+                display: block; text-align: center; background: linear-gradient(90deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #ff9a9e); background-size: 200% auto;
                 -webkit-background-clip: text; -webkit-text-fill-color: transparent !important;
-                animation: rainbowFlow 4s linear infinite;
-                font-size: 0.75em; font-style: italic; font-weight: bold;
+                animation: rainbowFlow 4s linear infinite; font-size: 0.75em; font-style: italic; font-weight: bold;
                 max-width: 90%; word-wrap: break-word; margin-top: 4px;
             }
             @keyframes rainbowFlow { 0% { background-position: 0% center; } 100% { background-position: 200% center; } }
         `;
         pipWindow.document.head.appendChild(style);
 
-        // 2. สร้างโครงสร้างหน้าต่าง (HTML) พร้อมครอบกล่อง scroll-box
+        // 2. สร้างโครงสร้างหน้าต่าง (HTML) 
         pipWindow.document.body.innerHTML = `
             <div id="pip-header">
                 <img id="pip-cover" src="" alt="cover">
@@ -227,7 +217,7 @@ window.togglePiPMode = async function() {
                 titleText.innerText = song.title;
                 artistText.innerText = `🎤 ${displayArtist}`;
                 
-                // 🟢 ฟังก์ชันคำนวณระยะการเลื่อนข้อความ (Smart Marquee)
+                // 🟢 ฟังก์ชันคำนวณระยะการเลื่อนข้อความ (ลบ alternate ออกเพื่อให้ไม่เลื่อนกลับ)
                 const applyScroll = (el) => {
                     el.style.animation = 'none';
                     el.style.transform = 'translateX(0)';
@@ -235,10 +225,11 @@ window.togglePiPMode = async function() {
                         if (!pipWindow || !pipWindow.document) return;
                         const parent = el.parentElement;
                         if (el.scrollWidth > parent.clientWidth) {
-                            const distance = el.scrollWidth - parent.clientWidth + 15; // เผื่อระยะขอบนิดนึง
-                            const speed = Math.max(3, distance / 15); // คำนวณความเร็วให้ลื่นไหล
+                            const distance = el.scrollWidth - parent.clientWidth + 15; 
+                            const speed = Math.max(4, distance / 15); // ปรับเวลาให้สมูทขึ้น
                             el.style.setProperty('--scroll-dist', `-${distance}px`);
-                            el.style.animation = `scroll-overflow ${speed}s linear infinite alternate`;
+                            // 🟢 ใช้ linear infinite ปกติ (ไม่ใช้ alternate)
+                            el.style.animation = `scroll-overflow ${speed}s linear infinite`;
                         }
                     }, 200);
                 };
@@ -273,9 +264,7 @@ window.togglePiPMode = async function() {
                 
                 setTimeout(() => {
                     if (!pipWindow || !pipWindow.document) return;
-                    
                     let currentSize = parseFloat(pipWindow.getComputedStyle(lyricBox).fontSize);
-                    
                     while (lyricBox.scrollHeight > wrapper.clientHeight - 20 && currentSize > 14) {
                         currentSize -= 1;
                         lyricBox.style.fontSize = currentSize + 'px';
