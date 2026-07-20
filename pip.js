@@ -1,6 +1,6 @@
 // ==========================================
 // pip.js - ระบบหน้าต่างเนื้อเพลงลอยอิสระ (Document Picture-in-Picture)
-// อัปเดต: คืนขนาดฟอนต์ใหญ่สะใจสำหรับท่อนสั้น + Auto-scale ท่อนยาว
+// อัปเดต: คืนขนาดฟอนต์ + Auto-scale + ดึง CSS ลูกเล่นพิเศษ (ดนตรี, ป้ายชื่อ, คอรัส) กลับมา!
 // ==========================================
 
 let pipWindow = null;
@@ -110,7 +110,6 @@ window.togglePiPMode = async function() {
             }
             
             #current-lyric-text {
-                /* 🟢 ปรับเพดานขนาดฟอนต์กลับไปใหญ่สะใจ (46px) ถ้าที่เหลือเฟือมันจะกางเต็มที่ */
                 font-size: clamp(16px, 6vmin, 46px); 
                 font-weight: 800; 
                 line-height: 1.25; 
@@ -118,17 +117,66 @@ window.togglePiPMode = async function() {
                 word-wrap: break-word; overflow-wrap: break-word; white-space: normal;
                 transition: font-size 0.15s ease; 
             }
-            #current-lyric-text * { 
+
+            /* ตัวหนังสือธรรมดาทั่วไป */
+            #current-lyric-text > div:not(.singer-badges):not(.lyric-instrumental):not(.dual-lyric) { 
                 color: #ffffff !important; 
                 text-shadow: 0 2px 8px rgba(0,0,0,0.8);
                 display: block; 
-                margin-bottom: 8px !important; /* ปรับช่องไฟให้หายใจสะดวกขึ้นนิดนึง */
+                margin-bottom: 8px; 
             }
-            #current-lyric-text span:not(:first-child) {
+            /* จัดการภาษาซับไตเติ้ล (บรรทัดที่ไม่ใช่ภาษาแรก) */
+            #current-lyric-text > div:not(:first-child):not(.singer-badges):not(.lyric-instrumental):not(.dual-lyric) {
                 font-size: 0.75em; 
                 color: #a0a0a5 !important; 
                 font-weight: 600;
                 line-height: 1.15;
+            }
+
+            /* =========================================
+               🎵 ลูกเล่นพิเศษ: ดนตรี, ป้ายชื่อ, คอรัส 
+               ========================================= */
+            
+            /* 1. ท่อนดนตรี */
+            .lyric-instrumental {
+                display: flex; justify-content: center; align-items: center; gap: 15px; font-size: 1.5em; height: 60px;
+            }
+            .lyric-instrumental .note {
+                color: #00d2ff !important; opacity: 0.5; animation: bounceNote 1.2s infinite ease-in-out alternate;
+            }
+            .lyric-instrumental .note:nth-child(2) { animation-delay: 0.3s; }
+            .lyric-instrumental .note:nth-child(3) { animation-delay: 0.6s; }
+            @keyframes bounceNote {
+                0% { transform: translateY(0) scale(1); opacity: 0.3; }
+                100% { transform: translateY(-10px) scale(1.2); opacity: 1; color: #fff; filter: drop-shadow(0 0 10px #00d2ff); }
+            }
+
+            /* 2. ป้ายชื่อนักร้อง */
+            .singer-badges { display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; }
+            .singer-badge { 
+                font-size: 0.5em; /* ย่อให้เหมาะกับ PiP */
+                padding: 6px 14px; border-radius: 20px; 
+                color: #fff; border: 1px solid rgba(255,255,255,0.8);
+                box-shadow: 0 0 10px rgba(255,255,255,0.5); 
+                text-shadow: none !important;
+            }
+
+            /* 3. ท่อนร้องประสาน (Dual Lyric สีรุ้ง) */
+            .dual-lyric { display: flex; flex-direction: column; align-items: center; width: 100%; margin-bottom: 10px; }
+            .lyric-main { text-align: center; width: 100%; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
+            .lyric-sub {
+                display: block; text-align: center;
+                background: linear-gradient(90deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #ff9a9e);
+                background-size: 200% auto;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent !important;
+                animation: rainbowFlow 4s linear infinite;
+                font-size: 0.75em; font-style: italic; font-weight: bold;
+                max-width: 90%; word-wrap: break-word; margin-top: 4px;
+            }
+            @keyframes rainbowFlow {
+                0% { background-position: 0% center; }
+                100% { background-position: 200% center; }
             }
         `;
         pipWindow.document.head.appendChild(style);
@@ -209,7 +257,6 @@ window.togglePiPMode = async function() {
                     lyricBox.innerHTML = '<span style="color:#8e8e93 !important; text-shadow:none;">🎵 กำลังรอเนื้อเพลง...</span>';
                 }
 
-                // 🟢 รีเซ็ตฟอนต์กลับไปค่า Default ใหญ่สุดก่อน (46px)
                 lyricBox.style.fontSize = ''; 
                 
                 setTimeout(() => {
@@ -217,7 +264,6 @@ window.togglePiPMode = async function() {
                     
                     let currentSize = parseFloat(pipWindow.getComputedStyle(lyricBox).fontSize);
                     
-                    // 🌟 ถ้าความสูงล้นกรอบ ให้บีบไซส์ลงทีละนิดจนกว่าจะเข้าที่
                     while (lyricBox.scrollHeight > wrapper.clientHeight - 20 && currentSize > 14) {
                         currentSize -= 1;
                         lyricBox.style.fontSize = currentSize + 'px';
