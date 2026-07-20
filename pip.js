@@ -1,6 +1,6 @@
 // ==========================================
 // pip.js - ระบบหน้าต่างเนื้อเพลงลอยอิสระ (Document Picture-in-Picture)
-// อัปเดต: คืนชีพสีเหลือง (Reading text), ขนาดฟอนต์ที่สมดุล และเงาเรืองแสง!
+// อัปเดต: คืนชื่อนักร้องในโหมด Compact (บรรทัดล่าง) + ระบบเลื่อนข้อความอัตโนมัติ (Smart Marquee)
 // ==========================================
 
 let pipWindow = null;
@@ -50,23 +50,31 @@ window.togglePiPMode = async function() {
                 background: #1c1c1e; 
                 display: none; 
                 transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+                flex-shrink: 0;
             }
+            
+            /* 🟢 คอนเทนเนอร์แสดงชื่อเพลงและศิลปิน */
             #pip-info {
                 display: flex; flex-direction: column; justify-content: center;
                 flex: 1; overflow: hidden;
                 transition: all 0.6s ease;
+                /* ใส่เอฟเฟกต์ขอบจางด้านขวา ป้องกันตัวอักษรโดนตัดฉับ */
+                -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent 100%);
+                mask-image: linear-gradient(90deg, #000 85%, transparent 100%);
             }
-            #pip-title {
-                font-size: 17px; font-weight: bold; color: #0a84ff;
-                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-                transition: all 0.6s ease;
+            
+            .scroll-box { width: 100%; overflow: hidden; white-space: nowrap; }
+            .scroll-text { display: inline-block; transition: all 0.6s ease; }
+            
+            #pip-title-text { font-size: 17px; font-weight: bold; color: #0a84ff; }
+            #pip-artist-text { font-size: 13px; color: #8e8e93; margin-top: 4px; }
+
+            /* 🟢 แอนิเมชันเลื่อนข้อความอัตโนมัติ ไป-กลับ */
+            @keyframes scroll-overflow {
+                0%, 15% { transform: translateX(0); }
+                85%, 100% { transform: translateX(var(--scroll-dist)); }
             }
-            #pip-artist {
-                font-size: 13px; color: #8e8e93; margin-top: 4px;
-                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-                max-height: 20px; opacity: 1;
-                transition: all 0.4s ease;
-            }
+            
             #pip-timer {
                 font-family: monospace; font-size: 13px; color: #aaa;
                 font-weight: bold; text-align: right;
@@ -86,13 +94,16 @@ window.togglePiPMode = async function() {
             }
 
             /* =========================================
-               🚀 โหมดเล่นเพลง (Compact Mode)
+               🚀 โหมดเล่นเพลง (Compact Mode) - คืนชีพชื่อศิลปิน (Option 2)
                ========================================= */
             body.compact-mode #pip-header { padding: 12px 15px; background: transparent; }
             body.compact-mode #pip-cover { width: 32px; height: 32px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }
-            body.compact-mode #pip-title { font-size: 15px; color: #fff; }
-            body.compact-mode #pip-artist { opacity: 0; max-height: 0; margin-top: 0; }
-            body.compact-mode #pip-timer { opacity: 1; transform: translateX(0); max-width: 100px; }
+            body.compact-mode #pip-title-text { font-size: 15px; color: #fff; }
+            
+            /* 🟢 แสดงชื่อศิลปินไว้ด้านล่าง แต่ปรับให้เล็กลงและจางลงนิดนึงเพื่อความเรียบหรู */
+            body.compact-mode #pip-artist-text { font-size: 11px !important; opacity: 0.7; margin-top: 2px; }
+            
+            body.compact-mode #pip-timer { opacity: 1; transform: translateX(0); max-width: 100px; padding-left: 10px; }
             body.compact-mode #pip-progress-container { height: 1px; background: rgba(255,255,255,0.15); box-shadow: 0 0 10px rgba(10, 132, 255, 0.3); }
             body.compact-mode #pip-progress-bar { background: #00d2ff; box-shadow: 0 0 8px #00d2ff; }
 
@@ -110,30 +121,23 @@ window.togglePiPMode = async function() {
             }
             
             #current-lyric-text {
-                font-size: clamp(20px, 6vmin, 44px); /* ตั้งเพดานให้ใหญ่สะใจ */
+                font-size: clamp(20px, 6vmin, 44px); 
                 font-weight: 800; 
                 line-height: 1.25; 
                 width: 100%;
                 word-wrap: break-word; overflow-wrap: break-word; white-space: normal;
                 transition: font-size 0.15s ease; 
-                
-                /* 🟢 ใส่เงาเรืองแสงหลักให้ตัวหนังสือพุ่งออกมา */
                 color: #fff;
                 text-shadow: 0 0 15px rgba(255,255,255,0.5); 
             }
 
-            /* จัดช่องไฟระหว่างบรรทัดภาษาต่างๆ */
-            #current-lyric-text div[class^="lang-"] { 
-                margin-bottom: 8px; 
-            }
+            #current-lyric-text div[class^="lang-"] { margin-bottom: 8px; }
 
-            /* 🟢 คืนชีพสีเหลือง สำหรับคำอ่านโรมาจิ (คลาส .reading-text) */
             #current-lyric-text .reading-text {
                 color: #ffd700 !important; 
                 text-shadow: 0 0 15px rgba(255, 215, 0, 0.4), 1px 2px 3px rgba(0,0,0,0.8) !important;
             }
 
-            /* ปรับขนาดภาษาที่ 2 และ 3 ให้เล็กลงนิดหน่อยอย่างสมดุล (85%) */
             #current-lyric-text .lang-1:not(.reading-text), 
             #current-lyric-text .lang-2, 
             #current-lyric-text .lang-3 {
@@ -144,60 +148,36 @@ window.togglePiPMode = async function() {
             /* =========================================
                🎵 ลูกเล่นพิเศษ: ดนตรี, ป้ายชื่อ, คอรัส 
                ========================================= */
-            
-            /* 1. ท่อนดนตรี */
-            .lyric-instrumental {
-                display: flex; justify-content: center; align-items: center; gap: 15px; font-size: 1.5em; height: 60px;
-            }
-            .lyric-instrumental .note {
-                color: #00d2ff !important; opacity: 0.5; animation: bounceNote 1.2s infinite ease-in-out alternate;
-            }
+            .lyric-instrumental { display: flex; justify-content: center; align-items: center; gap: 15px; font-size: 1.5em; height: 60px; }
+            .lyric-instrumental .note { color: #00d2ff !important; opacity: 0.5; animation: bounceNote 1.2s infinite ease-in-out alternate; }
             .lyric-instrumental .note:nth-child(2) { animation-delay: 0.3s; }
             .lyric-instrumental .note:nth-child(3) { animation-delay: 0.6s; }
-            @keyframes bounceNote {
-                0% { transform: translateY(0) scale(1); opacity: 0.3; }
-                100% { transform: translateY(-10px) scale(1.2); opacity: 1; color: #fff; filter: drop-shadow(0 0 10px #00d2ff); }
-            }
+            @keyframes bounceNote { 0% { transform: translateY(0) scale(1); opacity: 0.3; } 100% { transform: translateY(-10px) scale(1.2); opacity: 1; color: #fff; filter: drop-shadow(0 0 10px #00d2ff); } }
 
-            /* 2. ป้ายชื่อนักร้อง */
             .singer-badges { display: flex; gap: 8px; margin-bottom: 12px; justify-content: center; flex-wrap: wrap; }
-            .singer-badge { 
-                font-size: 14px; /* ล็อกขนาดฟอนต์ป้ายชื่อไม่ให้เล็กเกินไป */
-                padding: 4px 12px; border-radius: 20px; 
-                color: #fff !important; 
-                border: 1px solid rgba(255,255,255,0.8);
-                box-shadow: 0 0 10px rgba(255,255,255,0.5); 
-                text-shadow: none !important;
-                line-height: 1;
-            }
+            .singer-badge { font-size: 14px; padding: 4px 12px; border-radius: 20px; color: #fff !important; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 0 10px rgba(255,255,255,0.5); text-shadow: none !important; line-height: 1; }
 
-            /* 3. ท่อนร้องประสาน (Dual Lyric สีรุ้ง) */
             .dual-lyric { display: flex; flex-direction: column; align-items: center; width: 100%; margin-bottom: 10px; }
             .lyric-main { text-align: center; width: 100%; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
             .lyric-sub {
                 display: block; text-align: center;
-                background: linear-gradient(90deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #ff9a9e);
-                background-size: 200% auto;
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent !important;
+                background: linear-gradient(90deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #ff9a9e); background-size: 200% auto;
+                -webkit-background-clip: text; -webkit-text-fill-color: transparent !important;
                 animation: rainbowFlow 4s linear infinite;
                 font-size: 0.75em; font-style: italic; font-weight: bold;
                 max-width: 90%; word-wrap: break-word; margin-top: 4px;
             }
-            @keyframes rainbowFlow {
-                0% { background-position: 0% center; }
-                100% { background-position: 200% center; }
-            }
+            @keyframes rainbowFlow { 0% { background-position: 0% center; } 100% { background-position: 200% center; } }
         `;
         pipWindow.document.head.appendChild(style);
 
-        // 2. สร้างโครงสร้างหน้าต่าง (HTML) 
+        // 2. สร้างโครงสร้างหน้าต่าง (HTML) พร้อมครอบกล่อง scroll-box
         pipWindow.document.body.innerHTML = `
             <div id="pip-header">
                 <img id="pip-cover" src="" alt="cover">
                 <div id="pip-info">
-                    <div id="pip-title">กำลังรอเพลง...</div>
-                    <div id="pip-artist">🎤 -</div>
+                    <div class="scroll-box"><div id="pip-title-text" class="scroll-text">กำลังรอเพลง...</div></div>
+                    <div class="scroll-box"><div id="pip-artist-text" class="scroll-text">🎤 -</div></div>
                 </div>
                 <div id="pip-timer">00:00</div>
             </div>
@@ -241,8 +221,30 @@ window.togglePiPMode = async function() {
                     if(song.covers[window.currentCoverIndex].coverArtist) displayArtist = song.covers[window.currentCoverIndex].coverArtist;
                 }
 
-                pipWindow.document.getElementById('pip-title').innerText = song.title;
-                pipWindow.document.getElementById('pip-artist').innerText = `🎤 ${displayArtist}`;
+                const titleText = pipWindow.document.getElementById('pip-title-text');
+                const artistText = pipWindow.document.getElementById('pip-artist-text');
+                
+                titleText.innerText = song.title;
+                artistText.innerText = `🎤 ${displayArtist}`;
+                
+                // 🟢 ฟังก์ชันคำนวณระยะการเลื่อนข้อความ (Smart Marquee)
+                const applyScroll = (el) => {
+                    el.style.animation = 'none';
+                    el.style.transform = 'translateX(0)';
+                    setTimeout(() => {
+                        if (!pipWindow || !pipWindow.document) return;
+                        const parent = el.parentElement;
+                        if (el.scrollWidth > parent.clientWidth) {
+                            const distance = el.scrollWidth - parent.clientWidth + 15; // เผื่อระยะขอบนิดนึง
+                            const speed = Math.max(3, distance / 15); // คำนวณความเร็วให้ลื่นไหล
+                            el.style.setProperty('--scroll-dist', `-${distance}px`);
+                            el.style.animation = `scroll-overflow ${speed}s linear infinite alternate`;
+                        }
+                    }, 200);
+                };
+                
+                applyScroll(titleText);
+                applyScroll(artistText);
                 
                 const coverImg = pipWindow.document.getElementById('pip-cover');
                 const ytId = window.extractYouTubeID(targetVideoPath);
@@ -267,7 +269,6 @@ window.togglePiPMode = async function() {
                     lyricBox.innerHTML = '<span style="color:#8e8e93 !important; text-shadow:none;">🎵 กำลังรอเนื้อเพลง...</span>';
                 }
 
-                // รีเซ็ตค่าให้ฟอนต์กางออกเต็มที่ก่อนประเมินใหม่
                 lyricBox.style.fontSize = ''; 
                 
                 setTimeout(() => {
@@ -275,7 +276,6 @@ window.togglePiPMode = async function() {
                     
                     let currentSize = parseFloat(pipWindow.getComputedStyle(lyricBox).fontSize);
                     
-                    // ระบบลดไซส์ (ถ้าสูงล้น) ลดทีละ 1px อย่างนุ่มนวล
                     while (lyricBox.scrollHeight > wrapper.clientHeight - 20 && currentSize > 14) {
                         currentSize -= 1;
                         lyricBox.style.fontSize = currentSize + 'px';
