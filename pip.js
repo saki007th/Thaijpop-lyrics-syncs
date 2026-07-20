@@ -1,6 +1,6 @@
 // ==========================================
 // pip.js - ระบบหน้าต่างเนื้อเพลงลอยอิสระ (Document Picture-in-Picture)
-// อัปเดต: คืนขนาดฟอนต์ + Auto-scale + ดึง CSS ลูกเล่นพิเศษ (ดนตรี, ป้ายชื่อ, คอรัส) กลับมา!
+// อัปเดต: คืนชีพสีเหลือง (Reading text), ขนาดฟอนต์ที่สมดุล และเงาเรืองแสง!
 // ==========================================
 
 let pipWindow = null;
@@ -97,7 +97,7 @@ window.togglePiPMode = async function() {
             body.compact-mode #pip-progress-bar { background: #00d2ff; box-shadow: 0 0 8px #00d2ff; }
 
             /* =========================================
-               📝 พื้นที่เนื้อเพลง
+               📝 พื้นที่เนื้อเพลง (คืนชีพสีและเงา)
                ========================================= */
             #pip-lyrics {
                 flex-grow: 1; 
@@ -110,27 +110,35 @@ window.togglePiPMode = async function() {
             }
             
             #current-lyric-text {
-                font-size: clamp(16px, 6vmin, 46px); 
+                font-size: clamp(20px, 6vmin, 44px); /* ตั้งเพดานให้ใหญ่สะใจ */
                 font-weight: 800; 
                 line-height: 1.25; 
                 width: 100%;
                 word-wrap: break-word; overflow-wrap: break-word; white-space: normal;
                 transition: font-size 0.15s ease; 
+                
+                /* 🟢 ใส่เงาเรืองแสงหลักให้ตัวหนังสือพุ่งออกมา */
+                color: #fff;
+                text-shadow: 0 0 15px rgba(255,255,255,0.5); 
             }
 
-            /* ตัวหนังสือธรรมดาทั่วไป */
-            #current-lyric-text > div:not(.singer-badges):not(.lyric-instrumental):not(.dual-lyric) { 
-                color: #ffffff !important; 
-                text-shadow: 0 2px 8px rgba(0,0,0,0.8);
-                display: block; 
+            /* จัดช่องไฟระหว่างบรรทัดภาษาต่างๆ */
+            #current-lyric-text div[class^="lang-"] { 
                 margin-bottom: 8px; 
             }
-            /* จัดการภาษาซับไตเติ้ล (บรรทัดที่ไม่ใช่ภาษาแรก) */
-            #current-lyric-text > div:not(:first-child):not(.singer-badges):not(.lyric-instrumental):not(.dual-lyric) {
-                font-size: 0.75em; 
-                color: #a0a0a5 !important; 
-                font-weight: 600;
-                line-height: 1.15;
+
+            /* 🟢 คืนชีพสีเหลือง สำหรับคำอ่านโรมาจิ (คลาส .reading-text) */
+            #current-lyric-text .reading-text {
+                color: #ffd700 !important; 
+                text-shadow: 0 0 15px rgba(255, 215, 0, 0.4), 1px 2px 3px rgba(0,0,0,0.8) !important;
+            }
+
+            /* ปรับขนาดภาษาที่ 2 และ 3 ให้เล็กลงนิดหน่อยอย่างสมดุล (85%) */
+            #current-lyric-text .lang-1:not(.reading-text), 
+            #current-lyric-text .lang-2, 
+            #current-lyric-text .lang-3 {
+                font-size: 0.85em; 
+                color: #e0e0e5; 
             }
 
             /* =========================================
@@ -152,13 +160,15 @@ window.togglePiPMode = async function() {
             }
 
             /* 2. ป้ายชื่อนักร้อง */
-            .singer-badges { display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; }
+            .singer-badges { display: flex; gap: 8px; margin-bottom: 12px; justify-content: center; flex-wrap: wrap; }
             .singer-badge { 
-                font-size: 0.5em; /* ย่อให้เหมาะกับ PiP */
-                padding: 6px 14px; border-radius: 20px; 
-                color: #fff; border: 1px solid rgba(255,255,255,0.8);
+                font-size: 14px; /* ล็อกขนาดฟอนต์ป้ายชื่อไม่ให้เล็กเกินไป */
+                padding: 4px 12px; border-radius: 20px; 
+                color: #fff !important; 
+                border: 1px solid rgba(255,255,255,0.8);
                 box-shadow: 0 0 10px rgba(255,255,255,0.5); 
                 text-shadow: none !important;
+                line-height: 1;
             }
 
             /* 3. ท่อนร้องประสาน (Dual Lyric สีรุ้ง) */
@@ -257,6 +267,7 @@ window.togglePiPMode = async function() {
                     lyricBox.innerHTML = '<span style="color:#8e8e93 !important; text-shadow:none;">🎵 กำลังรอเนื้อเพลง...</span>';
                 }
 
+                // รีเซ็ตค่าให้ฟอนต์กางออกเต็มที่ก่อนประเมินใหม่
                 lyricBox.style.fontSize = ''; 
                 
                 setTimeout(() => {
@@ -264,6 +275,7 @@ window.togglePiPMode = async function() {
                     
                     let currentSize = parseFloat(pipWindow.getComputedStyle(lyricBox).fontSize);
                     
+                    // ระบบลดไซส์ (ถ้าสูงล้น) ลดทีละ 1px อย่างนุ่มนวล
                     while (lyricBox.scrollHeight > wrapper.clientHeight - 20 && currentSize > 14) {
                         currentSize -= 1;
                         lyricBox.style.fontSize = currentSize + 'px';
