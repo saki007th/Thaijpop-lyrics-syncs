@@ -1,6 +1,6 @@
 // ==========================================
 // pip.js - ระบบหน้าต่างเนื้อเพลงลอยอิสระ (Document Picture-in-Picture)
-// อัปเดต: เปลี่ยนอนิเมชันเลื่อนข้อความเป็นแบบ Seamless (เฟดกลับ) และแก้ขอบเบลอ
+// อัปเดต: แอนิเมชันเลื่อนข้อความแบบตัดกลับจุดเริ่มต้นทันที (ไม่มี Fade)
 // ==========================================
 
 let pipWindow = null;
@@ -58,7 +58,6 @@ window.togglePiPMode = async function() {
                 display: flex; flex-direction: column; justify-content: center;
                 flex: 1; overflow: hidden;
                 transition: all 0.6s ease;
-                /* 🟢 แก้ไขขอบเบลอให้แคบลง (จาก 85% เปลี่ยนเป็น 95%) ให้อ่านง่ายขึ้น */
                 -webkit-mask-image: linear-gradient(90deg, #000 95%, transparent 100%);
                 mask-image: linear-gradient(90deg, #000 95%, transparent 100%);
             }
@@ -69,13 +68,10 @@ window.togglePiPMode = async function() {
             #pip-title-text { font-size: 17px; font-weight: bold; color: #0a84ff; }
             #pip-artist-text { font-size: 13px; color: #8e8e93; margin-top: 4px; }
 
-            /* 🟢 เปลี่ยนอนิเมชันเลื่อนข้อความใหม่: เลื่อนสุด > เฟดออก > กลับไปจุดเริ่ม > เฟดเข้า */
+            /* 🟢 แอนิเมชันเลื่อนข้อความใหม่: เลื่อนสุด > หยุดแป๊บนึง > ตัดกลับไปจุดเริ่มทันที */
             @keyframes scroll-overflow {
-                0%, 15% { transform: translateX(0); opacity: 1; }
-                75%, 85% { transform: translateX(var(--scroll-dist)); opacity: 1; }
-                90% { transform: translateX(var(--scroll-dist)); opacity: 0; }
-                95% { transform: translateX(0); opacity: 0; }
-                100% { transform: translateX(0); opacity: 1; }
+                0%, 15% { transform: translateX(0); }
+                85%, 100% { transform: translateX(var(--scroll-dist)); }
             }
             
             #pip-timer {
@@ -217,7 +213,7 @@ window.togglePiPMode = async function() {
                 titleText.innerText = song.title;
                 artistText.innerText = `🎤 ${displayArtist}`;
                 
-                // 🟢 ฟังก์ชันคำนวณระยะการเลื่อนข้อความ (ลบ alternate ออกเพื่อให้ไม่เลื่อนกลับ)
+                // 🟢 ฟังก์ชันคำนวณระยะการเลื่อนข้อความ 
                 const applyScroll = (el) => {
                     el.style.animation = 'none';
                     el.style.transform = 'translateX(0)';
@@ -226,9 +222,9 @@ window.togglePiPMode = async function() {
                         const parent = el.parentElement;
                         if (el.scrollWidth > parent.clientWidth) {
                             const distance = el.scrollWidth - parent.clientWidth + 15; 
-                            const speed = Math.max(4, distance / 15); // ปรับเวลาให้สมูทขึ้น
+                            const speed = Math.max(4, distance / 15); 
                             el.style.setProperty('--scroll-dist', `-${distance}px`);
-                            // 🟢 ใช้ linear infinite ปกติ (ไม่ใช้ alternate)
+                            // ใช้แอนิเมชันแบบวนลูปต่อเนื่อง
                             el.style.animation = `scroll-overflow ${speed}s linear infinite`;
                         }
                     }, 200);
