@@ -296,9 +296,12 @@ async function fetchSongs() {
             }
         }
         
-        // 🟢 ตรวจสอบว่าเปิดมาจากลิงก์แชร์แบบใหม่หรือไม่
-        window.checkSharedLink();
-        window.wm.openLibrary(); 
+      // 🟢 ตรวจสอบลิงก์แชร์ ถ้าไม่มีการเล่นเพลงจากลิงก์ ถึงจะเปิดคลังเพลงขึ้นมา
+        const isSongPlayed = window.checkSharedLink();
+        
+        if (!isSongPlayed) {
+            window.wm.openLibrary(); 
+        }
         
     } catch (error) { 
         document.getElementById('loadingOverlay').style.display = 'none'; 
@@ -1283,12 +1286,15 @@ window.createCleanSlug = function(title) {
 window.checkSharedLink = function() {
     const urlParams = new URLSearchParams(window.location.search);
     const trackSlug = urlParams.get('track');
+
     if (trackSlug && window.songs) {
         const targetSong = window.songs.find(s => window.createCleanSlug(s.title) === trackSlug);
         if (targetSong) {
             if (typeof window.playSong === 'function') window.playSong(targetSong.id);
+            return true; // 🟢 เพิ่มบรรทัดนี้: ส่งสัญญาณว่าเปิดเพลงสำเร็จแล้ว
         }
     }
+    return false; // 🟢 เพิ่มบรรทัดนี้: ส่งสัญญาณว่าไม่เจอเพลงจากลิงก์
 };
 
 window.copyShareLink = function(songTitle, buttonElement) {
