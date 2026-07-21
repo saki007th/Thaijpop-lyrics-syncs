@@ -1261,3 +1261,50 @@ window.startCalibration = function() {
     });
     observer.observe(document.body, { childList: true });
 };
+
+// ==========================================
+// 🔗 ระบบ Share Link (Dynamic Slug)
+// ==========================================
+window.createCleanSlug = function(title) {
+    if (!title) return "";
+    let slug = title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return slug || "track-" + Math.floor(Math.random() * 10000);
+};
+
+window.checkSharedLink = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const trackSlug = urlParams.get('track');
+    if (trackSlug && window.songs) {
+        const targetSong = window.songs.find(s => window.createCleanSlug(s.title) === trackSlug);
+        if (targetSong) {
+            if (typeof window.playSong === 'function') window.playSong(targetSong.id);
+        }
+    }
+};
+
+window.copyShareLink = function(songTitle, buttonElement) {
+    const slug = window.createCleanSlug(songTitle);
+    const shareUrl = `${window.location.origin}${window.location.pathname}?track=${slug}`;
+    
+    navigator.clipboard.writeText(shareUrl).then(() => {
+        showShareToast('✅ คัดลอกลิงก์เพลงแล้ว!');
+        if(buttonElement) {
+            const originalText = buttonElement.innerHTML;
+            buttonElement.innerHTML = '✨ ก๊อปปี้แล้ว!';
+            buttonElement.style.color = '#00d2ff';
+            setTimeout(() => { buttonElement.innerHTML = originalText; buttonElement.style.color = ''; }, 2000);
+        }
+    });
+};
+
+function showShareToast(message) {
+    let toast = document.getElementById('share-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'share-toast';
+        toast.style.cssText = `position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(10, 132, 255, 0.9); color: white; padding: 10px 20px; border-radius: 30px; font-size: 14px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 9999; opacity: 0; transition: opacity 0.3s ease, bottom 0.3s ease; pointer-events: none;`;
+        document.body.appendChild(toast);
+    }
+    toast.innerText = message; toast.style.opacity = '1'; toast.style.bottom = '50px';
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.bottom = '30px'; }, 2500);
+}
