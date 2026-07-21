@@ -296,6 +296,8 @@ async function fetchSongs() {
             }
         }
         
+        // 🟢 ตรวจสอบว่าเปิดมาจากลิงก์แชร์แบบใหม่หรือไม่
+        window.checkSharedLink();
         window.wm.openLibrary(); 
         
     } catch (error) { 
@@ -413,10 +415,17 @@ window.renderSongList = function(query = '', artistFilter = 'All') {
         const videoId = window.extractYouTubeID(song.audioPath);
         const thumbUrl = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : '';
         let actionsHtml = window.isAdmin ? `<button class="btn-secondary" onclick="editSong('${song.id}')">✏️</button><button class="btn-secondary" style="color:#ff3b30;" onclick="deleteSong('${song.id}')">ลบ</button>` : '';
+       // 🟢 สร้างตัวแปรหลีกเลี่ยงชื่อเพลงที่มี ' (Single Quote) ทำให้โค้ดพัง
+        const safeTitle = song.title.replace(/'/g, "\\'"); 
+        
         item.innerHTML = `
             <img src="${thumbUrl}" onerror="this.style.display='none'">
             <div><div class="song-title">${song.title}</div><div class="song-artist">🎤 ${song.artist || '-'}</div></div>
-            <div class="song-actions"><button class="btn-primary" onclick="playSong('${song.id}')">▶ เล่น</button>${actionsHtml}</div>
+            <div class="song-actions">
+                <button class="btn-primary" onclick="playSong('${song.id}')">▶ เล่น</button>
+                <button class="share-btn" onclick="copyShareLink('${safeTitle}', this)">🔗 แชร์</button>
+                ${actionsHtml}
+            </div>
         `;
         listContainer.appendChild(item);
     });
