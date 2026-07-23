@@ -599,12 +599,15 @@ window.playSong = function(id) {
     let playerDiv = document.getElementById('youtubePlayer');
     if (!playerDiv) document.getElementById('content-player').innerHTML = '<div id="youtubePlayer" style="width: 100%; height: 100%;"></div>';
 
-    if (window.ytPlayer && typeof window.ytPlayer.loadVideoById === 'function') { 
+     if (window.ytPlayer && typeof window.ytPlayer.loadVideoById === 'function') { 
         window.ytPlayer.loadVideoById(videoId); 
     } else {
         if (window.isYTApiReady || (window.YT && window.YT.Player)) {
             window.ytPlayer = new YT.Player('youtubePlayer', { 
-                height: '100%', width: '100%', videoId: videoId, playerVars: { 'playsinline': 1, 'controls': 1 }, events: { 'onStateChange': window.onPlayerStateChange } 
+                height: '100%', width: '100%', videoId: videoId, 
+                // 🟢 เติม 'autoplay': 1 ตรง playerVars ด้านล่างนี้ครับ
+                playerVars: { 'playsinline': 1, 'controls': 1, 'autoplay': 1 }, 
+                events: { 'onStateChange': window.onPlayerStateChange } 
             });
         }
     }
