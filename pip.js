@@ -1,6 +1,6 @@
 // ==========================================
 // pip.js - ระบบหน้าต่างเนื้อเพลงลอยอิสระ (Document Picture-in-Picture)
-// อัปเดต: แอนิเมชันเลื่อนข้อความแบบตัดกลับจุดเริ่มต้นทันที (ไม่มี Fade)
+// อัปเดต: เพิ่มแอนิเมชันตอนเปลี่ยนท่อนเนื้อเพลง (Smooth Fade & Slide Up) ปลอดภัยไม่เละ!
 // ==========================================
 
 let pipWindow = null;
@@ -53,7 +53,6 @@ window.togglePiPMode = async function() {
                 flex-shrink: 0;
             }
             
-            /* 🟢 คอนเทนเนอร์แสดงชื่อเพลงและศิลปิน */
             #pip-info {
                 display: flex; flex-direction: column; justify-content: center;
                 flex: 1; overflow: hidden;
@@ -68,7 +67,6 @@ window.togglePiPMode = async function() {
             #pip-title-text { font-size: 17px; font-weight: bold; color: #0a84ff; }
             #pip-artist-text { font-size: 13px; color: #8e8e93; margin-top: 4px; }
 
-            /* 🟢 แอนิเมชันเลื่อนข้อความใหม่: เลื่อนสุด > หยุดแป๊บนึง > ตัดกลับไปจุดเริ่มทันที */
             @keyframes scroll-overflow {
                 0%, 15% { transform: translateX(0); }
                 85%, 100% { transform: translateX(var(--scroll-dist)); }
@@ -117,7 +115,14 @@ window.togglePiPMode = async function() {
             #current-lyric-text {
                 font-size: clamp(20px, 6vmin, 44px); font-weight: 800; line-height: 1.25; 
                 width: 100%; word-wrap: break-word; overflow-wrap: break-word; white-space: normal;
-                transition: font-size 0.15s ease; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); 
+                color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); 
+                /* 🟢 ปิด Transition ตรงนี้ทิ้ง ป้องกันการตีกับ Keyframes */
+            }
+
+            /* 🟢 แอนิเมชันตอนเปลี่ยนท่อน (Fade + Slide Up อ่อนๆ + Blur จางๆ ให้ดูนุ่มนวล) */
+            @keyframes lyricEnter {
+                0% { opacity: 0; transform: translateY(15px); filter: blur(3px); }
+                100% { opacity: 1; transform: translateY(0); filter: blur(0); }
             }
 
             #current-lyric-text div[class^="lang-"] { margin-bottom: 8px; }
@@ -213,7 +218,6 @@ window.togglePiPMode = async function() {
                 titleText.innerText = song.title;
                 artistText.innerText = `🎤 ${displayArtist}`;
                 
-                // 🟢 ฟังก์ชันคำนวณระยะการเลื่อนข้อความ 
                 const applyScroll = (el) => {
                     el.style.animation = 'none';
                     el.style.transform = 'translateX(0)';
@@ -224,7 +228,6 @@ window.togglePiPMode = async function() {
                             const distance = el.scrollWidth - parent.clientWidth + 15; 
                             const speed = Math.max(4, distance / 15); 
                             el.style.setProperty('--scroll-dist', `-${distance}px`);
-                            // ใช้แอนิเมชันแบบวนลูปต่อเนื่อง
                             el.style.animation = `scroll-overflow ${speed}s linear infinite`;
                         }
                     }, 200);
@@ -256,6 +259,12 @@ window.togglePiPMode = async function() {
                     lyricBox.innerHTML = '<span style="color:#8e8e93 !important; text-shadow:none;">🎵 กำลังรอเนื้อเพลง...</span>';
                 }
 
+                // 🟢 สร้าง Trigger เรียกใช้งานแอนิเมชันให้ปลอดภัย ไม่รวน 100%
+                lyricBox.style.animation = 'none'; // รีเซ็ตแอนิเมชัน
+                void lyricBox.offsetWidth; // บังคับให้เบราว์เซอร์ล้างค่าเก่า (Reflow)
+                lyricBox.style.animation = 'lyricEnter 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards'; // สั่งเล่นใหม่
+
+                // คืนค่าฟอนต์
                 lyricBox.style.fontSize = ''; 
                 
                 setTimeout(() => {
