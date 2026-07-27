@@ -132,11 +132,24 @@ window.wm = {
                     window.ytPlayer = null;
                 }
                 document.getElementById("content-player").innerHTML = '<div id="youtubePlayer" style="width: 100%; height: 100%;"></div>';
-                
-                const liveAct = document.getElementById('liveActivity');
-                const liveDiv = document.getElementById('dockDivider');
-                if (liveAct) liveAct.classList.add('hidden');
-                if (liveDiv) liveDiv.classList.add('hidden');
+
+                const liveAct = document.getElementById('liveActivity'); const liveDiv = document.getElementById('dockDivider');
+    if (liveAct && liveDiv) {
+        document.getElementById('liveTitle').innerText = song.title;
+        document.getElementById('liveArtist').innerText = '🎤 ' + (song.artist || '-');
+        
+        // 🔴 เพิ่มโค้ดดึงปก YouTube มาทำเป็นพื้นหลัง Live Activity แบบครอป
+        const ytId = window.extractYouTubeID(song.audioPath);
+        if (ytId) {
+            // ใช้ภาพปก (mqdefault.jpg) มาทำพื้นหลัง และใส่ linear-gradient สีดำโปร่งแสงทับ เพื่อให้ตัวหนังสือยังสว่างอ่านง่าย
+            liveAct.style.backgroundImage = `linear-gradient(to right, rgba(15, 15, 20, 0.85), rgba(10, 132, 255, 0.2)), url('https://img.youtube.com/vi/${ytId}/mqdefault.jpg')`;
+            liveAct.style.backgroundSize = 'cover';
+            liveAct.style.backgroundPosition = 'center';
+            liveAct.style.boxShadow = 'inset 0 0 20px rgba(0,0,0,0.5)'; // เพิ่มมิติขอบมืด
+        }
+
+        liveAct.classList.remove('hidden'); liveDiv.classList.remove('hidden');
+    }
                 
                 const bgEl = document.getElementById('dynamic-bg');
                 if (bgEl) bgEl.classList.remove('active');
