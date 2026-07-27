@@ -121,11 +121,12 @@ window.wm = {
             onclose: () => { this.settingsWin = null; }
         }));
     },
-   openPlayer: function(title) {
+
+    openPlayer: function(title) {
         if (this.playerWin) { this.playerWin.setTitle("🎥 " + title); this.playerWin.focus(); return; }
         this.playerWin = new WinBox("🎥 " + title, this.applyMemory('player', {
             mount: document.getElementById("content-player"), width: "500px", height: "320px", x: "20px", y: "80px", top: 70, class: ["wb-dark", "no-min"],
-                onclose: () => { 
+            onclose: () => { 
                 this.playerWin = null;
                 if (window.ytPlayer && typeof window.ytPlayer.destroy === 'function') {
                     window.ytPlayer.destroy();
@@ -133,7 +134,29 @@ window.wm = {
                 }
                 document.getElementById("content-player").innerHTML = '<div id="youtubePlayer" style="width: 100%; height: 100%;"></div>';
 
-                const liveAct = document.getElementById('liveActivity'); const liveDiv = document.getElementById('dockDivider');
+                // 🟢 โค้ดตอนปิดเพลง: ซ่อนแถบ Live Activity และล้างรูปปกออกให้หมด
+                const liveAct = document.getElementById('liveActivity'); 
+                const liveDiv = document.getElementById('dockDivider');
+                if (liveAct) {
+                    liveAct.classList.add('hidden');
+                    liveAct.style.removeProperty('--live-bg'); // ล้างรูปปก
+                }
+                if (liveDiv) {
+                    liveDiv.classList.add('hidden');
+                }
+                
+                const bgEl = document.getElementById('dynamic-bg');
+                if (bgEl) bgEl.classList.remove('active');
+
+                window.currentSongId = null;
+                
+                if(window.setRandomPanelState) window.setRandomPanelState(true);
+                if (window.wm.lyricsWin) { window.wm.lyricsWin.close(); }
+                if (window.wm.adminSyncWin) { window.wm.adminSyncWin.close(); }
+            }
+        }));
+    },
+
     if (liveAct && liveDiv) {
         document.getElementById('liveTitle').innerText = song.title;
         document.getElementById('liveArtist').innerText = '🎤 ' + (song.artist || '-');
