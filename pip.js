@@ -216,6 +216,11 @@ window.togglePiPMode = async function() {
                     // รีเซ็ต Header เป็นแบบชิลๆ
                     const titleText = pipWindow.document.getElementById('pip-title-text');
                     const artistText = pipWindow.document.getElementById('pip-artist-text');
+                    
+                    // 🟢 ล้างรูปปกออกตอนอยู่หน้า Idle
+                    const pipHeader = pipWindow.document.getElementById('pip-header');
+                    if (pipHeader) pipHeader.style.removeProperty('--pip-header-bg'); 
+                    
                     titleText.innerText = '🎲 โหมดสุ่มเพลง';
                     artistText.innerText = 'คลิกเลือกเพลงจากรายการด้านล่าง';
                     
@@ -314,12 +319,25 @@ window.togglePiPMode = async function() {
                 applyScroll(artistText);
                 
                 const coverImg = pipWindow.document.getElementById('pip-cover');
+                
+                // 🟢 โค้ดชุดใหม่สำหรับดึงรูปปกไปใส่ Header
+                const pipHeader = pipWindow.document.getElementById('pip-header');
                 const ytId = window.extractYouTubeID(targetVideoPath);
+                
                 if (ytId) {
+                    const thumbUrl = `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
+                    
                     coverImg.src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
                     coverImg.style.display = 'block';
+                    
+                    if (pipHeader) {
+                        pipHeader.style.setProperty('--pip-header-bg', `url('${thumbUrl}')`);
+                    }
                 } else {
                     coverImg.style.display = 'none';
+                    if (pipHeader) {
+                        pipHeader.style.removeProperty('--pip-header-bg');
+                    }
                 }
             }
 
