@@ -61,12 +61,22 @@ body {
 .live-activity {
     display: flex; align-items: center; gap: 10px;
     padding: 4px 14px 4px 8px; border-radius: 40px;
-    background: rgba(10, 132, 255, 0.15); 
+    
+    /* 🟢 1. เปลี่ยนเป็น background-color เพื่อให้เป็นสีพื้นฐานตอนที่ยังไม่มีเพลง */
+    background-color: rgba(10, 132, 255, 0.15);
+    
+    /* 🟢 2. เพิ่มโค้ดรับรูปภาพ และไล่สี (Gradient) เพื่อให้ข้อความยังอ่านง่าย */
+    background-image: linear-gradient(to right, rgba(15, 15, 20, 0.95) 35%, rgba(10, 132, 255, 0.2)), var(--live-bg, none);
+    background-size: cover;
+    background-position: center;
+    
     border: 1px solid rgba(10, 132, 255, 0.3);
     cursor: pointer; transition: all 0.4s ease;
     max-width: 250px; overflow: hidden;
 }
-.live-activity:hover { background: rgba(10, 132, 255, 0.25); transform: scale(1.02); }
+
+/* 🟢 3. จุดสำคัญ: เปลี่ยนจาก background เป็น background-color เพื่อไม่ให้รูปปกหายตอนเอาเมาส์ชี้ */
+.live-activity:hover { background-color: rgba(10, 132, 255, 0.25); transform: scale(1.02); }
 .live-activity.hidden { max-width: 0; padding: 0; margin: 0; opacity: 0; border: none; pointer-events: none; }
 
 .live-icon { font-size: 1.2em; animation: pulse 2s infinite; }
