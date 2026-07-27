@@ -79,8 +79,44 @@ body {
 .live-activity:hover { background-color: rgba(10, 132, 255, 0.25); transform: scale(1.02); }
 .live-activity.hidden { max-width: 0; padding: 0; margin: 0; opacity: 0; border: none; pointer-events: none; }
 
-.live-icon { font-size: 1.2em; animation: pulse 2s infinite; }
-@keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.15);} 100% {transform: scale(1);} }
+/* =========================================
+   คลื่นเสียง Visualizer Equalizer (แทนที่ไอคอนเพลง)
+   ========================================= */
+.live-icon {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 3px;
+    height: 18px; /* ความสูงของคลื่น */
+    margin-right: 5px;
+    padding-bottom: 2px;
+}
+
+.live-icon .bar {
+    width: 3px;
+    background-color: #00d2ff;
+    border-radius: 2px;
+    transform-origin: bottom;
+    animation: equalize 0.6s infinite ease-in-out alternate;
+}
+
+/* ตั้งค่าให้แต่ละแท่งเต้นไม่พร้อมกัน */
+.live-icon .bar:nth-child(1) { height: 60%; animation-delay: -0.4s; }
+.live-icon .bar:nth-child(2) { height: 100%; animation-delay: -0.2s; }
+.live-icon .bar:nth-child(3) { height: 75%; animation-delay: 0s; }
+.live-icon .bar:nth-child(4) { height: 50%; animation-delay: -0.5s; }
+
+@keyframes equalize {
+    0% { transform: scaleY(0.2); }
+    100% { transform: scaleY(1); }
+}
+
+/* 🟢 คำสั่งให้คลื่นหยุดนิ่งและยุบตัวลงเมื่อเพลงหยุด (Pause) */
+.live-activity.paused .live-icon .bar {
+    animation: none;
+    transform: scaleY(0.2);
+    transition: transform 0.3s ease;
+}
 
 /* =========================================
    เอฟเฟกต์ตัวหนังสือวิ่ง (Marquee) สำหรับ Live Activity
