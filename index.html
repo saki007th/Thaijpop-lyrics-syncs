@@ -21,7 +21,13 @@
         
       <!-- 🔴 ส่วน Live Activity(จะโชว์ก็ต่อเมื่อมีเพลงเล่น) -->
         <div id="liveActivity" class="live-activity hidden" onclick="if(window.currentSongId) wm.openPlayer(document.getElementById('liveTitle').innerText)" title="เปิดหน้าต่างเครื่องเล่น">
-            <div class="live-icon">🎵</div>
+            <div class="live-icon">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        </div>
+            
             <div class="live-info">
                 <div id="liveTitle" class="live-title">-</div>
                 <div id="liveArtist" class="live-artist">-</div>
