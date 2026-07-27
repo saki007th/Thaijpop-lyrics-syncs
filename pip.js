@@ -1,6 +1,6 @@
 // ==========================================
 // pip.js - ระบบหน้าต่างเนื้อเพลงลอยอิสระ (Document Picture-in-Picture)
-// อัปเดต: เปลี่ยนหน้าจอตอน "ไม่มีเพลงเล่น" ให้เป็น "หน้าต่างสุ่มเพลงน่าฟัง" กดเล่นได้ทันที!
+// อัปเดต: ดีไซน์ Glassmorphism พื้นหลังกระจกฝ้า + แผ่นเสียงหมุนได้!
 // ==========================================
 
 let pipWindow = null;
@@ -27,11 +27,17 @@ window.togglePiPMode = async function() {
         const style = document.createElement('style');
         style.textContent = `
             body { 
-                margin: 0; padding: 0; background: #0a0a0c; color: #fff; 
+                margin: 0; padding: 0; color: #fff; 
                 display: flex; flex-direction: column; 
                 height: 100vh; overflow: hidden; 
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-                transition: background 0.5s ease;
+                
+                /* 🟢 พื้นหลังเต็มจอรับรูปภาพ */
+                background-color: #0a0a0c;
+                background-image: var(--pip-bg-image, none);
+                background-size: cover;
+                background-position: center;
+                transition: background-image 1s ease;
             }
             
             /* =========================================
@@ -44,15 +50,28 @@ window.togglePiPMode = async function() {
                 background-image: linear-gradient(to right, rgba(15, 15, 20, 0.95) 40%, rgba(10, 132, 255, 0.2)), var(--pip-header-bg, none);
                 background-size: cover;
                 background-position: center;
+                border-bottom: 1px solid rgba(255,255,255,0.05);
             }
+
+            /* 🟢 ทำภาพปกให้เป็นวงกลม และหมุนเหมือนแผ่นเสียง */
             #pip-cover {
                 width: 65px; height: 65px;
-                border-radius: 12px; object-fit: cover;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+                border-radius: 50%; /* เปลี่ยนเป็นวงกลม */
+                object-fit: cover;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.5), 0 0 0 4px #1c1c1e; /* สร้างขอบแผ่นเสียง */
                 background: #1c1c1e; 
                 display: none; 
-                transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
                 flex-shrink: 0;
+                animation: spinRecord 12s linear infinite; /* สั่งหมุน */
+            }
+
+            @keyframes spinRecord {
+                100% { transform: rotate(360deg); }
+            }
+
+            /* 🟢 หยุดหมุนเวลาเพลงหยุด */
+            body.is-paused #pip-cover {
+                animation-play-state: paused;
             }
             
             #pip-info {
@@ -66,8 +85,8 @@ window.togglePiPMode = async function() {
             .scroll-box { width: 100%; overflow: hidden; white-space: nowrap; }
             .scroll-text { display: inline-block; transition: all 0.6s ease; }
             
-            #pip-title-text { font-size: 17px; font-weight: bold; color: #0a84ff; }
-            #pip-artist-text { font-size: 13px; color: #8e8e93; margin-top: 4px; }
+            #pip-title-text { font-size: 17px; font-weight: bold; color: #0a84ff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+            #pip-artist-text { font-size: 13px; color: #ccc; margin-top: 4px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
 
             @keyframes scroll-overflow {
                 0%, 15% { transform: translateX(0); }
@@ -75,16 +94,18 @@ window.togglePiPMode = async function() {
             }
             
             #pip-timer {
-                font-family: monospace; font-size: 13px; color: #aaa;
+                font-family: monospace; font-size: 13px; color: #ddd;
                 font-weight: bold; text-align: right;
                 opacity: 0; transform: translateX(10px);
                 max-width: 0; overflow: hidden;
                 transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+                text-shadow: 0 1px 3px rgba(0,0,0,0.8);
             }
             #pip-progress-container {
                 width: 100%; height: 4px;
-                background: rgba(255, 255, 255, 0.08);
+                background: rgba(255, 255, 255, 0.15);
                 transition: all 0.6s ease;
+                z-index: 10;
             }
             #pip-progress-bar {
                 width: 0%; height: 100%;
@@ -95,29 +116,34 @@ window.togglePiPMode = async function() {
             /* =========================================
                🚀 โหมดเล่นเพลง (Compact Mode)
                ========================================= */
-            body.compact-mode #pip-header { padding: 12px 15px; }
-            body.compact-mode #pip-cover { width: 32px; height: 32px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+            body.compact-mode #pip-header { padding: 12px 15px; } /* ลบ background: transparent ออกแล้ว */
+            body.compact-mode #pip-cover { width: 40px; height: 40px; box-shadow: 0 2px 6px rgba(0,0,0,0.5), 0 0 0 2px #1c1c1e; }
             body.compact-mode #pip-title-text { font-size: 15px; color: #fff; }
-            body.compact-mode #pip-artist-text { font-size: 11px !important; opacity: 0.7; margin-top: 2px; }
+            body.compact-mode #pip-artist-text { font-size: 11px !important; opacity: 0.8; margin-top: 2px; }
             body.compact-mode #pip-timer { opacity: 1; transform: translateX(0); max-width: 100px; padding-left: 10px; }
-            body.compact-mode #pip-progress-container { height: 1px; background: rgba(255,255,255,0.15); box-shadow: 0 0 10px rgba(10, 132, 255, 0.3); }
+            body.compact-mode #pip-progress-container { height: 2px; background: rgba(255,255,255,0.2); box-shadow: 0 0 10px rgba(10, 132, 255, 0.3); }
             body.compact-mode #pip-progress-bar { background: #00d2ff; box-shadow: 0 0 8px #00d2ff; }
 
             /* =========================================
-               📝 พื้นที่เนื้อเพลง
+               📝 พื้นที่เนื้อเพลง (Glassmorphism)
                ========================================= */
             #pip-lyrics {
                 flex-grow: 1; display: flex; flex-direction: column; 
                 justify-content: center; align-items: center; 
                 padding: 15px; text-align: center; box-sizing: border-box;
-                background: radial-gradient(circle at center, #1c1c1e 0%, #0a0a0c 100%);
                 width: 100%; overflow: hidden; 
+                
+                /* 🟢 ใส่เอฟเฟกต์กระจกฝ้าทับรูปปกเต็มจอ */
+                background: rgba(0, 0, 0, 0.55);
+                backdrop-filter: blur(45px) saturate(150%);
+                -webkit-backdrop-filter: blur(45px) saturate(150%);
+                box-shadow: inset 0 20px 50px rgba(0,0,0,0.5); 
             }
             
             #current-lyric-text {
                 font-size: clamp(20px, 6vmin, 44px); font-weight: 800; line-height: 1.25; 
                 width: 100%; word-wrap: break-word; overflow-wrap: break-word; white-space: normal;
-                color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); 
+                color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.4), 0 2px 5px rgba(0,0,0,0.8); 
             }
 
             @keyframes lyricEnter {
@@ -134,14 +160,14 @@ window.togglePiPMode = async function() {
                ========================================= */
             .pip-random-item {
                 display: flex; align-items: center; gap: 12px;
-                background: rgba(255, 255, 255, 0.05); padding: 8px 12px;
+                background: rgba(255, 255, 255, 0.08); padding: 8px 12px;
                 border-radius: 12px; cursor: pointer;
                 border: 1px solid rgba(255, 255, 255, 0.05);
                 transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
                 text-shadow: none; 
             }
             .pip-random-item:hover {
-                background: rgba(10, 132, 255, 0.15);
+                background: rgba(10, 132, 255, 0.25);
                 border-color: rgba(10, 132, 255, 0.4);
                 transform: translateY(-2px);
                 box-shadow: 0 4px 10px rgba(0,0,0,0.3);
@@ -151,8 +177,8 @@ window.togglePiPMode = async function() {
                 object-fit: cover; box-shadow: 0 2px 6px rgba(0,0,0,0.5);
             }
             .pip-random-info { flex: 1; overflow: hidden; text-align: left; }
-            .pip-random-title { font-size: 14px; font-weight: bold; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-            .pip-random-artist { font-size: 11px; color: #8e8e93; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .pip-random-title { font-size: 14px; font-weight: bold; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+            .pip-random-artist { font-size: 11px; color: #ccc; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
             /* 🎵 ลูกเล่นพิเศษ: ดนตรี, ป้ายชื่อ, คอรัส */
             .lyric-instrumental { display: flex; justify-content: center; align-items: center; gap: 15px; font-size: 1.5em; height: 60px; }
@@ -212,14 +238,16 @@ window.togglePiPMode = async function() {
                     
                     // ปิด Compact Mode เพื่อให้หน้าจอไม่พับ
                     pipWindow.document.body.classList.remove('compact-mode');
+                    pipWindow.document.body.classList.remove('is-paused');
                     
                     // รีเซ็ต Header เป็นแบบชิลๆ
                     const titleText = pipWindow.document.getElementById('pip-title-text');
                     const artistText = pipWindow.document.getElementById('pip-artist-text');
                     
-                    // 🟢 ล้างรูปปกออกตอนอยู่หน้า Idle
+                    // 🟢 ล้างภาพพื้นหลังออกทั้งหมดตอนอยู่หน้า Idle
                     const pipHeader = pipWindow.document.getElementById('pip-header');
                     if (pipHeader) pipHeader.style.removeProperty('--pip-header-bg'); 
+                    pipWindow.document.body.style.removeProperty('--pip-bg-image');
                     
                     titleText.innerText = '🎲 โหมดสุ่มเพลง';
                     artistText.innerText = 'คลิกเลือกเพลงจากรายการด้านล่าง';
@@ -284,7 +312,7 @@ window.togglePiPMode = async function() {
                 lastTrackKey = currentKey;
                 pipWindow.lastLyricIndex = -1; 
                 
-                pipWindow.document.getElementById('current-lyric-text').innerHTML = '<span style="color:#8e8e93 !important; text-shadow:none;">🎵 กำลังรอเนื้อเพลง...</span>';
+                pipWindow.document.getElementById('current-lyric-text').innerHTML = '<span style="color:#ccc !important; text-shadow:none;">🎵 กำลังรอเนื้อเพลง...</span>';
                 
                 let targetVideoPath = song.audioPath;
                 let displayArtist = song.artist || 'ไม่ระบุศิลปิน';
@@ -320,24 +348,27 @@ window.togglePiPMode = async function() {
                 
                 const coverImg = pipWindow.document.getElementById('pip-cover');
                 
-                // 🟢 โค้ดชุดใหม่สำหรับดึงรูปปกไปใส่ Header
+                // 🟢 ดึงรูปปกไปใส่ Header และพื้นหลังเต็มจอ
                 const pipHeader = pipWindow.document.getElementById('pip-header');
                 const ytId = window.extractYouTubeID(targetVideoPath);
                 
                 if (ytId) {
                     const thumbUrl = `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
+                    const hqUrl = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
                     
-                    coverImg.src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+                    coverImg.src = hqUrl;
                     coverImg.style.display = 'block';
                     
                     if (pipHeader) {
                         pipHeader.style.setProperty('--pip-header-bg', `url('${thumbUrl}')`);
                     }
+                    pipWindow.document.body.style.setProperty('--pip-bg-image', `url('${hqUrl}')`);
                 } else {
                     coverImg.style.display = 'none';
                     if (pipHeader) {
                         pipHeader.style.removeProperty('--pip-header-bg');
                     }
+                    pipWindow.document.body.style.removeProperty('--pip-bg-image');
                 }
             }
 
@@ -351,7 +382,7 @@ window.togglePiPMode = async function() {
                 if (activeLine) {
                     lyricBox.innerHTML = activeLine.innerHTML;
                 } else {
-                    lyricBox.innerHTML = '<span style="color:#8e8e93 !important; text-shadow:none;">🎵 กำลังรอเนื้อเพลง...</span>';
+                    lyricBox.innerHTML = '<span style="color:#ccc !important; text-shadow:none;">🎵 กำลังรอเนื้อเพลง...</span>';
                 }
 
                 // 🟢 แอนิเมชัน Smooth Fade & Slide Up
@@ -374,6 +405,16 @@ window.togglePiPMode = async function() {
             if (playerObj && typeof playerObj.getCurrentTime === 'function') {
                 const currentTime = playerObj.getCurrentTime();
                 const duration = playerObj.getDuration();
+                
+                // 🟢 เช็กสถานะการเล่นว่าหยุดพัก (Pause) อยู่หรือไม่ เพื่อสั่งหยุดแผ่นเสียง
+                if (typeof playerObj.getPlayerState === 'function') {
+                    const state = playerObj.getPlayerState();
+                    if (state === 2 || state === 0) { // 2 = Paused, 0 = Ended
+                        pipWindow.document.body.classList.add('is-paused');
+                    } else {
+                        pipWindow.document.body.classList.remove('is-paused');
+                    }
+                }
                 
                 if (duration > 0) {
                     const percent = (currentTime / duration) * 100;
