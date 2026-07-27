@@ -114,6 +114,7 @@ window.wm = {
         }));
         window.renderSongList();
     },
+    
     openSettings: function() {
         if (this.settingsWin) { this.settingsWin.focus(); return; }
         this.settingsWin = new WinBox("⚙️ การตั้งค่า", this.applyMemory('settings', {
@@ -122,7 +123,7 @@ window.wm = {
         }));
     },
 
-   openPlayer: function(title) {
+    openPlayer: function(title) {
         if (this.playerWin) { this.playerWin.setTitle("🎥 " + title); this.playerWin.focus(); return; }
         this.playerWin = new WinBox("🎥 " + title, this.applyMemory('player', {
             mount: document.getElementById("content-player"), width: "500px", height: "320px", x: "20px", y: "80px", top: 70, class: ["wb-dark", "no-min"],
@@ -156,35 +157,7 @@ window.wm = {
             }
         }));
     },
-
-    if (liveAct && liveDiv) {
-        document.getElementById('liveTitle').innerText = song.title;
-        document.getElementById('liveArtist').innerText = '🎤 ' + (song.artist || '-');
-        
-        // 🔴 เพิ่มโค้ดดึงปก YouTube มาทำเป็นพื้นหลัง Live Activity แบบครอป
-        const ytId = window.extractYouTubeID(song.audioPath);
-        if (ytId) {
-            // ใช้ภาพปก (mqdefault.jpg) มาทำพื้นหลัง และใส่ linear-gradient สีดำโปร่งแสงทับ เพื่อให้ตัวหนังสือยังสว่างอ่านง่าย
-            liveAct.style.backgroundImage = `linear-gradient(to right, rgba(15, 15, 20, 0.85), rgba(10, 132, 255, 0.2)), url('https://img.youtube.com/vi/${ytId}/mqdefault.jpg')`;
-            liveAct.style.backgroundSize = 'cover';
-            liveAct.style.backgroundPosition = 'center';
-            liveAct.style.boxShadow = 'inset 0 0 20px rgba(0,0,0,0.5)'; // เพิ่มมิติขอบมืด
-        }
-
-        liveAct.classList.remove('hidden'); liveDiv.classList.remove('hidden');
-    }
-                
-                const bgEl = document.getElementById('dynamic-bg');
-                if (bgEl) bgEl.classList.remove('active');
-
-                window.currentSongId = null;
-                
-                if(window.setRandomPanelState) window.setRandomPanelState(true);
-                if (window.wm.lyricsWin) { window.wm.lyricsWin.close(); }
-                if (window.wm.adminSyncWin) { window.wm.adminSyncWin.close(); }
-            }
-        }));
-    },
+    
     openLyrics: function(title) {
         if (this.lyricsWin) { this.lyricsWin.setTitle("📝 " + title); this.lyricsWin.focus(); return; }
         this.lyricsWin = new WinBox("📝 " + title, this.applyMemory('lyrics', {
@@ -192,6 +165,7 @@ window.wm = {
             onclose: () => { this.lyricsWin = null; }
         }));
     },
+    
     openAdd: function(title) {
         if (this.addWin) { this.addWin.setTitle(title); this.addWin.focus(); return; }
         this.addWin = new WinBox(title, this.applyMemory('addedit', {
@@ -199,6 +173,7 @@ window.wm = {
             onclose: () => { this.addWin = null; }
         }));
     },
+    
     openAdminSync: function() {
         if (!window.isAdmin || !window.currentSongId) return;
         const song = window.songs.find(s => s.id === window.currentSongId);
@@ -1339,10 +1314,10 @@ window.checkSharedLink = function() {
         const targetSong = window.songs.find(s => window.createCleanSlug(s.title) === trackSlug);
         if (targetSong) {
             if (typeof window.playSong === 'function') window.playSong(targetSong.id);
-            return true; // 🟢 เพิ่มบรรทัดนี้: ส่งสัญญาณว่าเปิดเพลงสำเร็จแล้ว
+            return true; 
         }
     }
-    return false; // 🟢 เพิ่มบรรทัดนี้: ส่งสัญญาณว่าไม่เจอเพลงจากลิงก์
+    return false; 
 };
 
 window.copyShareLink = function(songTitle, buttonElement) {
