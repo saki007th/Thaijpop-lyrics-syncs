@@ -603,7 +603,7 @@ window.playSong = function(id) {
             liveAct.style.removeProperty('--live-bg');
         }
 
-        liveAct.classList.remove('hidden'); liveDiv.classList.remove('hidden');
+        liveAct.classList.remove('hidden'); liveDiv.classList.remove('hidden'); liveAct.classList.remove('paused');
     }
 
     window.currentLyricsArray = song.lyrics.split(/\n\s*\n/); window.currentLyricIndex = -1;
@@ -984,8 +984,16 @@ window.toggleLang = function(langIndex) {
 
 window.onPlayerStateChange = function(event) {
     const playPauseBtn = document.getElementById('livePlayPauseBtn');
-    if (event.data === 1 && playPauseBtn) playPauseBtn.innerText = '⏸'; 
-    if (event.data === 2 && playPauseBtn) playPauseBtn.innerText = '▶'; 
+    const liveAct = document.getElementById('liveActivity'); // 🟢 เพิ่มบรรทัดนี้
+
+    if (event.data === 1) { 
+        if (playPauseBtn) playPauseBtn.innerText = '⏸'; 
+        if (liveAct) liveAct.classList.remove('paused'); // 🟢 เพลงเล่น -> คลื่นขยับ
+    } 
+    if (event.data === 2) { 
+        if (playPauseBtn) playPauseBtn.innerText = '▶'; 
+        if (liveAct) liveAct.classList.add('paused'); // 🟢 หยุดเพลง -> คลื่นหยุดนิ่ง
+    }
 
     if (event.data === 0) { 
         if (!window.songs || window.songs.length === 0) return;
