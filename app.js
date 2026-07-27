@@ -596,6 +596,15 @@ window.playSong = function(id) {
     if (liveAct && liveDiv) {
         document.getElementById('liveTitle').innerText = song.title;
         document.getElementById('liveArtist').innerText = '🎤 ' + (song.artist || '-');
+        
+        // ส่งรูปลงไปใน CSS
+        const ytId = window.extractYouTubeID(song.audioPath);
+        if (ytId) {
+            liveAct.style.setProperty('--live-bg', `url('https://img.youtube.com/vi/${ytId}/mqdefault.jpg')`);
+        } else {
+            liveAct.style.removeProperty('--live-bg');
+        }
+
         liveAct.classList.remove('hidden'); liveDiv.classList.remove('hidden');
     }
 
