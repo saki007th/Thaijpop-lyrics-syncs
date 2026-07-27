@@ -95,7 +95,7 @@ window.togglePiPMode = async function() {
             /* =========================================
                🚀 โหมดเล่นเพลง (Compact Mode)
                ========================================= */
-            body.compact-mode #pip-header { padding: 12px 15px; background: transparent; }
+            body.compact-mode #pip-header { padding: 12px 15px; }
             body.compact-mode #pip-cover { width: 32px; height: 32px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }
             body.compact-mode #pip-title-text { font-size: 15px; color: #fff; }
             body.compact-mode #pip-artist-text { font-size: 11px !important; opacity: 0.7; margin-top: 2px; }
