@@ -145,6 +145,7 @@ window.wm = {
                 if (liveDiv) {
                     liveDiv.classList.add('hidden');
                 }
+                window.resetWinBoxColor();
                 
                 const bgEl = document.getElementById('dynamic-bg');
                 if (bgEl) bgEl.classList.remove('active');
@@ -595,12 +596,15 @@ window.playSong = function(id) {
         document.getElementById('liveTitle').innerText = song.title;
         document.getElementById('liveArtist').innerText = '🎤 ' + (song.artist || '-');
         
-        // ส่งรูปลงไปใน CSS
+       // ส่งรูปลงไปใน CSS และดูดสีปก
         const ytId = window.extractYouTubeID(song.audioPath);
         if (ytId) {
-            liveAct.style.setProperty('--live-bg', `url('https://img.youtube.com/vi/${ytId}/mqdefault.jpg')`);
+            const thumbUrl = `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
+            liveAct.style.setProperty('--live-bg', `url('${thumbUrl}')`);
+            window.extractDominantColor(thumbUrl); 
         } else {
             liveAct.style.removeProperty('--live-bg');
+            window.resetWinBoxColor(); 
         }
 
         liveAct.classList.remove('hidden'); liveDiv.classList.remove('hidden'); liveAct.classList.remove('paused');
@@ -1354,3 +1358,53 @@ function showShareToast(message) {
     toast.innerText = message; toast.style.opacity = '1'; toast.style.bottom = '50px';
     setTimeout(() => { toast.style.opacity = '0'; toast.style.bottom = '30px'; }, 2500);
 }
+// ==========================================
+// 🎨 ระบบสกัดสีจากรูปปก (Dynamic WinBox Color)
+// ==========================================
+window.setWinBoxColor = function(r, g, b) {
+    document.documentElement.style.setProperty('--wb-bg-r', r);
+    document.documentElement.style.setProperty('--wb-bg-g', g);
+    document.documentElement.style.setProperty('--wb-bg-b', b);
+};
+
+window.resetWinBoxColor = function() {
+    window.setWinBoxColor(28, 28, 30); // คืนค่ากลับเป็นสีเทาเข้ม (Theme เดิม)
+};
+
+window.extractDominantColor = function(imgUrl) {
+    const img = new Image();
+    img.crossOrigin = "Anonymous"; // จำเป็นมาก เพื่ออนุญาตให้ดูดสีจากลิงก์ YouTube ได้
+    img.src = imgUrl;
+    img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width; canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+
+        // ดึงพิกเซลจากบริเวณตรงกลางภาพ (หลบขอบดำที่อาจจะติดมา)
+        const imageData = ctx.getImageData(0, Math.floor(img.height * 0.1), img.width, Math.floor(img.height * 0.8));
+        const data = imageData.data;
+
+        let r = 0, g = 0, b = 0, count = 0;
+        
+        // สุ่มข้ามพิกเซลเพื่อความเร็ว (คำนวณทุกๆ 16 ข้อมูล)
+        for (let i = 0; i < data.length; i += 16) {
+            // กรองสีที่ดำเกินไปหรือขาวเกินไปทิ้ง เพื่อให้ได้สีสันที่แท้จริง
+            if ((data[i] < 30 && data[i+1] < 30 && data[i+2] < 30) || (data[i] > 230 && data[i+1] > 230 && data[i+2] > 230)) continue;
+            r += data[i]; g += data[i+1]; b += data[i+2];
+            count++;
+        }
+
+        if (count > 0) {
+            // หาสีเฉลี่ย และดรอปความสว่างลง 65% (คูณ 0.35) เพื่อให้ WinBox ยังคงเป็นโทน Dark Mode ที่อ่านหนังสือสบายตา
+            const darkenFactor = 0.35;
+            r = Math.floor((r / count) * darkenFactor);
+            g = Math.floor((g / count) * darkenFactor);
+            b = Math.floor((b / count) * darkenFactor);
+            window.setWinBoxColor(r, g, b);
+        } else {
+            window.resetWinBoxColor();
+        }
+    };
+    img.onerror = function() { window.resetWinBoxColor(); }; // ถ้ารูปพัง ให้กลับไปใช้สีเดิม
+};
