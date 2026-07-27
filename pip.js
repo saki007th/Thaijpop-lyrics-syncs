@@ -40,8 +40,10 @@ window.togglePiPMode = async function() {
             #pip-header {
                 display: flex; align-items: center; gap: 15px;
                 padding: 20px 20px;
-                background: rgba(255, 255, 255, 0.05);
-                transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+                background-color: #1c1c1e;
+                background-image: linear-gradient(to right, rgba(15, 15, 20, 0.95) 40%, rgba(10, 132, 255, 0.2)), var(--pip-header-bg, none);
+                background-size: cover;
+                background-position: center;
             }
             #pip-cover {
                 width: 65px; height: 65px;
