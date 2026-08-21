@@ -168,7 +168,7 @@ body {
     left: 40px; /* ระยะห่างจากขอบซ้าย */
     display: flex;
     gap: 30px; /* ระยะห่างระหว่างไอคอน */
-    z-index: 100;
+    z-index: 1;
 }
 
 .desktop-icon {
@@ -222,7 +222,7 @@ body {
     position: fixed;
     bottom: 30px;
     left: 40px;
-    z-index: 100;
+    z-index: 1;
 }
 
 .desktop-corner-btn {
