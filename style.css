@@ -168,7 +168,7 @@ body {
     left: 40px; /* ระยะห่างจากขอบซ้าย */
     display: flex;
     gap: 30px; /* ระยะห่างระหว่างไอคอน */
-    z-index: 1;
+    z-index: 100;
 }
 
 .desktop-icon {
@@ -222,7 +222,10 @@ body {
     position: fixed;
     bottom: 30px;
     left: 40px;
-    z-index: 1;
+    z-index: 1000;
+    display: flex;
+    gap: 15px;
+    align-items: center;
 }
 
 .desktop-corner-btn {
@@ -618,22 +621,19 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
    ปุ่มกระดิ่งแจ้งเตือน (ลอยเด่นมุมขวาล่าง)
    ========================================= */
 .floating-notify-btn {
-    position: fixed;
-    bottom: 30px; /* ระยะห่างจากขอบจอข้างล่าง */
-    left: 30px;  /* ระยะห่างจากขอบจอฝั่งขวา */
+    position: relative; /* ยกเลิก fixed */
     width: 55px;
     height: 55px;
-    background: rgba(30, 30, 30, 0.7); /* พื้นหลังสีดำโปร่งแสง */
-    backdrop-filter: blur(10px);       /* เอฟเฟกต์กระจกฝ้า */
+    background: rgba(30, 30, 30, 0.7);
+    backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%; /* ทำให้ปุ่มเป็นวงกลม 100% */
+    border-radius: 50%;
     font-size: 24px;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    z-index: 1000; /* ลอยอยู่เลเยอร์บนสุด ห้ามใครบัง */
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
     transition: transform 0.2s, background 0.2s;
     color: white;
