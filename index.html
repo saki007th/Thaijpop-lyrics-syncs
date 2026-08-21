@@ -29,14 +29,22 @@
         <!-- ย้าย Live Activity มาไว้ตรงกลางแถบสถานะ -->
         <div class="mac-center">
             <div id="liveActivity" class="live-activity hidden" onclick="if(window.currentSongId) wm.openPlayer(document.getElementById('liveTitle').innerText)" title="เปิดหน้าต่างเครื่องเล่น">
-                <div class="live-icon">
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                </div>
+                <!-- 1. รูปปกจิ๋ว (ฝั่งซ้าย) -->
+                <div class="live-thumb"></div>
+                
+                <!-- 2. ข้อความ (ตรงกลาง, ซ่อนตอนหด) -->
                 <div class="live-info">
                     <div id="liveTitle" class="live-title">-</div>
                     <div id="liveArtist" class="live-artist">-</div>
                 </div>
-                <div class="live-controls" style="display: flex; gap: 5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 10px; margin-left: 5px;">
+                
+                <!-- 3. คลื่นเสียง (โชว์เสมอ) -->
+                <div class="live-icon">
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                </div>
+                
+                <!-- 4. ปุ่มควบคุม (ฝั่งขวา, ซ่อนตอนหด) -->
+                <div class="live-controls">
                     <button class="live-btn" onclick="event.stopPropagation(); prevLiveSong()" title="ก่อนหน้า">⏮</button>
                     <button id="livePlayPauseBtn" class="live-btn" onclick="event.stopPropagation(); toggleLivePlay()" title="เล่น/พัก">⏸</button>
                     <button class="live-btn" onclick="event.stopPropagation(); nextLiveSong()" title="ถัดไป">⏭</button>
@@ -72,7 +80,7 @@
         </div>
     </div>
 
-  <!-- 🔴 3. ปุ่มบัญชีแอดมินมุมซ้ายล่าง (Bottom Left Corner) -->
+    <!-- 🔴 3. ปุ่มบัญชีแอดมินมุมซ้ายล่าง (Bottom Left Corner) -->
     <div class="bottom-left-controls">
         <button id="btnDockNotify" class="floating-notify-btn" onclick="window.openNotifyWindow()" title="เพลงใหม่ล่าสุด">
             🔔<span id="notifyBadge" class="notify-badge" style="display: none;"></span>
@@ -214,6 +222,8 @@
             </button>
          </div>
     </div> 
+    
+
 
 </body>
 </html>
