@@ -160,32 +160,96 @@ body {
 }
 
 /* =========================================
-   วิดเจ็ตเมนูแคปซูล (Floating Widget Dock)
+   ไอคอนหน้าจอหลัก (Desktop Icons)
    ========================================= */
-.floating-widget-dock {
-    position: fixed; 
-    bottom: 30px; /* ระยะห่างจากขอบจอด้านล่าง */
-    left: 50%; transform: translateX(-50%);
-    background: #242936; /* สีพื้นหลังวิดเจ็ต */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 40px; /* ความโค้งมน */
-    padding: 8px 16px;
-    display: flex; align-items: center; gap: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-    z-index: 9999;
-}
-.widget-btn {
-    background: transparent; border: none;
-    font-size: 1.5em; /* ขนาดไอคอน */
-    width: 44px; height: 44px; border-radius: 12px;
-    cursor: pointer; display: flex; justify-content: center; align-items: center;
-    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-}
-.widget-btn:hover {
-    background: rgba(255, 255, 255, 0.15); 
-    transform: translateY(-5px) scale(1.1); /* เอฟเฟกต์เด้งขึ้นเมื่อชี้เมาส์ */
+.desktop-icons-container {
+    position: fixed;
+    top: 70px; /* ระยะห่างจากแถบด้านบน */
+    left: 40px; /* ระยะห่างจากขอบซ้าย */
+    display: flex;
+    gap: 30px; /* ระยะห่างระหว่างไอคอน */
+    z-index: 100;
 }
 
+.desktop-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    width: 85px; /* ความกว้างต่อบล็อก */
+    transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.desktop-icon:hover {
+    transform: scale(1.08); /* เด้งขยายเมื่อเอาเมาส์ชี้ */
+}
+
+.desktop-icon .icon-box {
+    width: 75px;
+    height: 75px;
+    background: rgba(30, 30, 33, 0.65); /* พื้นหลังไอคอนแบบกระจกฝ้า */
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 18px; /* ความโค้งมนสไตล์ไอคอนแอป */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2.2em; /* ขนาดอีโมจิ */
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    margin-bottom: 10px;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+.desktop-icon:hover .icon-box {
+    background: rgba(255, 255, 255, 0.15); /* สว่างขึ้นเมื่อเอาเมาส์ชี้ */
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.desktop-icon .icon-label {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* =========================================
+   ปุ่มมุมซ้ายล่าง (Bottom Left Controls)
+   ========================================= */
+.bottom-left-controls {
+    position: fixed;
+    bottom: 30px;
+    left: 40px;
+    z-index: 100;
+}
+
+.desktop-corner-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(30, 30, 33, 0.65);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: white;
+    font-size: 1.5em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.desktop-corner-btn:hover {
+    transform: scale(1.15);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.login-btn { color: #34c759; }
+.logout-btn { color: #ff3b30; }
 
 /* =========================================
    หน้าต่าง WinBox
