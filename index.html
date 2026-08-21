@@ -16,48 +16,53 @@
         <div>กำลังโหลดข้อมูลคลังเพลง...</div>
     </div>
 
-   <!-- แถบ Dock (สไตล์ แคปซูลลอย + Live Activity) -->
-    <nav class="floating-pill-dock" id="mainDock">
+   <!-- 🔴 1. แถบสถานะสไตล์ macOS (macOS Status Bar) -->
+    <div class="macos-status-bar">
+        <div class="mac-left">
+            <span class="mac-logo"></span>
+            <span class="mac-app-name">My Lyric Workspace</span>
+            <span class="mac-menu">แฟ้ม</span>
+            <span class="mac-menu">แก้ไข</span>
+            <span class="mac-menu">มุมมอง</span>
+        </div>
         
-      <!-- 🔴 ส่วน Live Activity(จะโชว์ก็ต่อเมื่อมีเพลงเล่น) -->
-        <div id="liveActivity" class="live-activity hidden" onclick="if(window.currentSongId) wm.openPlayer(document.getElementById('liveTitle').innerText)" title="เปิดหน้าต่างเครื่องเล่น">
-            <div class="live-icon">
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        </div>
-            
-            <div class="live-info">
-                <div id="liveTitle" class="live-title">-</div>
-                <div id="liveArtist" class="live-artist">-</div>
-            </div>
-            
-            <!-- 🔴 เพิ่มกลุ่มปุ่มควบคุมเพลงตรงนี้ -->
-            <div class="live-controls" style="display: flex; gap: 5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 15px; margin-left: 10px;">
-                <button class="live-btn" onclick="event.stopPropagation(); prevLiveSong()" title="ก่อนหน้า">⏮</button>
-                <button id="livePlayPauseBtn" class="live-btn" onclick="event.stopPropagation(); toggleLivePlay()" title="เล่น/พัก">⏸</button>
-                <button class="live-btn" onclick="event.stopPropagation(); nextLiveSong()" title="ถัดไป">⏭</button>
+        <!-- ย้าย Live Activity มาไว้ตรงกลางแถบสถานะ -->
+        <div class="mac-center">
+            <div id="liveActivity" class="live-activity hidden" onclick="if(window.currentSongId) wm.openPlayer(document.getElementById('liveTitle').innerText)" title="เปิดหน้าต่างเครื่องเล่น">
+                <div class="live-icon">
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                </div>
+                <div class="live-info">
+                    <div id="liveTitle" class="live-title">-</div>
+                    <div id="liveArtist" class="live-artist">-</div>
+                </div>
+                <div class="live-controls" style="display: flex; gap: 5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 10px; margin-left: 5px;">
+                    <button class="live-btn" onclick="event.stopPropagation(); prevLiveSong()" title="ก่อนหน้า">⏮</button>
+                    <button id="livePlayPauseBtn" class="live-btn" onclick="event.stopPropagation(); toggleLivePlay()" title="เล่น/พัก">⏸</button>
+                    <button class="live-btn" onclick="event.stopPropagation(); nextLiveSong()" title="ถัดไป">⏭</button>
+                </div>
             </div>
         </div>
-
-        <!-- เส้นแบ่ง (จะโชว์เมื่อมี Live Activity) -->
-        <div id="dockDivider" class="dock-divider hidden"></div>
-
-        <!-- ส่วนเมนูหลัก (เปลี่ยนเป็นไอคอนล้วน) -->
-        <div class="dock-buttons">
-            <button class="pill-btn" onclick="wm.openLibrary()" title="คลังเพลง">🏠</button>
-            <button class="pill-btn" onclick="wm.openSettings()" title="ตั้งค่า">⚙️</button>
-            <button class="pill-btn" style="color: #00d2ff;" onclick="togglePiPMode()" title="PiP (หน้าต่างลอย)">🪟</button>
-            
-            <!-- ปุ่มแอดมิน -->
-            <button id="btnDockAdminSync" class="pill-btn" style="display:none; color: #ffcc00;" onclick="if(window.currentSongId) wm.openAdminSync(); else alert('กรุณากดเล่นเพลงที่ต้องการซิงค์ก่อนครับ');" title="ซิงค์ & จัดการเนื้อ">⏱</button>
-            
-            <button id="btnHeaderLogin" class="pill-btn" style="color: #34c759;" onclick="loginWithGoogle()" title="เข้าสู่ระบบแอดมิน">👤</button>
-            <button id="btnHeaderLogout" class="pill-btn" style="display:none; color: #ff3b30;" onclick="logout()" title="ออกจากระบบ">🚪</button>
+        
+        <div class="mac-right">
+            <span class="mac-icon">📶 Wi-Fi</span>
+            <span class="mac-icon">🔋 100%</span>
+            <span id="mac-clock" class="mac-clock">00:00</span>
         </div>
-    </nav>
+    </div>
 
+    <!-- 🔴 2. วิดเจ็ตเมนูทรงแคปซูล (Floating Widget) -->
+    <div class="floating-widget-dock" id="mainWidget">
+        <button class="widget-btn" onclick="wm.openLibrary()" title="คลังเพลง">🏠</button>
+        <button class="widget-btn" onclick="wm.openSettings()" title="ตั้งค่า">⚙️</button>
+        <button class="widget-btn" onclick="togglePiPMode()" title="PiP (หน้าต่างลอย)">🪟</button>
+        
+        <!-- ปุ่มแอดมิน (จะซ่อน/แสดงอัตโนมัติตามสิทธิ์) -->
+        <button id="btnDockAdminSync" class="widget-btn" style="display:none; color: #ffcc00;" onclick="if(window.currentSongId) wm.openAdminSync(); else alert('กรุณากดเล่นเพลงที่ต้องการซิงค์ก่อนครับ');" title="ซิงค์ & จัดการเนื้อ">⏱</button>
+        <button id="btnHeaderLogin" class="widget-btn" style="color: #34c759;" onclick="loginWithGoogle()" title="เข้าสู่ระบบแอดมิน">👤</button>
+        <button id="btnHeaderLogout" class="widget-btn" style="display:none; color: #ff3b30;" onclick="logout()" title="ออกจากระบบ">🚪</button>
+    </div>
+    
     <!-- โกดังเก็บหน้าต่าง -->
     <div id="window-warehouse" style="display: none;">
         
