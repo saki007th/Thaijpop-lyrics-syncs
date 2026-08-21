@@ -72,8 +72,11 @@
         </div>
     </div>
 
-    <!-- 🔴 3. ปุ่มบัญชีแอดมินมุมซ้ายล่าง (Bottom Left Corner) -->
+  <!-- 🔴 3. ปุ่มบัญชีแอดมินมุมซ้ายล่าง (Bottom Left Corner) -->
     <div class="bottom-left-controls">
+        <button id="btnDockNotify" class="floating-notify-btn" onclick="window.openNotifyWindow()" title="เพลงใหม่ล่าสุด">
+            🔔<span id="notifyBadge" class="notify-badge" style="display: none;"></span>
+        </button>
         <button id="btnHeaderLogin" class="desktop-corner-btn login-btn" onclick="loginWithGoogle()" title="เข้าสู่ระบบแอดมิน">👤</button>
         <button id="btnHeaderLogout" class="desktop-corner-btn logout-btn" style="display:none;" onclick="logout()" title="ออกจากระบบ">🚪</button>
     </div>
@@ -211,10 +214,6 @@
             </button>
          </div>
     </div> 
-    
-    <button id="btnDockNotify" class="floating-notify-btn" onclick="window.openNotifyWindow()" title="เพลงใหม่ล่าสุด">
-        🔔<span id="notifyBadge" class="notify-badge" style="display: none;"></span>
-    </button>
 
 </body>
 </html>
