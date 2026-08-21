@@ -68,43 +68,72 @@ body {
 .mac-clock { font-weight: 500; }
 
 /* =========================================
-   ย่อขนาด Live Activity ให้ฝังในแถบสถานะ
+   🍎 Dynamic Island (Live Activity)
    ========================================= */
 .live-activity {
-    height: 24px; padding: 0 12px; border-radius: 12px;
-    background-color: rgba(10, 132, 255, 0.15);
-    background-image: linear-gradient(to right, rgba(15, 15, 20, 0.95) 35%, rgba(10, 132, 255, 0.2)), var(--live-bg, none);
-    background-size: cover; background-position: center;
-    border: 1px solid rgba(10, 132, 255, 0.3);
-    display: flex; align-items: center; gap: 8px; cursor: pointer;
-    max-width: 320px; overflow: hidden; transition: all 0.4s ease;
+    height: 28px; 
+    padding: 0 10px; 
+    border-radius: 14px; /* ทรงแคปซูล */
+    background-color: #000; /* สีดำสนิทแบบจอ OLED */
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    cursor: pointer;
+    overflow: hidden; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); /* แอนิเมชันยืดหยุ่น (Spring) */
+    
+    /* ขนาดเริ่มต้นตอนยังไม่เอาเมาส์ชี้ (หดตัว) */
+    max-width: 120px; 
+    border: 1px solid rgba(255,255,255,0.1);
 }
-.live-activity:hover { background-color: rgba(10, 132, 255, 0.25); }
-.live-activity.hidden { max-width: 0; padding: 0; margin: 0; opacity: 0; border: none; pointer-events: none; }
 
+.live-activity.hidden { 
+    max-width: 0; padding: 0; margin: 0; opacity: 0; border: none; pointer-events: none; 
+}
+
+/* 🟢 เมื่อเอาเมาส์ชี้ ให้ยืดออก (Expand) */
+.live-activity:hover { 
+    max-width: 350px; /* ขยายความกว้าง */
+    padding: 0 15px;
+    background-color: #111;
+    border-color: rgba(255,255,255,0.2);
+}
 
 /* =========================================
-   คลื่นเสียง Visualizer Equalizer (แทนที่ไอคอนเพลง)
+   รูปปกเพลงจิ๋ว (ทางซ้ายสุด)
+   ========================================= */
+.live-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    background-image: var(--live-bg, none);
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+    transition: transform 0.3s;
+}
+
+/* =========================================
+   คลื่นเสียง (ย้ายมาไว้ขวาสุดตอนหดตัว)
    ========================================= */
 .live-icon {
     display: flex;
     align-items: flex-end;
     justify-content: center;
     gap: 3px;
-    height: 14px; /* ปรับลดลงให้เหมาะกับแถบสถานะ */
-    margin-right: 5px;
-    padding-bottom: 2px;
+    height: 14px;
+    margin-left: auto; /* ดันไปขวาสุด */
 }
 
 .live-icon .bar {
-    width: 2px; /* ปรับลดลงให้เหมาะกับแถบสถานะ */
+    width: 2px;
     background-color: #00d2ff;
     border-radius: 2px;
     transform-origin: bottom;
     animation: equalize 0.6s infinite ease-in-out alternate;
 }
 
-/* ตั้งค่าให้แต่ละแท่งเต้นไม่พร้อมกัน */
 .live-icon .bar:nth-child(1) { height: 60%; animation-delay: -0.4s; }
 .live-icon .bar:nth-child(2) { height: 100%; animation-delay: -0.2s; }
 .live-icon .bar:nth-child(3) { height: 75%; animation-delay: 0s; }
@@ -115,7 +144,6 @@ body {
     100% { transform: scaleY(1); }
 }
 
-/* 🟢 คำสั่งให้คลื่นหยุดนิ่งและยุบตัวลงเมื่อเพลงหยุด (Pause) */
 .live-activity.paused .live-icon .bar {
     animation: none;
     transform: scaleY(0.2);
@@ -123,42 +151,77 @@ body {
 }
 
 /* =========================================
-   เอฟเฟกต์ตัวหนังสือวิ่ง (Marquee) สำหรับ Live Activity
+   ข้อความชื่อเพลง (แสดงตอนขยายเท่านั้น)
    ========================================= */
 .live-info {
     flex: 1;            
     min-width: 0;       
-    margin-right: 15px; /* ระยะห่างก่อนถึงปุ่ม */
-    overflow: hidden;   /* 🔴 สำคัญมาก! ใช้บังสายตา ซ่อนตัวอักษรที่อยู่นอกกรอบ */
+    overflow: hidden;   
     white-space: nowrap; 
     display: flex;
     flex-direction: column;
+    
+    /* ตอนหดตัวจะถูกบีบจนหายไป */
+    opacity: 0;
+    width: 0;
+    transition: opacity 0.3s ease 0.1s, width 0.4s ease;
 }
 
-/* สร้างคำสั่งแอนิเมชันให้วิ่งจากขวาไปซ้าย */
-@keyframes scrollText {
-    0%   { transform: translateX(100%); }   /* เริ่มต้นลอยอยู่ขอบขวา (นอกจอ) */
-    100% { transform: translateX(-100%); }  /* วิ่งทะลุไปจนสุดขอบซ้าย (นอกจอ) */
+/* แสดงข้อความเมื่อเอาเมาส์ชี้ */
+.live-activity:hover .live-info {
+    opacity: 1;
+    width: 120px; /* ให้พื้นที่ข้อความ */
 }
 
 .live-title {
-    display: inline-block;
-    /* สั่งให้ชื่อเพลงวิ่งวนลูป ใช้เวลา 10 วินาทีต่อ 1 รอบ */
-    animation: scrollText 10s linear infinite; 
-    font-size: 11px; /* ปรับลดขนาด */
+    font-size: 11px; 
+    font-weight: bold;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .live-artist {
-    display: inline-block;
-    /* สั่งให้ชื่อศิลปินวิ่งช้ากว่านิดนึง (12 วินาที) จะได้ดูมีมิติไม่ทับกัน */
-    animation: scrollText 12s linear infinite; 
-    font-size: 11px; /* ปรับลดขนาด */
+    font-size: 10px; 
+    color: #aaa;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+/* =========================================
+   ปุ่มควบคุม (โผล่มาตอนขยาย)
+   ========================================= */
 .live-controls {
-    flex-shrink: 0; /* 🔴 ล็อกปุ่มควบคุมไว้ ห้ามโดนเบียดเด็ดขาด */
+    display: flex; 
+    gap: 8px; 
+    padding-left: 10px; 
+    border-left: 1px solid rgba(255,255,255,0.15);
+    
+    /* ซ่อนไว้ก่อน */
+    opacity: 0;
+    transform: scale(0.8);
+    pointer-events: none;
+    transition: all 0.3s ease;
 }
 
+/* แสดงเมื่อเอาเมาส์ชี้ */
+.live-activity:hover .live-controls {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+.live-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.1s;
+    padding: 0;
+}
+.live-btn:hover { color: #00d2ff; transform: scale(1.1); }
+.live-btn:active { transform: scale(0.9); }
 /* =========================================
    ไอคอนหน้าจอหลัก (Desktop Icons)
    ========================================= */
