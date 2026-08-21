@@ -47,41 +47,41 @@ body {
 }
 #dynamic-bg.active { opacity: 1; }
 
+
 /* =========================================
-   แถบ Dock ด้านบน (สไตล์ Floating Pill)
+   แถบสถานะ macOS (macOS Status Bar)
    ========================================= */
-.floating-pill-dock {
-    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-    background: rgba(20, 20, 25, 0.6); 
-    backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(255, 255, 255, 0.15); 
-    border-radius: 50px; /* ทำให้หัวมนเป็นแคปซูล */
-    padding: 8px 12px; display: flex; align-items: center; gap: 8px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 9999;
-    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); /* アニメーションยืดหดนุ่มนวล */
+.macos-status-bar {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 30px;
+    background: rgba(30, 30, 33, 0.85); /* สีพื้นหลังแถบสถานะ */
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 15px; font-size: 13px; color: #fff; z-index: 10000;
+    box-sizing: border-box; border-bottom: 1px solid rgba(0, 0, 0, 0.5);
 }
+.mac-left, .mac-center, .mac-right { display: flex; align-items: center; gap: 16px; }
+.mac-center { flex: 1; justify-content: center; }
+.mac-logo { font-size: 16px; cursor: pointer; }
+.mac-app-name { font-weight: bold; cursor: pointer; }
+.mac-menu { cursor: pointer; opacity: 0.8; transition: 0.2s; }
+.mac-menu:hover { opacity: 1; }
+.mac-clock { font-weight: 500; }
 
-/* 🔴 ลูกเล่น Live Activity */
+/* =========================================
+   ย่อขนาด Live Activity ให้ฝังในแถบสถานะ
+   ========================================= */
 .live-activity {
-    display: flex; align-items: center; gap: 10px;
-    padding: 4px 14px 4px 8px; border-radius: 40px;
-    
-    /* 🟢 1. เปลี่ยนเป็น background-color เพื่อให้เป็นสีพื้นฐานตอนที่ยังไม่มีเพลง */
+    height: 24px; padding: 0 12px; border-radius: 12px;
     background-color: rgba(10, 132, 255, 0.15);
-    
-    /* 🟢 2. เพิ่มโค้ดรับรูปภาพ และไล่สี (Gradient) เพื่อให้ข้อความยังอ่านง่าย */
     background-image: linear-gradient(to right, rgba(15, 15, 20, 0.95) 35%, rgba(10, 132, 255, 0.2)), var(--live-bg, none);
-    background-size: cover;
-    background-position: center;
-    
+    background-size: cover; background-position: center;
     border: 1px solid rgba(10, 132, 255, 0.3);
-    cursor: pointer; transition: all 0.4s ease;
-    max-width: 250px; overflow: hidden;
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
+    max-width: 320px; overflow: hidden; transition: all 0.4s ease;
 }
-
-/* 🟢 3. จุดสำคัญ: เปลี่ยนจาก background เป็น background-color เพื่อไม่ให้รูปปกหายตอนเอาเมาส์ชี้ */
-.live-activity:hover { background-color: rgba(10, 132, 255, 0.25); transform: scale(1.02); }
+.live-activity:hover { background-color: rgba(10, 132, 255, 0.25); }
 .live-activity.hidden { max-width: 0; padding: 0; margin: 0; opacity: 0; border: none; pointer-events: none; }
+
 
 /* =========================================
    คลื่นเสียง Visualizer Equalizer (แทนที่ไอคอนเพลง)
@@ -91,13 +91,13 @@ body {
     align-items: flex-end;
     justify-content: center;
     gap: 3px;
-    height: 18px; /* ความสูงของคลื่น */
+    height: 14px; /* ปรับลดลงให้เหมาะกับแถบสถานะ */
     margin-right: 5px;
     padding-bottom: 2px;
 }
 
 .live-icon .bar {
-    width: 3px;
+    width: 2px; /* ปรับลดลงให้เหมาะกับแถบสถานะ */
     background-color: #00d2ff;
     border-radius: 2px;
     transform-origin: bottom;
@@ -145,30 +145,48 @@ body {
     display: inline-block;
     /* สั่งให้ชื่อเพลงวิ่งวนลูป ใช้เวลา 10 วินาทีต่อ 1 รอบ */
     animation: scrollText 10s linear infinite; 
+    font-size: 11px; /* ปรับลดขนาด */
 }
 
 .live-artist {
     display: inline-block;
     /* สั่งให้ชื่อศิลปินวิ่งช้ากว่านิดนึง (12 วินาที) จะได้ดูมีมิติไม่ทับกัน */
     animation: scrollText 12s linear infinite; 
+    font-size: 11px; /* ปรับลดขนาด */
 }
 
 .live-controls {
     flex-shrink: 0; /* 🔴 ล็อกปุ่มควบคุมไว้ ห้ามโดนเบียดเด็ดขาด */
 }
 
-.dock-divider { width: 1px; height: 24px; background: rgba(255, 255, 255, 0.2); transition: all 0.3s; }
-.dock-divider.hidden { width: 0; margin: 0; opacity: 0; }
-
-/* ปุ่มเมนูแบบไอคอน */
-.dock-buttons { display: flex; gap: 4px; }
-.pill-btn {
-    background: transparent; border: none; color: white;
-    font-size: 1.3em; width: 40px; height: 40px; border-radius: 50%;
-    cursor: pointer; display: flex; justify-content: center; align-items: center;
-    transition: all 0.2s;
+/* =========================================
+   วิดเจ็ตเมนูแคปซูล (Floating Widget Dock)
+   ========================================= */
+.floating-widget-dock {
+    position: fixed; 
+    bottom: 30px; /* ระยะห่างจากขอบจอด้านล่าง */
+    left: 50%; transform: translateX(-50%);
+    background: #242936; /* สีพื้นหลังวิดเจ็ต */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 40px; /* ความโค้งมน */
+    padding: 8px 16px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    z-index: 9999;
 }
-.pill-btn:hover { background: rgba(255, 255, 255, 0.1); transform: scale(1.15); }
+.widget-btn {
+    background: transparent; border: none;
+    font-size: 1.5em; /* ขนาดไอคอน */
+    width: 44px; height: 44px; border-radius: 12px;
+    cursor: pointer; display: flex; justify-content: center; align-items: center;
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.widget-btn:hover {
+    background: rgba(255, 255, 255, 0.15); 
+    transform: translateY(-5px) scale(1.1); /* เอฟเฟกต์เด้งขึ้นเมื่อชี้เมาส์ */
+}
+
+
 /* =========================================
    หน้าต่าง WinBox
    ========================================= */
@@ -187,11 +205,6 @@ body {
     transform-origin: center center;
 }
 
-    /* ✨ เพิ่มแอนิเมชันเปิดหน้าต่างตรงนี้ครับ */
-    animation: popInSmooth 0.4s cubic-bezier(0.25, 1.3, 0.4, 1) forwards !important;
-    transform-origin: center center;
-}
-
 /* วาง Keyframes ของแอนิเมชันไว้ด้านล่างบล็อก .winbox */
 @keyframes popInSmooth {
     0% {
@@ -202,7 +215,7 @@ body {
         opacity: 1;
         transform: scale(1) translateY(0);
     }
-} /* 🔴 ตรงนี้ครับ! ต้องมีปีกกาปิดอีก 1 ตัว เพื่อจบคำสั่ง popInSmooth */
+} 
 
 /* ✨ แอนิเมชันตอนปิดหน้าต่าง (ค่อยๆ หดและจางหายลงไป) */
 .winbox.closing {
@@ -399,45 +412,6 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 .ts-dropdown-menu::-webkit-scrollbar-thumb { 
     background: rgba(255, 255, 255, 0.3); 
     border-radius: 10px; 
-}
-
-/* =========================================
-   แก้ไขปุ่มหน้าต่าง (สไตล์ Mac OS)
-   ========================================= */
-.wb-header .wb-control { 
-    filter: none !important; /* 🔴 ล้างคำสั่งทำสีเพี้ยนทิ้งไป */
-    display: flex;
-    align-items: center;
-    padding-right: 10px; /* ขยับออกจากขอบขวาให้ดูพอดี */
-    gap: 8px; /* ระยะห่างระหว่างปุ่ม */
-}
-
-/* ปรับทรงให้เป็นวงกลมสมบูรณ์ และย่อขนาดไอคอนข้างใน */
-.wb-header .wb-min, 
-.wb-header .wb-max, 
-.wb-header .wb-close {
-    width: 14px !important;
-    height: 14px !important;
-    border-radius: 50% !important;
-    margin: 0 !important; 
-    background-size: 8px !important; /* ขนาดของไอคอนกากบาท/สี่เหลี่ยม */
-    background-position: center !important;
-    background-repeat: no-repeat !important;
-    transition: transform 0.2s ease, filter 0.2s;
-    cursor: pointer;
-}
-
-/* ใส่สีแดง เหลือง เขียว สไตล์ Apple */
-.wb-header .wb-min { background-color: #ffcc00 !important; }
-.wb-header .wb-max { background-color: #34c759 !important; }
-.wb-header .wb-close { background-color: #ff3b30 !important; }
-
-/* ลูกเล่นเวลาเอาเมาส์ชี้ ให้ปุ่มขยายขึ้นนิดนึงและสว่างขึ้น */
-.wb-header .wb-min:hover, 
-.wb-header .wb-max:hover, 
-.wb-header .wb-close:hover {
-    transform: scale(1.2);
-    filter: brightness(1.2);
 }
 
 /* =========================================
