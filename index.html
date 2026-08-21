@@ -16,7 +16,7 @@
         <div>กำลังโหลดข้อมูลคลังเพลง...</div>
     </div>
 
-   <!-- 🔴 1. แถบสถานะสไตล์ macOS (macOS Status Bar) -->
+    <!-- 🔴 1. แถบสถานะสไตล์ macOS (macOS Status Bar) -->
     <div class="macos-status-bar">
         <div class="mac-left">
             <span class="mac-logo"></span>
@@ -51,18 +51,33 @@
         </div>
     </div>
 
-    <!-- 🔴 2. วิดเจ็ตเมนูทรงแคปซูล (Floating Widget) -->
-    <div class="floating-widget-dock" id="mainWidget">
-        <button class="widget-btn" onclick="wm.openLibrary()" title="คลังเพลง">🏠</button>
-        <button class="widget-btn" onclick="wm.openSettings()" title="ตั้งค่า">⚙️</button>
-        <button class="widget-btn" onclick="togglePiPMode()" title="PiP (หน้าต่างลอย)">🪟</button>
-        
-        <!-- ปุ่มแอดมิน (จะซ่อน/แสดงอัตโนมัติตามสิทธิ์) -->
-        <button id="btnDockAdminSync" class="widget-btn" style="display:none; color: #ffcc00;" onclick="if(window.currentSongId) wm.openAdminSync(); else alert('กรุณากดเล่นเพลงที่ต้องการซิงค์ก่อนครับ');" title="ซิงค์ & จัดการเนื้อ">⏱</button>
-        <button id="btnHeaderLogin" class="widget-btn" style="color: #34c759;" onclick="loginWithGoogle()" title="เข้าสู่ระบบแอดมิน">👤</button>
-        <button id="btnHeaderLogout" class="widget-btn" style="display:none; color: #ff3b30;" onclick="logout()" title="ออกจากระบบ">🚪</button>
+    <!-- 🔴 2. ไอคอนเมนูหลักบนหน้าจอ (Desktop Icons) -->
+    <div id="desktop-icons-container" class="desktop-icons-container">
+        <div class="desktop-icon" onclick="wm.openLibrary()">
+            <div class="icon-box">🏠</div>
+            <div class="icon-label">คลังเพลง</div>
+        </div>
+        <div class="desktop-icon" onclick="wm.openSettings()">
+            <div class="icon-box">⚙️</div>
+            <div class="icon-label">ตั้งค่า</div>
+        </div>
+        <div class="desktop-icon" onclick="togglePiPMode()">
+            <div class="icon-box">🪟</div>
+            <div class="icon-label">PiP (หน้าต่างลอย)</div>
+        </div>
+        <!-- ปุ่มจัดการเนื้อเพลง (จะโชว์เมื่อเป็นแอดมิน) -->
+        <div class="desktop-icon" id="btnDockAdminSync" style="display:none;" onclick="if(window.currentSongId) wm.openAdminSync(); else alert('กรุณากดเล่นเพลงที่ต้องการซิงค์ก่อนครับ');">
+            <div class="icon-box">⏱</div>
+            <div class="icon-label">จัดการเนื้อเพลง</div>
+        </div>
     </div>
-    
+
+    <!-- 🔴 3. ปุ่มบัญชีแอดมินมุมซ้ายล่าง (Bottom Left Corner) -->
+    <div class="bottom-left-controls">
+        <button id="btnHeaderLogin" class="desktop-corner-btn login-btn" onclick="loginWithGoogle()" title="เข้าสู่ระบบแอดมิน">👤</button>
+        <button id="btnHeaderLogout" class="desktop-corner-btn logout-btn" style="display:none;" onclick="logout()" title="ออกจากระบบ">🚪</button>
+    </div>
+
     <!-- โกดังเก็บหน้าต่าง -->
     <div id="window-warehouse" style="display: none;">
         
@@ -172,7 +187,8 @@
     
     <!-- 🔴 ระบบ เชื่อมไฟล์  -->
     <script src="pip.js"></script>
-    <script src="notify.js"></script> <script type="module" src="app.js"></script>
+    <script src="notify.js"></script> 
+    <script type="module" src="app.js"></script>
  
 
     <!-- 🔴 แถบสุ่มเพลงด้านขวา (Random Playlist Widget) -->
@@ -194,7 +210,9 @@
                 🔄 สุ่มเพลงใหม่
             </button>
          </div>
-    </div> <button id="btnDockNotify" class="floating-notify-btn" onclick="window.openNotifyWindow()" title="เพลงใหม่ล่าสุด">
+    </div> 
+    
+    <button id="btnDockNotify" class="floating-notify-btn" onclick="window.openNotifyWindow()" title="เพลงใหม่ล่าสุด">
         🔔<span id="notifyBadge" class="notify-badge" style="display: none;"></span>
     </button>
 
