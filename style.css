@@ -16,7 +16,7 @@ body {
     margin: 0; padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: var(--bg-color); color: #f5f5f7;
-    height: 100vh; overflow: hidden; /* ห้ามเลื่อนหน้าจอหลัก */
+    height: 100vh; overflow: hidden; 
 }
 
 /* =========================================
@@ -45,8 +45,8 @@ body {
    แถบสถานะ macOS (macOS Status Bar)
    ========================================= */
 .macos-status-bar {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 36px;
-    background: rgba(30, 30, 33, 0.85);
+    position: fixed; top: 0; left: 0; width: 100vw; height: 30px;
+    background: rgba(30, 30, 33, 0.85); 
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     display: flex; justify-content: space-between; align-items: center;
     padding: 0 15px; font-size: 13px; color: #fff; z-index: 10000;
@@ -64,52 +64,27 @@ body {
    ========================================= */
 .live-activity-panel {
     position: fixed; 
-    top: 30px; /* ห้อยต่อลงมาจากใต้แถบ Status Bar */
+    top: 30px; 
     left: 0;
-    width: 100vw; /* กว้างเต็มจอ */
-    height: 65px; /* ความสูงของแถบเพลง */
-    
-    background: rgba(30, 30, 33, 0.75); /* สีโปร่งแสงนิดๆ */
+    width: 100vw; 
+    height: 65px; 
+    background: rgba(30, 30, 33, 0.75); 
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    
     display: flex; 
     align-items: center; 
-    justify-content: space-between; /* ดัน 3 กล่องให้ห่างกัน ซ้าย-กลาง-ขวา */
+    justify-content: space-between; 
     padding: 0 30px; 
     box-sizing: border-box;
     cursor: pointer;
     z-index: 9999; 
-    
-    /* 🔴 แอนิเมชันเปิด/ปิด (ม้วนพับขึ้น/ลง) */
-    transform-origin: top; /* จุดหมุนอยู่ด้านบน */
+    transform-origin: top; 
     transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-    overflow: hidden;
-}
-/* =========================================
-   🔴 แถบวิ่งพื้นหลังความคืบหน้าเพลง (Background Progress Bar)
-   ========================================= */
-.player-progress-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 0%; /* เริ่มต้นที่ 0% */
-    background: linear-gradient(90deg, rgba(0, 210, 255, 0.05), rgba(0, 210, 255, 0.2)); 
-    border-right: 1px solid rgba(0, 210, 255, 0.4); 
-    z-index: 0; 
-    transition: width 0.25s linear; 
+    overflow: hidden; 
 }
 
-/* 🟢 ยกเนื้อหาด้านในให้อยู่เหนือพื้นหลังความคืบหน้า */
-.player-left, .player-center, .player-right {
-    position: relative;
-    z-index: 1; 
-}
-
-/* 🟢 ซ่อนแถบเมื่อไม่มีเพลง */
 .live-activity-panel.hidden { 
     height: 0; 
     padding-top: 0;
@@ -117,69 +92,36 @@ body {
     opacity: 0; 
     border: none; 
     pointer-events: none; 
-    transform: scaleY(0); /* พับกระดาษม้วนขึ้นไป */
+    transform: scaleY(0); 
 }
 
-/* --- 1. ส่วนซ้าย (ปก + ชื่อ) --- */
-.player-left {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    width: 30%; /* จองพื้นที่ไว้ 30% ของจอ */
-}
-.live-thumb {
-    width: 45px;
-    height: 45px;
-    border-radius: 8px; 
-    background-image: var(--live-bg, none);
-    background-size: cover;
-    background-position: center;
-    flex-shrink: 0;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-}
-.live-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    overflow: hidden;
-}
-.live-title { 
-    font-size: 14px; font-weight: bold; color: #fff; 
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-}
-.live-artist { 
-    font-size: 12px; color: #00d2ff; 
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; 
+/* 🔴 แถบวิ่งพื้นหลังความคืบหน้าเพลง */
+.player-progress-bg {
+    position: absolute; top: 0; left: 0; height: 100%; width: 0%; 
+    background: linear-gradient(90deg, rgba(0, 210, 255, 0.05), rgba(0, 210, 255, 0.2)); 
+    border-right: 1px solid rgba(0, 210, 255, 0.4); 
+    z-index: 0; transition: width 0.25s linear; 
 }
 
-/* --- 2. ส่วนกลาง (ปุ่มควบคุม) --- */
-.player-center {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 40%;
-}
+/* ให้อยู่เหนือพื้นหลังวิ่ง */
+.player-left, .player-center, .player-right { position: relative; z-index: 1; }
+
+.player-left { display: flex; align-items: center; gap: 15px; width: 30%; }
+.live-thumb { width: 45px; height: 45px; border-radius: 8px; background-image: var(--live-bg, none); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+.live-info { display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+.live-title { font-size: 14px; font-weight: bold; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.live-artist { font-size: 12px; color: #00d2ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; }
+
+.player-center { display: flex; justify-content: center; align-items: center; width: 40%; }
 .live-controls { display: flex; gap: 25px; align-items: center; }
-.live-btn {
-    background: transparent; border: none; color: white;
-    font-size: 1.6em; cursor: pointer; transition: 0.2s; padding: 0;
-}
+.live-btn { background: transparent; border: none; color: white; font-size: 1.6em; cursor: pointer; transition: 0.2s; padding: 0; }
 .live-btn:hover { color: #00d2ff; transform: scale(1.15); }
 .live-btn:active { transform: scale(0.9); }
-#livePlayPauseBtn { font-size: 2em; } /* ให้ปุ่มเล่นใหญ่กว่าเพื่อน */
+#livePlayPauseBtn { font-size: 2em; }
 
-/* --- 3. ส่วนขวา (คลื่นเสียง) --- */
-.player-right {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    width: 30%;
-}
+.player-right { display: flex; justify-content: flex-end; align-items: center; width: 30%; }
 .live-icon { display: flex; align-items: flex-end; gap: 4px; height: 24px; }
-.live-icon .bar {
-    width: 3px; background-color: #00d2ff; border-radius: 3px; transform-origin: bottom;
-    animation: equalize 0.6s infinite ease-in-out alternate;
-}
+.live-icon .bar { width: 3px; background-color: #00d2ff; border-radius: 3px; transform-origin: bottom; animation: equalize 0.6s infinite ease-in-out alternate; }
 .live-icon .bar:nth-child(1) { height: 60%; animation-delay: -0.4s; }
 .live-icon .bar:nth-child(2) { height: 100%; animation-delay: -0.2s; }
 .live-icon .bar:nth-child(3) { height: 75%; animation-delay: 0s; }
@@ -192,93 +134,60 @@ body {
    ========================================= */
 .desktop-icons-container {
     position: fixed;
-    top: 110px; 
+    top: 110px; /* ขยับหลบเผื่อแถบเพลงกางออก */
     left: 40px; 
-    display: flex;
-    gap: 30px; 
-    z-index: 1;
+    display: flex; gap: 30px; z-index: 1;
 }
 
 .desktop-icon {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    cursor: pointer;
-    width: 85px; 
-    transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    display: flex; flex-direction: column; align-items: center;
+    cursor: pointer; width: 85px; transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
-
 .desktop-icon:hover { transform: scale(1.08); }
 
 .desktop-icon .icon-box {
-    width: 75px;
-    height: 75px;
-    background: rgba(30, 30, 33, 0.65); 
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 18px; 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 2.2em; 
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-    margin-bottom: 10px;
-    transition: background 0.2s, box-shadow 0.2s;
+    width: 75px; height: 75px; background: rgba(30, 30, 33, 0.65); 
+    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 18px; 
+    display: flex; justify-content: center; align-items: center;
+    font-size: 2.2em; box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    margin-bottom: 10px; transition: background 0.2s, box-shadow 0.2s;
 }
-
-.desktop-icon:hover .icon-box {
-    background: rgba(255, 255, 255, 0.15); 
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-}
-
-.desktop-icon .icon-label {
-    color: #fff;
-    font-size: 13px;
-    font-weight: 600;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-    text-align: center;
-    white-space: nowrap;
-}
+.desktop-icon:hover .icon-box { background: rgba(255, 255, 255, 0.15); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+.desktop-icon .icon-label { color: #fff; font-size: 13px; font-weight: 600; text-shadow: 0 1px 4px rgba(0,0,0,0.8); text-align: center; white-space: nowrap; }
 
 /* =========================================
    ปุ่มมุมซ้ายล่าง (Bottom Left Controls)
    ========================================= */
 .bottom-left-controls {
-    position: fixed;
-    bottom: 30px;
-    left: 40px;
-    z-index: 1000;
-    display: flex;
-    gap: 15px;
-    align-items: center;
+    position: fixed; bottom: 30px; left: 40px; z-index: 1000;
+    display: flex; gap: 15px; align-items: center;
 }
 
 .desktop-corner-btn {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: rgba(30, 30, 33, 0.65);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: white;
-    font-size: 1.5em;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    width: 50px; height: 50px; border-radius: 50%;
+    background: rgba(30, 30, 33, 0.65); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.15); color: white; font-size: 1.5em;
+    display: flex; justify-content: center; align-items: center;
+    cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.3); transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
-
-.desktop-corner-btn:hover {
-    transform: scale(1.15);
-    background: rgba(255, 255, 255, 0.15);
-}
-
+.desktop-corner-btn:hover { transform: scale(1.15); background: rgba(255, 255, 255, 0.15); }
 .login-btn { color: #34c759; }
 .logout-btn { color: #ff3b30; }
+
+.floating-notify-btn {
+    position: relative; width: 55px; height: 55px;
+    background: rgba(30, 30, 30, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%; font-size: 24px;
+    display: flex; justify-content: center; align-items: center;
+    cursor: pointer; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); transition: transform 0.2s, background 0.2s; color: white;
+}
+.floating-notify-btn:hover { transform: scale(1.1); background: rgba(50, 50, 50, 0.9); }
+.notify-badge {
+    position: absolute; top: 10px; right: 10px; width: 12px; height: 12px; background-color: #ff3b30;
+    border-radius: 50%; box-shadow: 0 0 5px rgba(255, 59, 48, 0.8); border: 2px solid #1c1c1e; animation: pulseBadge 2s infinite;
+}
+@keyframes pulseBadge { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(255, 59, 48, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); } }
 
 /* =========================================
    หน้าต่าง WinBox
@@ -288,74 +197,34 @@ body {
     box-shadow: 0 15px 50px rgba(0,0,0,0.6) !important;
     background: rgba(var(--wb-bg-r), var(--wb-bg-g), var(--wb-bg-b), var(--window-opacity)) !important;
     transition: background 0.8s ease; 
-    backdrop-filter: blur(var(--window-blur));
-    -webkit-backdrop-filter: blur(var(--window-blur));
+    backdrop-filter: blur(var(--window-blur)); -webkit-backdrop-filter: blur(var(--window-blur));
     border: 1px solid rgba(255, 255, 255, 0.1);
-    animation: popInSmooth 0.4s cubic-bezier(0.25, 1.3, 0.4, 1) forwards !important;
-    transform-origin: center center;
+    animation: popInSmooth 0.4s cubic-bezier(0.25, 1.3, 0.4, 1) forwards !important; transform-origin: center center;
 }
-
-@keyframes popInSmooth {
-    0% { opacity: 0; transform: scale(0.85) translateY(20px); }
-    100% { opacity: 1; transform: scale(1) translateY(0); }
-} 
-
-.winbox.closing {
-    animation: popOutSmooth 0.3s cubic-bezier(0.25, 1.3, 0.4, 1) forwards !important;
-    pointer-events: none; 
-}
-
-@keyframes popOutSmooth {
-    0% { opacity: 1; transform: scale(1) translateY(0); }
-    100% { opacity: 0; transform: scale(0.85) translateY(20px); }
-}
+@keyframes popInSmooth { 0% { opacity: 0; transform: scale(0.85) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } } 
+.winbox.closing { animation: popOutSmooth 0.3s cubic-bezier(0.25, 1.3, 0.4, 1) forwards !important; pointer-events: none; }
+@keyframes popOutSmooth { 0% { opacity: 1; transform: scale(1) translateY(0); } 100% { opacity: 0; transform: scale(0.85) translateY(20px); } }
 
 .wb-header { 
     background: rgba(calc(var(--wb-bg-r) + 5), calc(var(--wb-bg-g) + 5), calc(var(--wb-bg-b) + 5), var(--window-opacity)) !important; 
-    transition: background 0.8s ease;
-    backdrop-filter: blur(var(--window-blur));
-    -webkit-backdrop-filter: blur(var(--window-blur));
+    transition: background 0.8s ease; backdrop-filter: blur(var(--window-blur)); -webkit-backdrop-filter: blur(var(--window-blur));
     color: white !important; font-weight: bold; 
 }
 .wb-body { background: transparent !important; }
 .wb-full { display: none !important; }
 .wb-content-padding { padding: 20px; box-sizing: border-box; height: 100%; overflow-y: auto; }
 
-/* =========================================
-   แก้ไขปุ่มหน้าต่าง (สไตล์ Mac OS)
-   ========================================= */
-.wb-header .wb-control { 
-    filter: none !important; 
-    display: flex;
-    align-items: center;
-    padding-right: 10px; 
-    gap: 8px; 
+/* ปุ่มหน้าต่าง */
+.wb-header .wb-control { filter: none !important; display: flex; align-items: center; padding-right: 10px; gap: 8px; }
+.wb-header .wb-min, .wb-header .wb-max, .wb-header .wb-close {
+    width: 14px !important; height: 14px !important; border-radius: 50% !important; margin: 0 !important; 
+    background-size: 8px !important; background-position: center !important; background-repeat: no-repeat !important;
+    transition: transform 0.2s ease, filter 0.2s; cursor: pointer;
 }
-
-.wb-header .wb-min, 
-.wb-header .wb-max, 
-.wb-header .wb-close {
-    width: 14px !important;
-    height: 14px !important;
-    border-radius: 50% !important;
-    margin: 0 !important; 
-    background-size: 8px !important; 
-    background-position: center !important;
-    background-repeat: no-repeat !important;
-    transition: transform 0.2s ease, filter 0.2s;
-    cursor: pointer;
-}
-
 .wb-header .wb-min { background-color: #ffcc00 !important; }
 .wb-header .wb-max { background-color: #34c759 !important; }
 .wb-header .wb-close { background-color: #ff3b30 !important; }
-
-.wb-header .wb-min:hover, 
-.wb-header .wb-max:hover, 
-.wb-header .wb-close:hover {
-    transform: scale(1.2);
-    filter: brightness(1.2);
-}
+.wb-header .wb-min:hover, .wb-header .wb-max:hover, .wb-header .wb-close:hover { transform: scale(1.2); filter: brightness(1.2); }
 
 /* =========================================
    ทั่วไป (UI Components)
@@ -387,18 +256,11 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 .chip.active { background: #0a84ff; color: #fff; border-color: #0a84ff; }
 
 .song-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
-.song-item { 
-    background: #2c2c2e; padding: 12px; border-radius: 14px; 
-    transition: transform 0.2s; position: relative; display: flex; flex-direction: column; gap: 10px;
-}
+.song-item { background: #2c2c2e; padding: 12px; border-radius: 14px; transition: transform 0.2s; position: relative; display: flex; flex-direction: column; gap: 10px; }
 .song-item:hover { transform: translateY(-5px); }
 .song-item img { width: 100%; aspect-ratio: 16/9; border-radius: 8px; object-fit: cover; }
 .song-title { font-weight: bold; font-size: 1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color:#fff;}
-.song-artist { 
-    color: #8e8e93; font-size: 0.8em; margin-bottom: 10px; 
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-    overflow: hidden; text-overflow: ellipsis; white-space: normal;
-}
+.song-artist { color: #8e8e93; font-size: 0.8em; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; white-space: normal; }
 .song-actions { display: flex; gap: 8px; }
 .song-actions button { flex: 1; padding: 8px; font-size: 0.85em; }
 
@@ -406,36 +268,22 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
    เนื้อเพลง
    ========================================= */
 .lyrics-container { padding: 20px 10px; text-align: center; }
-.lyric-line { 
-    font-size: var(--lyric-font-size); font-weight: 600; color: rgba(255,255,255,0.3); 
-    transition: all 0.3s; margin-bottom: 15px; cursor: pointer; 
-}
+.lyric-line { font-size: var(--lyric-font-size); font-weight: 600; color: rgba(255,255,255,0.3); transition: all 0.3s; margin-bottom: 15px; cursor: pointer; }
 .lyric-line:hover { color: rgba(255,255,255,0.6); transform: scale(1.02); }
-
-.lyric-line.active { 
-    font-size: calc(var(--lyric-font-size) + 0.35em); color: #fff; 
-    text-shadow: 0 0 15px rgba(255,255,255,0.5); transform: scale(1.05); 
-    margin: 30px 0; cursor: default; 
-}
+.lyric-line.active { font-size: calc(var(--lyric-font-size) + 0.35em); color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); transform: scale(1.05); margin: 30px 0; cursor: default; }
 
 .singer-badges { display: flex; gap: 8px; margin-bottom: 8px; justify-content: center; flex-wrap: wrap; }
 .singer-badge { font-size: 0.65em; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; }
-.lyric-line.active .singer-badge { 
-    color: #fff; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 0 10px rgba(255,255,255,0.5); 
-}
+.lyric-line.active .singer-badge { color: #fff; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 0 10px rgba(255,255,255,0.5); }
 
 .reading-text { color: #ffd700; text-shadow: 0 0 15px rgba(255, 215, 0, 0.4), 1px 2px 3px rgba(0,0,0,0.8); }
 .hide-lang-0 .lang-0, .hide-lang-1 .lang-1, .hide-lang-2 .lang-2 { display: none !important; }
 
-/* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
 
-#loadingOverlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 99999;
-    display: flex; justify-content: center; align-items: center; font-size: 1.2em; font-weight: bold;
-}
+#loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 99999; display: flex; justify-content: center; align-items: center; font-size: 1.2em; font-weight: bold; }
 .theme-btn { border-radius: 12px; padding: 15px; font-weight: bold; border: none; cursor: pointer; display: block; width: 100%; margin-bottom: 10px; }
 
 /* =========================================
@@ -444,7 +292,6 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 .ts-singer-dropdown { position: relative; }
 .ts-dropdown-toggle { background: rgba(255, 204, 0, 0.15) !important; border: 1px solid rgba(255, 204, 0, 0.4) !important; color: #ffcc00 !important; padding: 6px 10px !important; border-radius: 6px !important; font-size: 0.85em !important; font-weight: bold; cursor: pointer; width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; margin: 0 !important; transition: 0.2s; }
 .ts-dropdown-toggle:hover { background: rgba(255, 204, 0, 0.3) !important; }
-
 .ts-dropdown-menu { display: none; background: #2c2c2e; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px; z-index: 99999; box-shadow: 0 10px 30px rgba(0,0,0,0.8); min-width: 150px; max-height: 200px; overflow-y: auto; }
 .ts-dropdown-menu.show { display: flex; flex-direction: column; gap: 10px; }
 .ts-dropdown-item { display: flex; align-items: center; gap: 10px; font-size: 0.9em; color: #f5f5f7; cursor: pointer; }
@@ -452,36 +299,26 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 .ts-dropdown-menu::-webkit-scrollbar { width: 6px; }
 .ts-dropdown-menu::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 10px; }
 
-.sticky-sync-bar {
-    position: sticky; top: 0; z-index: 100; background: transparent; padding: 10px 0 15px 0; margin-top: -5px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; gap: 10px;
-}
+.sticky-sync-bar { position: sticky; top: 0; z-index: 100; background: transparent; padding: 10px 0 15px 0; margin-top: -5px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; gap: 10px; }
 .sticky-sync-bar button { flex: 1; }
 
 /* =========================================
    แถบสุ่มเพลงด้านขวา (Random Playlist Panel)
    ========================================= */
 .right-panel {
-    position: fixed; top: 120px; right: 0; width: 260px;
-    background: rgba(20, 20, 25, var(--window-opacity, 0.75));
+    position: fixed; top: 120px; right: 0; width: 260px; background: rgba(20, 20, 25, var(--window-opacity, 0.75));
     backdrop-filter: blur(var(--window-blur, 20px)); -webkit-backdrop-filter: blur(var(--window-blur, 20px));
     border: 1px solid rgba(255, 255, 255, 0.15); border-right: none; border-radius: 20px 0 0 20px;
     padding: 20px 15px; box-shadow: -5px 10px 30px rgba(0,0,0,0.5); z-index: 9990;
     transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); transform: translateX(100%);
 }
-
 .right-panel.open { transform: translateX(0); }
-
 .panel-toggle-btn {
     position: absolute; top: 50%; left: -35px; transform: translateY(-50%); width: 35px; height: 70px;
-    background: rgba(20, 20, 25, var(--window-opacity, 0.75));
-    backdrop-filter: blur(var(--window-blur, 20px)); -webkit-backdrop-filter: blur(var(--window-blur, 20px));
-    border: 1px solid rgba(255, 255, 255, 0.15); border-right: none; border-radius: 15px 0 0 15px;
-    color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1em;
-    box-shadow: -5px 0px 15px rgba(0,0,0,0.3);
+    background: rgba(20, 20, 25, var(--window-opacity, 0.75)); backdrop-filter: blur(var(--window-blur, 20px)); -webkit-backdrop-filter: blur(var(--window-blur, 20px));
+    border: 1px solid rgba(255, 255, 255, 0.15); border-right: none; border-radius: 15px 0 0 15px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1em; box-shadow: -5px 0px 15px rgba(0,0,0,0.3);
 }
 .panel-toggle-btn:hover { background: rgba(255, 255, 255, 0.15); color: #00d2ff; }
-
 .random-song-list { display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding-right: 5px; }
 .random-song-item { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 8px; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
 .random-song-item:hover { background: rgba(255, 255, 255, 0.15); transform: scale(1.03); }
@@ -498,23 +335,6 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 .lyric-instrumental .note:nth-child(2) { animation-delay: 0.3s; }
 .lyric-instrumental .note:nth-child(3) { animation-delay: 0.6s; }
 @keyframes bounceNote { 0% { transform: translateY(0) scale(1); opacity: 0.3; } 100% { transform: translateY(-10px) scale(1.2); opacity: 1; color: #fff; filter: drop-shadow(0 0 10px #00d2ff); } }
-
-/* =========================================
-   ปุ่มกระดิ่งแจ้งเตือน
-   ========================================= */
-.floating-notify-btn {
-    position: relative; width: 55px; height: 55px; background: rgba(30, 30, 30, 0.7);
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%; font-size: 24px;
-    display: flex; justify-content: center; align-items: center; cursor: pointer;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); transition: transform 0.2s, background 0.2s; color: white;
-}
-.floating-notify-btn:hover { transform: scale(1.1); background: rgba(50, 50, 50, 0.9); }
-.notify-badge {
-    position: absolute; top: 10px; right: 10px; width: 12px; height: 12px; background-color: #ff3b30;
-    border-radius: 50%; box-shadow: 0 0 5px rgba(255, 59, 48, 0.8); border: 2px solid #1c1c1e; animation: pulseBadge 2s infinite;
-}
-@keyframes pulseBadge { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(255, 59, 48, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); } }
 
 /* =========================================
    สไตล์ Dual Lyric (คอรัสอยู่ใต้เนื้อหลัก) 
@@ -536,12 +356,7 @@ label { font-size: 0.85em; color: #8e8e93; display: block; margin-bottom: 5px; f
 /* =========================================
    ระบบ Cover Badges
    ========================================= */
-.version-badges-container {
-    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); 
-}
-.version-badge {
-    padding: 6px 16px; border-radius: 20px; font-size: 0.85em; font-weight: bold; cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.05); color: #ccc; transition: all 0.3s ease; backdrop-filter: blur(5px);
-}
+.version-badges-container { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.version-badge { padding: 6px 16px; border-radius: 20px; font-size: 0.85em; font-weight: bold; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.05); color: #ccc; transition: all 0.3s ease; backdrop-filter: blur(5px); }
 .version-badge:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
 .version-badge.active { border-color: transparent; }
