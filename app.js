@@ -644,7 +644,14 @@ window.playSong = function(id) {
         const activeTimestamps = window.getActiveTimestamps(currentSong);
         const currentTime = window.ytPlayer.getCurrentTime(); 
         if (currentTime === undefined || currentTime === 0) return;
-
+        
+        const duration = window.ytPlayer.getDuration();
+        if (duration > 0) {
+            const percent = (currentTime / duration) * 100;
+            const progressBg = document.getElementById('playerProgressBarBg');
+            if (progressBg) progressBg.style.width = percent + '%';
+        }
+        
         let correctIndex = -1;
         for (let i = 0; i < activeTimestamps.length; i++) {
             if (activeTimestamps[i] != null && currentTime >= activeTimestamps[i]) correctIndex = i;
