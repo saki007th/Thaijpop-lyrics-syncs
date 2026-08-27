@@ -25,7 +25,7 @@ const provider = new GoogleAuthProvider();
 const songsCollection = collection(db, 'songs');
 
 window.songs = []; window.currentLyricsArray = []; window.currentLyricIndex = -1;
-window.editingSongId = null; window.currentSongId = null; window.ytPlayer = null;
+window.editingSongId = null; window.currentSongId = null; if(window.updateWinBoxBounds) window.updateWinBoxBounds(false); if(window.updateWinBoxBounds) window.updateWinBoxBounds(false); window.ytPlayer = null;
 window.syncInterval = null; window.isLoggedIn = false; window.isAdmin = false;
 window.isYTApiReady = false; window.currentFilter = 'All'; 
 
@@ -67,7 +67,10 @@ window.wm = {
             const saved = JSON.parse(localStorage.getItem('winbox_memory_' + winId));
             if (saved && saved.x < window.innerWidth - 50 && saved.y < window.innerHeight - 50) {
                 options.x = saved.x;
-                options.y = saved.y;
+                
+                // 🔴 ป้องกันการดึงค่าพิกัดเก่าที่ทะลุขอบบน
+                options.y = Math.max(saved.y, options.top || 30);
+                
                 options.width = saved.width;
                 options.height = saved.height;
             }
@@ -109,8 +112,7 @@ window.wm = {
     openLibrary: function() {
         if (this.libWin) { this.libWin.focus(); return; }
         this.libWin = new WinBox("🏠 คลังเพลงของฉัน", this.applyMemory('library', {
-            mount: document.getElementById("content-library"), width: "80%", height: "80%", x: "center", y: "center", 
-            top: window.currentSongId ? 95 : 30, class: ["wb-dark"],
+            mount: document.getElementById("content-library"), width: "80%", height: "80%", x: "center", y: "center", top: window.currentSongId ? 95 : 30, class: ["wb-dark"],
             onclose: () => { this.libWin = null; }
         }));
         window.renderSongList();
@@ -119,8 +121,7 @@ window.wm = {
     openSettings: function() {
         if (this.settingsWin) { this.settingsWin.focus(); return; }
         this.settingsWin = new WinBox("⚙️ การตั้งค่า", this.applyMemory('settings', {
-            mount: document.getElementById("content-settings"), width: "350px", height: "450px", x: "center", y: "center", 
-            top: window.currentSongId ? 95 : 30, class: ["wb-dark"],
+            mount: document.getElementById("content-settings"), width: "350px", height: "450px", x: "center", y: "center", top: window.currentSongId ? 95 : 30, class: ["wb-dark"],
             onclose: () => { this.settingsWin = null; }
         }));
     },
@@ -128,8 +129,7 @@ window.wm = {
     openPlayer: function(title) {
         if (this.playerWin) { this.playerWin.setTitle("🎥 " + title); this.playerWin.focus(); return; }
         this.playerWin = new WinBox("🎥 " + title, this.applyMemory('player', {
-            mount: document.getElementById("content-player"), width: "500px", height: "320px", x: "20px", y: "80px", 
-            top: window.currentSongId ? 95 : 30, class: ["wb-dark", "no-min"],
+            mount: document.getElementById("content-player"), width: "500px", height: "320px", x: "20px", y: "80px", top: window.currentSongId ? 95 : 30, class: ["wb-dark", "no-min"],
             onclose: () => { 
                 this.playerWin = null;
                 if (window.ytPlayer && typeof window.ytPlayer.destroy === 'function') {
@@ -138,18 +138,22 @@ window.wm = {
                 }
                 document.getElementById("content-player").innerHTML = '<div id="youtubePlayer" style="width: 100%; height: 100%;"></div>';
 
+                // 🟢 โค้ดตอนปิดเพลง: ซ่อนแถบ Live Activity และล้างรูปปกออกให้หมด
                 const liveAct = document.getElementById('liveActivity'); 
+                const liveDiv = document.getElementById('dockDivider');
                 if (liveAct) {
                     liveAct.classList.add('hidden');
-                    liveAct.style.removeProperty('--live-bg');
+                    liveAct.style.removeProperty('--live-bg'); // ล้างรูปปก
+                }
+                if (liveDiv) {
+                    liveDiv.classList.add('hidden');
                 }
                 window.resetWinBoxColor();
                 
                 const bgEl = document.getElementById('dynamic-bg');
                 if (bgEl) bgEl.classList.remove('active');
 
-                window.currentSongId = null; 
-                if(window.updateWinBoxBounds) window.updateWinBoxBounds(false);
+                window.currentSongId = null; if(window.updateWinBoxBounds) window.updateWinBoxBounds(false); if(window.updateWinBoxBounds) window.updateWinBoxBounds(false);
                 
                 if(window.setRandomPanelState) window.setRandomPanelState(true);
                 if (window.wm.lyricsWin) { window.wm.lyricsWin.close(); }
@@ -161,8 +165,7 @@ window.wm = {
     openLyrics: function(title) {
         if (this.lyricsWin) { this.lyricsWin.setTitle("📝 " + title); this.lyricsWin.focus(); return; }
         this.lyricsWin = new WinBox("📝 " + title, this.applyMemory('lyrics', {
-            mount: document.getElementById("content-lyrics"), width: "500px", height: "80%", x: "right", y: "center", 
-            top: window.currentSongId ? 95 : 30, class: ["wb-dark"],
+            mount: document.getElementById("content-lyrics"), width: "500px", height: "80%", x: "right", y: "center", top: window.currentSongId ? 95 : 30, class: ["wb-dark"],
             onclose: () => { this.lyricsWin = null; }
         }));
     },
@@ -170,8 +173,7 @@ window.wm = {
     openAdd: function(title) {
         if (this.addWin) { this.addWin.setTitle(title); this.addWin.focus(); return; }
         this.addWin = new WinBox(title, this.applyMemory('addedit', {
-            mount: document.getElementById("content-add"), width: "450px", height: "80%", x: "center", y: "center", 
-            top: window.currentSongId ? 95 : 30, class: ["wb-dark"],
+            mount: document.getElementById("content-add"), width: "450px", height: "80%", x: "center", y: "center", top: window.currentSongId ? 95 : 30, class: ["wb-dark"],
             onclose: () => { this.addWin = null; }
         }));
     },
@@ -182,8 +184,7 @@ window.wm = {
         if (this.adminSyncWin) { this.adminSyncWin.setTitle("⏱ ซิงค์: " + song.title); this.adminSyncWin.focus(); return; }
         
         this.adminSyncWin = new WinBox("⏱ ซิงค์: " + song.title, this.applyMemory('adminsync', {
-            mount: document.getElementById("content-admin-sync"), width: "450px", height: "80%", x: "center", y: "center", 
-            top: window.currentSongId ? 95 : 30, class: ["wb-dark"],
+            mount: document.getElementById("content-admin-sync"), width: "450px", height: "80%", x: "center", y: "center", top: window.currentSongId ? 95 : 30, class: ["wb-dark"],
             onclose: () => { this.adminSyncWin = null; }
         }));
         window.renderTimestampEditor(); 
@@ -238,10 +239,10 @@ onAuthStateChanged(auth, async (user) => {
     window.isLoggedIn = !!user;
     window.isAdmin = user && ALLOWED_EMAILS.includes(user.email);
     
-    document.getElementById('btnHeaderLogout').style.display = window.isLoggedIn ? 'flex' : 'none';
-    document.getElementById('btnHeaderLogin').style.display = window.isLoggedIn ? 'none' : 'flex';
+    document.getElementById('btnHeaderLogout').style.display = window.isLoggedIn ? 'block' : 'none';
+    document.getElementById('btnHeaderLogin').style.display = window.isLoggedIn ? 'none' : 'block';
     document.getElementById('btnAddSong').style.display = window.isAdmin ? 'block' : 'none';
-    document.getElementById('btnDockAdminSync').style.display = window.isAdmin ? 'flex' : 'none';
+    document.getElementById('btnDockAdminSync').style.display = window.isAdmin ? 'block' : 'none';
     
     let btnColor = document.getElementById('btnColorAdmin');
     if (window.isAdmin) {
@@ -249,7 +250,7 @@ onAuthStateChanged(auth, async (user) => {
             btnColor = document.createElement('button');
             btnColor.id = 'btnColorAdmin';
             btnColor.innerHTML = '🎨 จัดการสีนักร้อง';
-            btnColor.style.cssText = 'position:fixed; bottom:30px; right:20px; z-index:100; background:#9370DB; color:#fff; border:none; padding:10px 15px; border-radius:20px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); font-weight:bold;';
+            btnColor.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:100; background:#9370DB; color:#fff; border:none; padding:10px 15px; border-radius:20px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); font-weight:bold;';
             btnColor.onclick = () => openSingerColorManager(db);
             document.body.appendChild(btnColor);
         }
@@ -310,7 +311,9 @@ async function fetchSongs() {
             }
         }
         
+      // 🟢 ตรวจสอบลิงก์แชร์ ถ้าไม่มีการเล่นเพลงจากลิงก์ ถึงจะเปิดคลังเพลงขึ้นมา
         const isSongPlayed = window.checkSharedLink();
+        
         if (!isSongPlayed) {
             window.wm.openLibrary(); 
         }
@@ -430,6 +433,7 @@ window.renderSongList = function(query = '', artistFilter = 'All') {
         const videoId = window.extractYouTubeID(song.audioPath);
         const thumbUrl = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : '';
         let actionsHtml = window.isAdmin ? `<button class="btn-secondary" onclick="editSong('${song.id}')">✏️</button><button class="btn-secondary" style="color:#ff3b30;" onclick="deleteSong('${song.id}')">ลบ</button>` : '';
+       // 🟢 สร้างตัวแปรหลีกเลี่ยงชื่อเพลงที่มี ' (Single Quote) ทำให้โค้ดพัง
         const safeTitle = song.title.replace(/'/g, "\\'"); 
         
         item.innerHTML = `
@@ -446,7 +450,7 @@ window.renderSongList = function(query = '', artistFilter = 'All') {
 }
 
 // ==========================================
-// ระบบเล่นเพลง & จัดการเวลา 
+// ระบบเล่นเพลง & จัดการเวลา (Full Admin Controls)
 // ==========================================
 
 window.getActiveTimestamps = function(song) {
@@ -529,7 +533,7 @@ window.renderLyricsToContainer = function() {
 }
 
 // ==========================================
-// 🎧 ระบบเพลง Cover
+// 🎧 ระบบเพลง Cover (Alternative Versions)
 // ==========================================
 window.currentCoverIndex = -1; 
 
@@ -582,9 +586,7 @@ function createBadgeElement(label, artistName, index) {
 }
 
 window.playSong = function(id) {
-    window.currentSongId = id; 
-    if(window.updateWinBoxBounds) window.updateWinBoxBounds(true); // 🔴 ดันหน้าต่างลง
-    const song = window.songs.find(s => s.id === id); if (!song) return;
+    window.currentSongId = id; if(window.updateWinBoxBounds) window.updateWinBoxBounds(true); const song = window.songs.find(s => s.id === id); if (!song) return;
 
     window.currentCoverIndex = -1;
     window.renderVersionBadges();
@@ -592,11 +594,12 @@ window.playSong = function(id) {
     if(window.setRandomPanelState) window.setRandomPanelState(false);
     if(window.wm && window.wm.notifyWin) window.wm.notifyWin.close();
     
-    const liveAct = document.getElementById('liveActivity'); 
-    if (liveAct) {
+    const liveAct = document.getElementById('liveActivity'); const liveDiv = document.getElementById('dockDivider');
+    if (liveAct && liveDiv) {
         document.getElementById('liveTitle').innerText = song.title;
         document.getElementById('liveArtist').innerText = '🎤 ' + (song.artist || '-');
         
+       // ส่งรูปลงไปใน CSS และดูดสีปก
         const ytId = window.extractYouTubeID(song.audioPath);
         if (ytId) {
             const thumbUrl = `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
@@ -607,7 +610,7 @@ window.playSong = function(id) {
             window.resetWinBoxColor(); 
         }
 
-        liveAct.classList.remove('hidden'); liveAct.classList.remove('paused');
+        liveAct.classList.remove('hidden'); liveDiv.classList.remove('hidden'); liveAct.classList.remove('paused');
     }
 
     window.currentLyricsArray = song.lyrics.split(/\n\s*\n/); window.currentLyricIndex = -1;
@@ -629,6 +632,7 @@ window.playSong = function(id) {
         if (window.isYTApiReady || (window.YT && window.YT.Player)) {
             window.ytPlayer = new YT.Player('youtubePlayer', { 
                 height: '100%', width: '100%', videoId: videoId, 
+                // 🟢 เติม 'autoplay': 1 ตรง playerVars ด้านล่างนี้ครับ
                 playerVars: { 'playsinline': 1, 'controls': 1, 'autoplay': 1 }, 
                 events: { 'onStateChange': window.onPlayerStateChange } 
             });
@@ -638,19 +642,11 @@ window.playSong = function(id) {
     clearInterval(window.syncInterval);
     window.syncInterval = setInterval(() => {
         if (!window.ytPlayer || typeof window.ytPlayer.getCurrentTime !== 'function') return;
+        const currentSong = window.songs.find(s => s.id === window.currentSongId); if (!currentSong) return;
+        
+        const activeTimestamps = window.getActiveTimestamps(currentSong);
         const currentTime = window.ytPlayer.getCurrentTime(); 
         if (currentTime === undefined || currentTime === 0) return;
-
-        // 🟢 อัปเดตแถบวิ่งพื้นหลัง (Background Progress)
-        const duration = window.ytPlayer.getDuration();
-        if (duration > 0) {
-            const percent = (currentTime / duration) * 100;
-            const progressBg = document.getElementById('playerProgressBarBg');
-            if (progressBg) progressBg.style.width = percent + '%';
-        }
-
-        const currentSong = window.songs.find(s => s.id === window.currentSongId); if (!currentSong) return;
-        const activeTimestamps = window.getActiveTimestamps(currentSong);
 
         let correctIndex = -1;
         for (let i = 0; i < activeTimestamps.length; i++) {
@@ -714,6 +710,9 @@ window.renderTimestampEditor = function() {
     container.innerHTML = '';
     const song = window.songs.find(s => s.id === window.currentSongId); if (!song) return;
 
+    // ==========================================
+    // 🟢 แถบ Calibrate หูฟังบลูทูธ (จดจำแยกเครื่องลง localStorage)
+    // ==========================================
     if (window.isAdmin) {
         const savedOffset = localStorage.getItem('admin_audio_offset') || '0';
         const offsetDiv = document.createElement('div');
@@ -898,6 +897,7 @@ window.updateLyricDisplay = function() {
     window.syncTimestampEditorUI(); 
 }
 
+// 🟢 ระบบหักลบความหน่วง (Calibrate) ทำงานตรงฟังก์ชันนี้
 window.nextLyric = function(isAuto = false) {
     if (window.currentLyricIndex < window.currentLyricsArray.length) {
         window.currentLyricIndex++; 
@@ -906,6 +906,8 @@ window.nextLyric = function(isAuto = false) {
         if (!isAuto && window.isAdmin && window.currentSongId && window.ytPlayer) {
             const song = window.songs.find(s => s.id === window.currentSongId);
             if (song) { 
+                
+                // คำนวณหักลบเวลาความหน่วง
                 const offsetMs = parseInt(localStorage.getItem('admin_audio_offset')) || 0;
                 const rawTime = window.ytPlayer.getCurrentTime();
                 const currentTime = Math.max(0, rawTime - (offsetMs / 1000));
@@ -989,15 +991,15 @@ window.toggleLang = function(langIndex) {
 
 window.onPlayerStateChange = function(event) {
     const playPauseBtn = document.getElementById('livePlayPauseBtn');
-    const liveAct = document.getElementById('liveActivity'); 
+    const liveAct = document.getElementById('liveActivity'); // 🟢 เพิ่มบรรทัดนี้
 
     if (event.data === 1) { 
         if (playPauseBtn) playPauseBtn.innerText = '⏸'; 
-        if (liveAct) liveAct.classList.remove('paused'); 
+        if (liveAct) liveAct.classList.remove('paused'); // 🟢 เพลงเล่น -> คลื่นขยับ
     } 
     if (event.data === 2) { 
         if (playPauseBtn) playPauseBtn.innerText = '▶'; 
-        if (liveAct) liveAct.classList.add('paused'); 
+        if (liveAct) liveAct.classList.add('paused'); // 🟢 หยุดเพลง -> คลื่นหยุดนิ่ง
     }
 
     if (event.data === 0) { 
@@ -1021,10 +1023,11 @@ window.onPlayerStateChange = function(event) {
                 if (bgEl) bgEl.classList.remove('active');
                 
                 const liveAct = document.getElementById('liveActivity');
+                const liveDiv = document.getElementById('dockDivider');
                 if (liveAct) liveAct.classList.add('hidden');
+                if (liveDiv) liveDiv.classList.add('hidden');
                 
-                window.currentSongId = null; 
-                if(window.updateWinBoxBounds) window.updateWinBoxBounds(false);
+                window.currentSongId = null; if(window.updateWinBoxBounds) window.updateWinBoxBounds(false); if(window.updateWinBoxBounds) window.updateWinBoxBounds(false);
                 
                 if(window.setRandomPanelState) window.setRandomPanelState(true);
             }
@@ -1180,7 +1183,7 @@ window.prevLiveSong = function() {
 }
 
 // ==========================================
-// 🎯 ระบบ Auto Calibration 
+// 🎯 ระบบ Auto Calibration (จับจังหวะเสียงหาความหน่วง Bluetooth)
 // ==========================================
 window.startCalibration = function() {
     const actx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1310,7 +1313,7 @@ window.startCalibration = function() {
 };
 
 // ==========================================
-// 🔗 ระบบ Share Link
+// 🔗 ระบบ Share Link (Dynamic Slug)
 // ==========================================
 window.createCleanSlug = function(title) {
     if (!title) return "";
@@ -1358,9 +1361,8 @@ function showShareToast(message) {
     toast.innerText = message; toast.style.opacity = '1'; toast.style.bottom = '50px';
     setTimeout(() => { toast.style.opacity = '0'; toast.style.bottom = '30px'; }, 2500);
 }
-
 // ==========================================
-// 🎨 ระบบสกัดสีจากรูปปก
+// 🎨 ระบบสกัดสีจากรูปปก (Dynamic WinBox Color)
 // ==========================================
 window.setWinBoxColor = function(r, g, b) {
     document.documentElement.style.setProperty('--wb-bg-r', r);
@@ -1369,12 +1371,12 @@ window.setWinBoxColor = function(r, g, b) {
 };
 
 window.resetWinBoxColor = function() {
-    window.setWinBoxColor(28, 28, 30); 
+    window.setWinBoxColor(28, 28, 30); // คืนค่ากลับเป็นสีเทาเข้ม (Theme เดิม)
 };
 
 window.extractDominantColor = function(imgUrl) {
     const img = new Image();
-    img.crossOrigin = "Anonymous"; 
+    img.crossOrigin = "Anonymous"; // จำเป็นมาก เพื่ออนุญาตให้ดูดสีจากลิงก์ YouTube ได้
     img.src = imgUrl;
     img.onload = function() {
         const canvas = document.createElement('canvas');
@@ -1382,18 +1384,22 @@ window.extractDominantColor = function(imgUrl) {
         canvas.width = img.width; canvas.height = img.height;
         ctx.drawImage(img, 0, 0);
 
+        // ดึงพิกเซลจากบริเวณตรงกลางภาพ (หลบขอบดำที่อาจจะติดมา)
         const imageData = ctx.getImageData(0, Math.floor(img.height * 0.1), img.width, Math.floor(img.height * 0.8));
         const data = imageData.data;
 
         let r = 0, g = 0, b = 0, count = 0;
         
+        // สุ่มข้ามพิกเซลเพื่อความเร็ว (คำนวณทุกๆ 16 ข้อมูล)
         for (let i = 0; i < data.length; i += 16) {
+            // กรองสีที่ดำเกินไปหรือขาวเกินไปทิ้ง เพื่อให้ได้สีสันที่แท้จริง
             if ((data[i] < 30 && data[i+1] < 30 && data[i+2] < 30) || (data[i] > 230 && data[i+1] > 230 && data[i+2] > 230)) continue;
             r += data[i]; g += data[i+1]; b += data[i+2];
             count++;
         }
 
         if (count > 0) {
+            // หาสีเฉลี่ย และดรอปความสว่างลง 65% (คูณ 0.35) เพื่อให้ WinBox ยังคงเป็นโทน Dark Mode ที่อ่านหนังสือสบายตา
             const darkenFactor = 0.35;
             r = Math.floor((r / count) * darkenFactor);
             g = Math.floor((g / count) * darkenFactor);
@@ -1403,25 +1409,9 @@ window.extractDominantColor = function(imgUrl) {
             window.resetWinBoxColor();
         }
     };
-    img.onerror = function() { window.resetWinBoxColor(); }; 
+    img.onerror = function() { window.resetWinBoxColor(); }; // ถ้ารูปพัง ให้กลับไปใช้สีเดิม
 };
 
-// ==========================================
-// 🕒 ระบบนาฬิกาสำหรับ macOS Status Bar
-// ==========================================
-function updateMacClock() {
-    const clock = document.getElementById('mac-clock');
-    if (!clock) return;
-    const now = new Date();
-    const options = { weekday: 'short', hour: '2-digit', minute: '2-digit' };
-    clock.innerText = now.toLocaleTimeString('th-TH', options);
-}
-setInterval(updateMacClock, 1000);
-updateMacClock();
-
-// ==========================================
-// 🪟 ระบบขยับเพดานหน้าต่างอัตโนมัติ (Dynamic WinBox Boundary)
-// ==========================================
 window.updateWinBoxBounds = function(isPlaying) {
     const newTop = isPlaying ? 95 : 30;
     
@@ -1433,8 +1423,14 @@ window.updateWinBoxBounds = function(isPlaying) {
     activeWindows.forEach(win => {
         if (win) {
             win.top = newTop; 
+            
+            // 🔴 บังคับให้พิกัด Y ขยับลงมาด้วย ถ้ามันจมอยู่ใต้แถบ
+            if (win.y < newTop) {
+                win.y = newTop;
+            }
+            
+            win.move(win.x, win.y); // สั่งขยับหน้าต่างไปพิกัดใหม่
             win.resize(); 
-            win.move();   
         }
     });
 };
