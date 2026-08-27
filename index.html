@@ -36,7 +36,8 @@
 
     <!-- 🔴 แถบเครื่องเล่นเพลง (จะม้วนกางลงมาจากใต้ Status Bar) -->
     <div id="liveActivity" class="live-activity-panel hidden" onclick="if(window.currentSongId) wm.openPlayer(document.getElementById('liveTitle').innerText)" title="เปิดหน้าต่างเครื่องเล่น">
-        
+        <!-- 🟢 แถบพื้นหลังวิ่ง -->
+        <div id="playerProgressBarBg" class="player-progress-bg"></div>
         <!-- ซ้าย: ปกเพลง + ชื่อเพลง -->
         <div class="player-left">
             <div class="live-thumb"></div>
