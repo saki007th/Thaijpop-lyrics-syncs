@@ -17,7 +17,7 @@
         <div>กำลังโหลดข้อมูลคลังเพลง...</div>
     </div>
 
-    <!-- 🔴 1. แถบสถานะสไตล์ macOS (macOS Status Bar) -->
+   <!-- 🔴 1. แถบสถานะสไตล์ macOS (macOS Status Bar) -->
     <div class="macos-status-bar">
         <div class="mac-left">
             <span class="mac-logo"></span>
@@ -27,32 +27,6 @@
             <span class="mac-menu">มุมมอง</span>
         </div>
         
-        <!-- ย้าย Live Activity มาไว้ตรงกลางแถบสถานะ -->
-        <div class="mac-center">
-            <div id="liveActivity" class="live-activity hidden" onclick="if(window.currentSongId) wm.openPlayer(document.getElementById('liveTitle').innerText)" title="เปิดหน้าต่างเครื่องเล่น">
-                <!-- 1. รูปปกจิ๋ว (ฝั่งซ้าย) -->
-                <div class="live-thumb"></div>
-                
-                <!-- 2. ข้อความ (ตรงกลาง, ซ่อนตอนหด) -->
-                <div class="live-info">
-                    <div id="liveTitle" class="live-title">-</div>
-                    <div id="liveArtist" class="live-artist">-</div>
-                </div>
-                
-                <!-- 3. คลื่นเสียง (โชว์เสมอ) -->
-                <div class="live-icon">
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                </div>
-                
-                <!-- 4. ปุ่มควบคุม (ฝั่งขวา, ซ่อนตอนหด) -->
-                <div class="live-controls">
-                    <button class="live-btn" onclick="event.stopPropagation(); prevLiveSong()" title="ก่อนหน้า">⏮</button>
-                    <button id="livePlayPauseBtn" class="live-btn" onclick="event.stopPropagation(); toggleLivePlay()" title="เล่น/พัก">⏸</button>
-                    <button class="live-btn" onclick="event.stopPropagation(); nextLiveSong()" title="ถัดไป">⏭</button>
-                </div>
-            </div>
-        </div>
-        
         <div class="mac-right">
             <span class="mac-icon">📶 Wi-Fi</span>
             <span class="mac-icon">🔋 100%</span>
@@ -60,6 +34,35 @@
         </div>
     </div>
 
+    <!-- 🔴 แถบเครื่องเล่นเพลง (จะม้วนกางลงมาจากใต้ Status Bar) -->
+    <div id="liveActivity" class="live-activity-panel hidden" onclick="if(window.currentSongId) wm.openPlayer(document.getElementById('liveTitle').innerText)" title="เปิดหน้าต่างเครื่องเล่น">
+        
+        <!-- ซ้าย: ปกเพลง + ชื่อเพลง -->
+        <div class="player-left">
+            <div class="live-thumb"></div>
+            <div class="live-info">
+                <div id="liveTitle" class="live-title">-</div>
+                <div id="liveArtist" class="live-artist">-</div>
+            </div>
+        </div>
+        
+        <!-- กลาง: ปุ่มควบคุม -->
+        <div class="player-center">
+            <div class="live-controls">
+                <button class="live-btn" onclick="event.stopPropagation(); prevLiveSong()" title="ก่อนหน้า">⏮</button>
+                <button id="livePlayPauseBtn" class="live-btn" onclick="event.stopPropagation(); toggleLivePlay()" title="เล่น/พัก">⏸</button>
+                <button class="live-btn" onclick="event.stopPropagation(); nextLiveSong()" title="ถัดไป">⏭</button>
+            </div>
+        </div>
+        
+        <!-- ขวา: คลื่นเสียงสถานะ -->
+        <div class="player-right">
+            <div class="live-icon">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            </div>
+        </div>
+    </div>
+    
     <!-- 🔴 2. ไอคอนเมนูหลักบนหน้าจอ (Desktop Icons) -->
     <div id="desktop-icons-container" class="desktop-icons-container">
         <div class="desktop-icon" onclick="wm.openLibrary()">
