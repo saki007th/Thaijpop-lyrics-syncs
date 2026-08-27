@@ -86,6 +86,27 @@ body {
     /* 🔴 แอนิเมชันเปิด/ปิด (ม้วนพับขึ้น/ลง) */
     transform-origin: top; /* จุดหมุนอยู่ด้านบน */
     transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    overflow: hidden;
+}
+/* =========================================
+   🔴 แถบวิ่งพื้นหลังความคืบหน้าเพลง (Background Progress Bar)
+   ========================================= */
+.player-progress-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%; /* เริ่มต้นที่ 0% */
+    background: linear-gradient(90deg, rgba(0, 210, 255, 0.05), rgba(0, 210, 255, 0.2)); 
+    border-right: 1px solid rgba(0, 210, 255, 0.4); 
+    z-index: 0; 
+    transition: width 0.25s linear; 
+}
+
+/* 🟢 ยกเนื้อหาด้านในให้อยู่เหนือพื้นหลังความคืบหน้า */
+.player-left, .player-center, .player-right {
+    position: relative;
+    z-index: 1; 
 }
 
 /* 🟢 ซ่อนแถบเมื่อไม่มีเพลง */
