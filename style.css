@@ -60,174 +60,118 @@ body {
 .mac-clock { font-weight: 500; }
 
 /* =========================================
-   🍎 Dynamic Island (Live Activity) - อัปเกรดใหม่!
+   🍎 แถบเครื่องเล่นเพลงม้วนลง (Dropdown Player Panel)
    ========================================= */
-.mac-center {
-    position: absolute;
-    left: 50%;
-    top: 4px;
-    transform: translateX(-50%);
-    display: flex;
-    justify-content: center;
-    z-index: 10001;
-}
-
-.live-activity {
-    height: 28px; 
-    padding: 0 12px; 
-    border-radius: 16px; 
-    background-color: rgba(10, 10, 12, 0.9); 
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+.live-activity-panel {
+    position: fixed; 
+    top: 30px; /* ห้อยต่อลงมาจากใต้แถบ Status Bar */
+    left: 0;
+    width: 100vw; /* กว้างเต็มจอ */
+    height: 65px; /* ความสูงของแถบเพลง */
+    
+    background: rgba(30, 30, 33, 0.75); /* สีโปร่งแสงนิดๆ */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    
     display: flex; 
     align-items: center; 
-    gap: 10px; 
+    justify-content: space-between; /* ดัน 3 กล่องให้ห่างกัน ซ้าย-กลาง-ขวา */
+    padding: 0 30px; 
+    box-sizing: border-box;
     cursor: pointer;
-    overflow: hidden; 
-    box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); 
+    z-index: 9999; 
     
-    max-width: 180px; 
-    min-width: 140px; 
-    border: 1px solid rgba(255,255,255,0.15);
+    /* 🔴 แอนิเมชันเปิด/ปิด (ม้วนพับขึ้น/ลง) */
+    transform-origin: top; /* จุดหมุนอยู่ด้านบน */
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.live-activity.hidden { 
-    max-width: 0; min-width: 0; padding: 0; margin: 0; opacity: 0; border: none; pointer-events: none; 
+/* 🟢 ซ่อนแถบเมื่อไม่มีเพลง */
+.live-activity-panel.hidden { 
+    height: 0; 
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0; 
+    border: none; 
+    pointer-events: none; 
+    transform: scaleY(0); /* พับกระดาษม้วนขึ้นไป */
 }
 
-.live-activity:hover { 
-    height: 42px; 
-    border-radius: 21px; 
-    max-width: 450px; 
-    padding: 0 16px;
-    background-color: rgba(25, 25, 28, 0.95); 
-    border-color: rgba(255,255,255,0.3);
+/* --- 1. ส่วนซ้าย (ปก + ชื่อ) --- */
+.player-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    width: 30%; /* จองพื้นที่ไว้ 30% ของจอ */
 }
-
-/* รูปปกเพลงจิ๋ว */
 .live-thumb {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%; 
+    width: 45px;
+    height: 45px;
+    border-radius: 8px; 
     background-image: var(--live-bg, none);
     background-size: cover;
     background-position: center;
     flex-shrink: 0;
-    box-shadow: 0 0 5px rgba(0,0,0,0.5);
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
 }
-
-.live-activity:hover .live-thumb {
-    width: 30px; 
-    height: 30px;
-    border-radius: 8px; 
-}
-
-/* คลื่นเสียง */
-.live-icon {
+.live-info {
     display: flex;
-    align-items: flex-end;
+    flex-direction: column;
     justify-content: center;
-    gap: 3px;
-    height: 14px;
-    margin-left: auto; /* ดันไปขวาสุดเสมอตอนหุบ */
-    transition: all 0.3s;
-    flex-shrink: 0;
+    overflow: hidden;
+}
+.live-title { 
+    font-size: 14px; font-weight: bold; color: #fff; 
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+}
+.live-artist { 
+    font-size: 12px; color: #00d2ff; 
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; 
 }
 
-.live-activity:hover .live-icon {
-    height: 20px;
-    margin-left: 0;
+/* --- 2. ส่วนกลาง (ปุ่มควบคุม) --- */
+.player-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40%;
 }
+.live-controls { display: flex; gap: 25px; align-items: center; }
+.live-btn {
+    background: transparent; border: none; color: white;
+    font-size: 1.6em; cursor: pointer; transition: 0.2s; padding: 0;
+}
+.live-btn:hover { color: #00d2ff; transform: scale(1.15); }
+.live-btn:active { transform: scale(0.9); }
+#livePlayPauseBtn { font-size: 2em; } /* ให้ปุ่มเล่นใหญ่กว่าเพื่อน */
 
+/* --- 3. ส่วนขวา (คลื่นเสียง) --- */
+.player-right {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    width: 30%;
+}
+.live-icon { display: flex; align-items: flex-end; gap: 4px; height: 24px; }
 .live-icon .bar {
-    width: 2px;
-    background-color: #00d2ff;
-    border-radius: 2px;
-    transform-origin: bottom;
+    width: 3px; background-color: #00d2ff; border-radius: 3px; transform-origin: bottom;
     animation: equalize 0.6s infinite ease-in-out alternate;
 }
-
 .live-icon .bar:nth-child(1) { height: 60%; animation-delay: -0.4s; }
 .live-icon .bar:nth-child(2) { height: 100%; animation-delay: -0.2s; }
 .live-icon .bar:nth-child(3) { height: 75%; animation-delay: 0s; }
 .live-icon .bar:nth-child(4) { height: 50%; animation-delay: -0.5s; }
-
 @keyframes equalize { 0% { transform: scaleY(0.2); } 100% { transform: scaleY(1); } }
-.live-activity.paused .live-icon .bar { animation: none; transform: scaleY(0.2); transition: transform 0.3s ease; }
-
-/* ข้อความชื่อเพลง */
-.live-info {
-    flex: 1;            
-    min-width: 60px;       
-    overflow: hidden;   
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    transition: all 0.4s ease;
-}
-
-.live-title {
-    font-size: 12px; 
-    font-weight: bold;
-    color: #fff;
-    white-space: nowrap; 
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: all 0.3s;
-}
-
-.live-activity:hover .live-title { font-size: 13px; color: #00d2ff; }
-
-.live-artist {
-    font-size: 11px; 
-    color: #aaa;
-    white-space: nowrap; 
-    overflow: hidden;
-    text-overflow: ellipsis;
-    opacity: 0;
-    max-height: 0;
-    transition: all 0.3s ease;
-}
-
-.live-activity:hover .live-artist { opacity: 1; max-height: 20px; margin-top: 2px; }
-
-/* ปุ่มควบคุม */
-.live-controls {
-    display: flex; 
-    gap: 8px; 
-    padding-left: 12px; 
-    border-left: 1px solid rgba(255,255,255,0.15);
-    opacity: 0;
-    width: 0;
-    overflow: hidden; 
-    transform: translateX(10px) scale(0.8);
-    pointer-events: none;
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    flex-shrink: 0;
-}
-
-.live-activity:hover .live-controls {
-    opacity: 1;
-    width: 90px; 
-    transform: translateX(0) scale(1);
-    pointer-events: auto;
-}
-
-.live-btn {
-    background: transparent; border: none; color: white;
-    font-size: 1.3em; cursor: pointer; transition: color 0.2s ease, transform 0.1s; padding: 0;
-}
-.live-btn:hover { color: #00d2ff; transform: scale(1.15); }
-.live-btn:active { transform: scale(0.9); }
+.live-activity-panel.paused .live-icon .bar { animation: none; transform: scaleY(0.2); transition: 0.3s; }
 
 /* =========================================
    ไอคอนหน้าจอหลัก (Desktop Icons)
    ========================================= */
 .desktop-icons-container {
     position: fixed;
-    top: 70px; 
+    top: 110px; 
     left: 40px; 
     display: flex;
     gap: 30px; 
