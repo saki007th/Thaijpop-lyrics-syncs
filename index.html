@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/winbox@0.2.82/dist/winbox.bundle.min.js"></script>
 </head>
 <body>
+    <!-- 🔴 เพิ่มเลเยอร์นี้สำหรับทำวอลเปเปอร์แบบภาพคมชัด -->
     <div id="desktop-wallpaper"></div>
     <div id="dynamic-bg"></div>
     <div id="dockDivider" style="display: none;"></div>
@@ -25,16 +26,10 @@
             <span class="mac-menu">แก้ไข</span>
             <span class="mac-menu">มุมมอง</span>
         </div>
-        <div class="mac-right">
-            <span class="mac-icon">📶 Wi-Fi</span>
-            <span class="mac-icon">🔋 100%</span>
-            <span id="mac-clock" class="mac-clock">00:00</span>
-        </div>
-    </div>
 
-    <!-- 🔴 2. แถบเครื่องเล่นเพลง (จะม้วนกางลงมาจากใต้ Status Bar) -->
+    <!-- 🔴 แถบเครื่องเล่นเพลง (จะม้วนกางลงมาจากใต้ Status Bar) -->
     <div id="liveActivity" class="live-activity-panel hidden" onclick="if(window.currentSongId) wm.openPlayer(document.getElementById('liveTitle').innerText)" title="เปิดหน้าต่างเครื่องเล่น">
-        <div id="playerProgressBarBg" class="player-progress-bg"></div>
+        
         <!-- แถบวิ่งพื้นหลังความคืบหน้า -->
         <div id="playerProgressBarBg" class="player-progress-bg"></div>
         
@@ -63,11 +58,34 @@
             </div>
         </div>
     </div>
+        
+        </div>
+        <div class="mac-right">
+            <span class="mac-icon">📶 Wi-Fi</span>
+            <span class="mac-icon">🔋 100%</span>
+            <span id="mac-clock" class="mac-clock">00:00</span>
+        </div>
+    </div>
 
-    <!-- 🔴 3. ไอคอนเมนูหลักบนหน้าจอ (Desktop Icons) -->
+    <!-- 🔴 2. ไอคอนเมนูหลักบนหน้าจอ (Desktop Icons) -->
     <div id="desktop-icons-container" class="desktop-icons-container">
         <div class="desktop-icon" onclick="wm.openLibrary()">
             <div class="icon-box">🏠</div>
+
+    <!-- 🔴 5. Desktop Widgets (วิดเจ็ตบนหน้าจอ) -->
+    <div id="desktop-widgets-container" class="desktop-widgets-container">
+        <!-- Widget สุ่มนักร้อง (Artist Spotlight) -->
+        <div class="ios-widget artist-widget">
+            <div class="widget-header">
+                <div class="widget-title">✨ แนะนำศิลปิน</div>
+                <button class="widget-refresh-btn" onclick="renderArtistWidget()" title="สุ่มใหม่">🔄</button>
+            </div>
+            <div id="artistWidgetContent" class="widget-content">
+                <!-- เนื้อหาจะถูกเติมด้วย JS -->
+                <div style="color: #aaa; text-align: center; margin-top: 50px;">กำลังโหลด...</div>
+            </div>
+        </div>
+    </div>
             <div class="icon-label">คลังเพลง</div>
         </div>
         <div class="desktop-icon" onclick="wm.openSettings()">
@@ -78,13 +96,14 @@
             <div class="icon-box">🪟</div>
             <div class="icon-label">PiP (หน้าต่างลอย)</div>
         </div>
+        <!-- ปุ่มจัดการเนื้อเพลง (จะโชว์เมื่อเป็นแอดมิน) -->
         <div class="desktop-icon" id="btnDockAdminSync" style="display:none;" onclick="if(window.currentSongId) wm.openAdminSync(); else alert('กรุณากดเล่นเพลงที่ต้องการซิงค์ก่อนครับ');">
             <div class="icon-box">⏱</div>
             <div class="icon-label">จัดการเนื้อเพลง</div>
         </div>
     </div>
 
-    <!-- 🔴 4. ปุ่มบัญชีแอดมินมุมซ้ายล่าง (Bottom Left Corner) -->
+    <!-- 🔴 3. ปุ่มบัญชีแอดมินมุมซ้ายล่าง (Bottom Left Corner) -->
     <div class="bottom-left-controls">
         <button id="btnDockNotify" class="floating-notify-btn" onclick="window.openNotifyWindow()" title="เพลงใหม่ล่าสุด">
             🔔<span id="notifyBadge" class="notify-badge" style="display: none;"></span>
@@ -96,6 +115,7 @@
     <!-- โกดังเก็บหน้าต่าง -->
     <div id="window-warehouse" style="display: none;">
         
+        <!-- 1. คลังเพลง -->
         <div id="content-library" class="wb-content-padding">
             <div class="library-toolbar">
                 <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหาชื่อเพลง หรือ ศิลปิน..." oninput="filterSongs()">
@@ -105,24 +125,31 @@
             <div id="songList" class="song-grid"></div>
         </div>
 
+        <!-- 2. วิดีโอ -->
         <div id="content-player" style="width: 100%; height: 100%; background: #000;">
             <div id="youtubePlayer" style="width: 100%; height: 100%;"></div>
         </div>
-
-        <div id="content-lyrics" class="wb-content-padding">
+                <!-- 3. เนื้อเพลงcover -->
+      <div id="content-lyrics" class="wb-content-padding">
             <div id="versionContainer" style="display: none;"></div>
             <div id="lyricsContainer" class="lyrics-container"></div>
         </div>
             
-        <div id="content-admin-sync" class="wb-content-padding">
-            <div class="sticky-sync-bar" id="lyricControlBtnGroup">
-                <button class="btn-secondary" onclick="prevLyric()">⏮ ย้อน (ลบเวลา)</button>
-                <button class="btn-primary" onclick="nextLyric()" style="background: #ffcc00; color: #000;">⏭ ถัดไป (จับจังหวะ)</button>
-            </div>
-            <div id="timestampList" class="timestamp-list"></div>
-            <button id="btnResetSync" class="btn-secondary" onclick="resetSync()" style="margin-top: 15px; width: 100%;">🔄 ล้างเวลาซิงค์เริ่มใหม่</button>
-        </div>
+        <!-- 🔴 4. หน้าต่าง Admin: เครื่องมือซิงค์ & แก้ไขเนื้อเพลง -->
+<div id="content-admin-sync" class="wb-content-padding">
+    
+    <!-- เปลี่ยนจาก button-group เป็น sticky-sync-bar ตรงนี้ครับ -->
+    <div class="sticky-sync-bar" id="lyricControlBtnGroup">
+        <button class="btn-secondary" onclick="prevLyric()">⏮ ย้อน (ลบเวลา)</button>
+        <button class="btn-primary" onclick="nextLyric()" style="background: #ffcc00; color: #000;">⏭ ถัดไป (จับจังหวะ)</button>
+    </div>
 
+    <div id="timestampList" class="timestamp-list"></div>
+    
+    <button id="btnResetSync" class="btn-secondary" onclick="resetSync()" style="margin-top: 15px; width: 100%;">🔄 ล้างเวลาซิงค์เริ่มใหม่</button>
+</div>
+
+<!-- 5. ตั้งค่า -->
         <div id="content-settings" class="wb-content-padding">
             <h3 style="margin-top:0;">🖼️ ภาพพื้นหลัง (Wallpaper)</h3>
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
@@ -133,6 +160,7 @@
             </div>
            <input type="text" id="inputCustomWallpaper" placeholder="หรือวางลิงก์รูปภาพ (URL) ของคุณที่นี่..." onchange="setWallpaper(this.value)" style="margin-bottom: 15px;">
             
+            <!-- 🔴 เพิ่มเมนูให้ผู้ใช้เลือกขนาดภาพพื้นหลัง -->
             <label>รูปแบบภาพพื้นหลัง:</label>
             <select id="bgSizeSelect" onchange="setBgSize(this.value)" style="width:100%; padding:10px; margin-bottom:30px; background:#2c2c2e; color:white; border-radius:10px; border:none; outline:none;">
                 <option value="cover">เต็มจอ (ภาพอาจถูกตัดขอบ)</option>
@@ -141,6 +169,7 @@
             
             <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin-bottom: 25px;">
 
+            <!-- 🔴 เพิ่มสวิตช์เปิด-ปิด โหมดสุ่มเพลง -->
             <h3 style="margin-top: 0;">🔀 โหมดเล่นเพลง</h3>
             <div style="margin-bottom: 25px;">
                 <label class="lang-toggle" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
@@ -148,6 +177,7 @@
                 </label>
             </div>
             
+            <!-- 🔴 ระบบปรับแต่งที่เพิ่มกลับเข้ามา -->
             <h3 style="margin-top:0;">🪟 ปรับแต่งหน้าต่าง WinBox</h3>
             <label>ความโปร่งใส (Opacity):</label>
             <input type="range" id="sliderOpacity" min="10" max="100" value="95" oninput="setWindowStyle()" style="width:100%; margin-bottom:10px;">
@@ -165,6 +195,7 @@
             </div>
         </div>
 
+        <!-- 6. เพิ่ม/แก้ไขเพลง -->
         <div id="content-add" class="wb-content-padding">
             <label>ชื่อเพลง:</label>
             <input type="text" id="inputTitle" placeholder="เช่น ソワレ (Soirée)">
@@ -185,25 +216,37 @@
             
             <button id="btnSave" class="btn-primary" onclick="saveSong()" style="width: 100%; margin-top: 15px;">💾 บันทึกเพลง</button>
         </div>
+        
     </div>
     
+    <!-- 🔴 ระบบ เชื่อมไฟล์  -->
     <script src="pip.js"></script>
     <script src="notify.js"></script> 
     <script type="module" src="app.js"></script>
+ 
 
+    <!-- 🔴 แถบสุ่มเพลงด้านขวา (Random Playlist Widget) -->
     <div id="randomPlaylistPanel" class="right-panel open">
+        <!-- ปุ่มกดพับเก็บ / กางออก -->
         <button class="panel-toggle-btn" onclick="toggleRandomPanel()">
             <span id="panelToggleIcon">▶</span>
         </button>
+        
+        <!-- เนื้อหาด้านใน -->
         <div class="panel-content">
             <h3 style="margin-top: 0; font-size: 1.1em; text-align: center; color: #00d2ff; margin-bottom: 15px;">
                 🎲 5 เพลงสุ่มน่าฟัง
             </h3>
-            <div id="randomSongList" class="random-song-list"></div>
+            <div id="randomSongList" class="random-song-list">
+                <!-- รายชื่อเพลงจะถูกเติมด้วย JavaScript -->
+            </div>
             <button class="btn-primary" style="width: 100%; margin-top: 15px; font-size: 0.9em;" onclick="renderRandomPlaylist()">
                 🔄 สุ่มเพลงใหม่
             </button>
          </div>
     </div> 
+    
+
+
 </body>
 </html>

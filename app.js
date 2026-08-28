@@ -291,6 +291,7 @@ async function fetchSongs() {
         document.getElementById('loadingOverlay').style.display = 'none';
         
         window.renderRandomPlaylist();
+        if(window.renderArtistWidget) window.renderArtistWidget();
         
         if(window.checkNewSongsNotification) {
             window.checkNewSongsNotification();
@@ -648,13 +649,15 @@ window.playSong = function(id) {
         const currentTime = window.ytPlayer.getCurrentTime(); 
         if (currentTime === undefined || currentTime === 0) return;
 
+        // 🟢 อัปเดตแถบวิ่งพื้นหลัง (Background Progress)
         const duration = window.ytPlayer.getDuration();
         if (duration > 0) {
             const percent = (currentTime / duration) * 100;
             const progressBg = document.getElementById('playerProgressBarBg');
             if (progressBg) progressBg.style.width = percent + '%';
         }
-        
+
+
         let correctIndex = -1;
         for (let i = 0; i < activeTimestamps.length; i++) {
             if (activeTimestamps[i] != null && currentTime >= activeTimestamps[i]) correctIndex = i;
@@ -1440,4 +1443,70 @@ window.updateWinBoxBounds = function(isPlaying) {
             win.resize(); 
         }
     });
+};
+
+
+// ==========================================
+// 📱 ระบบ iOS Desktop Widgets
+// ==========================================
+window.renderArtistWidget = function() {
+    const container = document.getElementById('artistWidgetContent');
+    if (!container || !window.songs || window.songs.length === 0) return;
+
+    // 1. ดึงรายชื่อนักร้องทั้งหมดที่มีในคลัง
+    let artistSet = new Set();
+    window.songs.forEach(s => {
+        window.getSingersList(s.artist).forEach(n => artistSet.add(n));
+    });
+    const allArtists = Array.from(artistSet).filter(a => a !== 'ดนตรี');
+    
+    if (allArtists.length === 0) {
+        container.innerHTML = '<div style="color: #aaa; text-align: center;">ไม่พบข้อมูลศิลปิน</div>';
+        return;
+    }
+
+    // 2. สุ่มนักร้อง 1 คน
+    const randomArtist = allArtists[Math.floor(Math.random() * allArtists.length)];
+    
+    // 3. หาเพลงของนักร้องคนนี้
+    const artistSongs = window.songs.filter(song => {
+        const artistStr = song.artist || '';
+        return artistStr.includes(randomArtist);
+    });
+
+    // 4. สุ่มลำดับเพลงนิดหน่อย จะได้ไม่น่าเบื่อ
+    const shuffledSongs = [...artistSongs].sort(() => 0.5 - Math.random());
+    const displaySongs = shuffledSongs.slice(0, 3); // โชว์ 3 เพลงให้พอดีความสูงกล่อง
+
+    // 5. ดึงสีประจำตัวนักร้อง (ถ้ามี)
+    let badgeColor = (window.SINGER_COLORS && window.SINGER_COLORS[randomArtist]) ? window.SINGER_COLORS[randomArtist] : '#00d2ff';
+    
+    // เติมเอฟเฟกต์แสงให้กล่อง Widget ตามสีศิลปิน
+    const widgetBox = document.querySelector('.artist-widget');
+    if (widgetBox) {
+        widgetBox.style.boxShadow = `0 15px 35px rgba(0, 0, 0, 0.3), inset 0 0 50px ${badgeColor}15`;
+    }
+
+    // 6. วาด UI
+    let html = `<div class="widget-artist-name" style="color: ${badgeColor};">${randomArtist}</div>`;
+    html += `<div class="widget-song-list">`;
+    
+    displaySongs.forEach(song => {
+        const videoId = window.extractYouTubeID(song.audioPath);
+        const thumbUrl = videoId ? `https://img.youtube.com/vi/${videoId}/default.jpg` : '';
+        // 🟢 สร้างตัวแปรหลีกเลี่ยงชื่อเพลงที่มี '
+        const safeTitle = song.title.replace(/'/g, "\'");
+        
+        html += `
+            <div class="widget-song-item" onclick="playSong('${song.id}')">
+                <img src="${thumbUrl}" onerror="this.style.display='none'">
+                <div class="widget-song-info">
+                    <div class="widget-song-title">${song.title}</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `</div>`;
+    container.innerHTML = html;
 };
