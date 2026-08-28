@@ -60,7 +60,7 @@ window.updateArtistSuggestions = function() {
 // 🪟 Window Manager  
 // ==========================================
 window.wm = {
-    libWin: null, playerWin: null, lyricsWin: null, settingsWin: null, addWin: null, adminSyncWin: null,
+    libWin: null, playerWin: null, lyricsWin: null, settingsWin: null, addWin: null, adminSyncWin: null, artistWin: null,
 
     applyMemory: function(winId, options) {
         try {
@@ -178,6 +178,18 @@ window.wm = {
         }));
     },
     
+    
+    openArtistWidget: function() {
+        if (this.artistWin) { this.artistWin.focus(); return; }
+        this.artistWin = new WinBox("✨ แนะนำศิลปิน", this.applyMemory('artist_widget', {
+            mount: document.getElementById("content-artist-widget"), 
+            width: "350px", height: "450px", x: "right", y: "center", 
+            top: window.currentSongId ? 95 : 30, class: ["wb-dark"],
+            onclose: () => { this.artistWin = null; }
+        }));
+        window.wm.openArtistWidget();
+    },
+    
     openAdminSync: function() {
         if (!window.isAdmin || !window.currentSongId) return;
         const song = window.songs.find(s => s.id === window.currentSongId);
@@ -291,7 +303,7 @@ async function fetchSongs() {
         document.getElementById('loadingOverlay').style.display = 'none';
         
         window.renderRandomPlaylist();
-        if(window.renderArtistWidget) window.renderArtistWidget();
+        window.wm.openArtistWidget();
         
         if(window.checkNewSongsNotification) {
             window.checkNewSongsNotification();
@@ -1427,7 +1439,8 @@ window.updateWinBoxBounds = function(isPlaying) {
     
     const activeWindows = [
         window.wm.libWin, window.wm.settingsWin, window.wm.playerWin, 
-        window.wm.lyricsWin, window.wm.addWin, window.wm.adminSyncWin
+        window.wm.lyricsWin, window.wm.addWin, window.wm.adminSyncWin, 
+        window.wm.artistWin
     ];
     
     activeWindows.forEach(win => {
@@ -1453,48 +1466,29 @@ window.renderArtistWidget = function() {
     const container = document.getElementById('artistWidgetContent');
     if (!container || !window.songs || window.songs.length === 0) return;
 
-    // 1. ดึงรายชื่อนักร้องทั้งหมดที่มีในคลัง
     let artistSet = new Set();
-    window.songs.forEach(s => {
-        window.getSingersList(s.artist).forEach(n => artistSet.add(n));
-    });
+    window.songs.forEach(s => window.getSingersList(s.artist).forEach(n => artistSet.add(n)));
     const allArtists = Array.from(artistSet).filter(a => a !== 'ดนตรี');
     
-    if (allArtists.length === 0) {
-        container.innerHTML = '<div style="color: #aaa; text-align: center;">ไม่พบข้อมูลศิลปิน</div>';
-        return;
-    }
+    if (allArtists.length === 0) { container.innerHTML = '<div style="color: #aaa; text-align: center;">ไม่พบข้อมูลศิลปิน</div>'; return; }
 
-    // 2. สุ่มนักร้อง 1 คน
     const randomArtist = allArtists[Math.floor(Math.random() * allArtists.length)];
-    
-    // 3. หาเพลงของนักร้องคนนี้
-    const artistSongs = window.songs.filter(song => {
-        const artistStr = song.artist || '';
-        return artistStr.includes(randomArtist);
-    });
-
-    // 4. สุ่มลำดับเพลงนิดหน่อย จะได้ไม่น่าเบื่อ
+    const artistSongs = window.songs.filter(song => (song.artist || '').includes(randomArtist));
     const shuffledSongs = [...artistSongs].sort(() => 0.5 - Math.random());
-    const displaySongs = shuffledSongs.slice(0, 3); // โชว์ 3 เพลงให้พอดีความสูงกล่อง
-
-    // 5. ดึงสีประจำตัวนักร้อง (ถ้ามี)
+    const displaySongs = shuffledSongs.slice(0, 3);
     let badgeColor = (window.SINGER_COLORS && window.SINGER_COLORS[randomArtist]) ? window.SINGER_COLORS[randomArtist] : '#00d2ff';
     
-    // เติมเอฟเฟกต์แสงให้กล่อง Widget ตามสีศิลปิน
-    const widgetBox = document.querySelector('.artist-widget');
-    if (widgetBox) {
-        widgetBox.style.boxShadow = `0 15px 35px rgba(0, 0, 0, 0.3), inset 0 0 50px ${badgeColor}15`;
-    }
-
-    // 6. วาด UI
-    let html = `<div class="widget-artist-name" style="color: ${badgeColor};">${randomArtist}</div>`;
-    html += `<div class="widget-song-list">`;
+    let html = `
+        <div class="widget-artist-header">
+            <div class="widget-artist-name" style="color: ${badgeColor};">${randomArtist}</div>
+            <button class="widget-refresh-btn" onclick="renderArtistWidget()" title="สุ่มใหม่">🔄</button>
+        </div>
+        <div class="widget-song-list">
+    `;
     
     displaySongs.forEach(song => {
         const videoId = window.extractYouTubeID(song.audioPath);
         const thumbUrl = videoId ? `https://img.youtube.com/vi/${videoId}/default.jpg` : '';
-        // 🟢 สร้างตัวแปรหลีกเลี่ยงชื่อเพลงที่มี '
         const safeTitle = song.title.replace(/'/g, "\'");
         
         html += `
