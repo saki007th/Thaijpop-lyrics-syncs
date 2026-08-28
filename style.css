@@ -120,25 +120,33 @@ body {
    ========================================= */
 .desktop-widgets-container {
     position: fixed;
-    /* 🔴 ปรับให้อยู่กึ่งกลางหน้าจอมากขึ้น (เลื่อนลงและขยับขวา) */
-    top: 55%; 
-    left: 38%; 
+    top: 52%; 
+    left: 50%; /* 🔴 จัดให้อยู่กึ่งกลางหน้าจอ 100% */
     transform: translate(-50%, -50%);
     display: flex;
-    gap: 40px; /* เตรียมพื้นที่ไว้เผื่อกล่องคิวเพลงในอนาคต */
+    justify-content: center; /* 🔴 ให้กล่องด้านในเรียงตัวตรงกลาง */
+    align-items: flex-start; /* 🔴 ให้แต่ละกล่องมีความสูงอิสระจากกัน */
+    gap: 40px; 
     z-index: 1; 
+    width: 90%; /* ตีวงกว้างๆ ไว้รอรับกล่องคิวเพลง */
+    pointer-events: none; /* ป้องกันคอนเทนเนอร์ไปบังการคลิกด้านหลัง */
+}
+
+/* ทำให้ตัวกล่อง Widget กดได้ตามปกติ */
+.desktop-widgets-container > * {
+    pointer-events: auto; 
 }
 
 .ios-widget {
-    /* 🔴 ขยายขนาดให้ใหญ่สะใจแบบในรูปสเก็ตช์ */
-    width: 400px;
-    height: 400px;
-    border-radius: 32px; /* โค้งมนให้สมส่วนกับขนาดกล่อง */
+    width: 380px;
+    min-height: 200px; /* 🔴 ความสูงเริ่มต้น ไม่ให้กล่องบี้เกินไป */
+    max-height: 450px; /* 🔴 ความสูงสูงสุด ถ้าเพลงเยอะให้โชว์ Scrollbar แทน */
+    border-radius: 32px; 
     background: rgba(30, 30, 33, 0.45); 
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4); /* เพิ่มเงาให้ดูลอยขึ้น */
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4); 
     padding: 30px; 
     box-sizing: border-box;
     display: flex;
