@@ -183,11 +183,13 @@ window.wm = {
         if (this.artistWin) { this.artistWin.focus(); return; }
         this.artistWin = new WinBox("✨ แนะนำศิลปิน", this.applyMemory('artist_widget', {
             mount: document.getElementById("content-artist-widget"), 
-            width: "350px", height: "450px", x: "right", y: "center", 
+            width: "380px", height: "420px", x: "center", y: "center", 
             top: window.currentSongId ? 95 : 30, class: ["wb-dark"],
             onclose: () => { this.artistWin = null; }
         }));
-        window.wm.openArtistWidget();
+        
+        // 🔴 สั่งให้ระบบวาด UI และดึงเพลงมาแสดงทันทีที่เปิดหน้าต่าง
+        if(window.renderArtistWidget) window.renderArtistWidget();
     },
     
     openAdminSync: function() {
