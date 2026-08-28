@@ -71,6 +71,22 @@
     <div id="desktop-icons-container" class="desktop-icons-container">
         <div class="desktop-icon" onclick="wm.openLibrary()">
             <div class="icon-box">🏠</div>
+            <div class="icon-label">คลังเพลง</div>
+        </div>
+        <div class="desktop-icon" onclick="wm.openSettings()">
+            <div class="icon-box">⚙️</div>
+            <div class="icon-label">ตั้งค่า</div>
+        </div>
+        <div class="desktop-icon" onclick="togglePiPMode()">
+            <div class="icon-box">🪟</div>
+            <div class="icon-label">PiP (หน้าต่างลอย)</div>
+        </div>
+        <!-- ปุ่มจัดการเนื้อเพลง (จะโชว์เมื่อเป็นแอดมิน) -->
+        <div class="desktop-icon" id="btnDockAdminSync" style="display:none;" onclick="if(window.currentSongId) wm.openAdminSync(); else alert('กรุณากดเล่นเพลงที่ต้องการซิงค์ก่อนครับ');">
+            <div class="icon-box">⏱</div>
+            <div class="icon-label">จัดการเนื้อเพลง</div>
+        </div>
+    </div>
 
     <!-- 🔴 5. Desktop Widgets (วิดเจ็ตบนหน้าจอ) -->
     <div id="desktop-widgets-container" class="desktop-widgets-container">
@@ -86,6 +102,7 @@
             </div>
         </div>
     </div>
+
             <div class="icon-label">คลังเพลง</div>
         </div>
         <div class="desktop-icon" onclick="wm.openSettings()">
